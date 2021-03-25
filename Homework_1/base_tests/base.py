@@ -1,4 +1,5 @@
 import pytest
+
 from ui.pages.base_page_no_auth import BasePageNoAuth
 from ui.pages.main_page_no_auth import MainPageNoAuth
 from ui.pages.base_page_auth import BasePageAuth

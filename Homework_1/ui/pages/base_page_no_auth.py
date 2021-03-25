@@ -1,5 +1,3 @@
-import pytest
-
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC

@@ -2,9 +2,10 @@ import pytest
 
 from selenium.webdriver.support import expected_conditions as EC
 
-import settings
 from base_tests.base import BaseCaseNoAuth, BaseCaseAuth
 from ui.locators import pages_locators
+
+import settings
 
 
 class TestLoginLogout(BaseCaseNoAuth):

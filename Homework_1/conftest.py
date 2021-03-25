@@ -1,4 +1,5 @@
 import pytest
+
 from selenium import webdriver
 
 from ui.pages.base_page_no_auth import BasePageNoAuth

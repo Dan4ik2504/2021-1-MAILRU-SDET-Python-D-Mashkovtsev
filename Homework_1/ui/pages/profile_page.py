@@ -1,6 +1,5 @@
 from selenium.webdriver.support import expected_conditions as EC
 
-import settings
 from ui.pages.base_page_auth import BasePageAuth
 from ui.locators import pages_locators
 

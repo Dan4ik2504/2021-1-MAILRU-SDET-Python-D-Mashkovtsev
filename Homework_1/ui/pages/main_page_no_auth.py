@@ -1,11 +1,9 @@
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
-import settings
 from ui.pages.base_page_no_auth import BasePageNoAuth
 from ui.locators import pages_locators
 
-from time import sleep
+import settings
 
 
 class MainPageNoAuth(BasePageNoAuth):
