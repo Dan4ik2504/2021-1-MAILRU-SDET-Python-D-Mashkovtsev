@@ -13,9 +13,9 @@ class BasePage:
     def __init__(self, driver):
         self.driver = driver
 
-    def open_page(self):
+    def open_page(self, url=None):
         """Открыть страницу в браузере"""
-        self.driver.get(self.URL)
+        self.driver.get(url if url else self.URL)
 
     def wait(self, timeout=settings.DEFAULT_TIMEOUT):
         """Ожидание"""
