@@ -28,18 +28,11 @@ class BasePage:
         """Клик по элементу"""
         for i in range(settings.CLICK_RETRY):
             try:
-                element = self.wait(timeout).until(EC.element_to_be_clickable(locator))
-            except TimeoutException as exc:
+                self.wait(timeout).until(self.is_page_loaded)
+                return self.wait(timeout).until(EC.element_to_be_clickable(locator)).click()
+            except (TimeoutException, StaleElementReferenceException) as exc:
                 if i == settings.CLICK_RETRY - 1:
                     raise exc
-            else:
-                try:
-                    element.click()
-                    return element
-                except StaleElementReferenceException as exc:
-                    if i == settings.CLICK_RETRY - 1:
-                        raise exc
-                    self.driver.refresh()
 
     def fill_field(self, locator, text: str):
         """Заполняет поле текстом"""
@@ -71,6 +64,11 @@ class BasePage:
             return self.checking_in_new_tab(check_func=check_func, open_new_tab=open_new_tab, *args, **kwargs)
         else:
             return check_func(self, open_new_tab=open_new_tab, *args, **kwargs)
+
+    @staticmethod
+    def is_page_loaded(driver):
+        """Возвращает True, если страница загружена"""
+        return driver.execute_script("return document.readyState") == "complete"
 
     class NewTab:
         """Новая вкладка"""

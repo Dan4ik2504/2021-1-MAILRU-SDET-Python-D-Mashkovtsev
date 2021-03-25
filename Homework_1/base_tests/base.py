@@ -22,3 +22,4 @@ class BaseCaseAuth(BaseCaseNoAuth):
     @pytest.fixture(scope='function', autouse=True)
     def login(self, setup):
         self.main_page_no_auth.login()
+        self.profile_page.wait().until(self.profile_page.is_dashboard_loaded)

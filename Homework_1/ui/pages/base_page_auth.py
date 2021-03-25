@@ -20,6 +20,8 @@ class BasePageAuth(BasePage):
     def logout(self):
         """Выход из аккаунта"""
         self.open_page(settings.DASHBOARD_URL)
+        self.wait().until(self.is_dashboard_loaded)
+        self.wait().until(EC.visibility_of_element_located(self.locators.HEADER_USER_MENU_BUTTON))
         self.click(self.locators.HEADER_USER_MENU_BUTTON)
         self.wait().until(EC.visibility_of_element_located(self.locators.HEADER_USER_MENU))
         self.click(self.locators.HEADER_USER_MENU_LOGOUT_BUTTON)
@@ -37,3 +39,8 @@ class BasePageAuth(BasePage):
             return True
 
         return self.checking_in_new_tab_wrapper(check_func, open_new_tab=open_new_tab)
+
+    def is_dashboard_loaded(self, driver):
+        """Возвращает True, если на странице 'Компании' загружжена инструкция 'С чего начать?',
+        что означает полную загрузку страницы"""
+        return bool(self.find(self.locators.INSTRUCTION_WRAPPER))

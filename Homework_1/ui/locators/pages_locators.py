@@ -17,6 +17,7 @@ class BasePageAuth:
     HEADER_USER_MENU_BUTTON = (By.CSS_SELECTOR, "[class^='right-module-rightButton-']")
     HEADER_USER_MENU_LOGOUT_BUTTON = (By.XPATH, "//li/a[contains(@class, 'rightMenu-module-rightMenuLink') and \
     contains(@href, '/logout')]")
+    INSTRUCTION_WRAPPER = (By.CSS_SELECTOR, "[class^='instruction-module-wrapper-']")
 
     class NavPanel:
         _BASE_XPATH = "//a[contains(@class, 'center-module-button-') and contains(@href, '{}')]"
