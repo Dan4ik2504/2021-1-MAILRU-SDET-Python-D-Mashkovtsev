@@ -9,12 +9,12 @@ import settings
 
 
 class TestLoginLogout(BaseCaseNoAuth):
-    @pytest.mark.ui
+    @pytest.mark.UI
     def test_login(self):
         self.main_page_no_auth.login()
         assert self.driver.current_url == settings.DASHBOARD_URL
 
-    @pytest.mark.ui
+    @pytest.mark.UI
     def test_logout(self):
         self.main_page_no_auth.login()
         assert self.base_page_auth.is_authorized(open_new_tab=False)
@@ -31,7 +31,7 @@ class TestUI(BaseCaseAuth):
             ("poiuytrewq@bombaya.com", settings.EMAIL, pages_locators.ProfilePage.EMAIL_FIELD),
         ]
     )
-    @pytest.mark.ui
+    @pytest.mark.UI
     def test_edit_contact_information(self, new_text, prev_text, locator):
         self.base_page_auth.click(self.base_page_auth.locators.NavPanel.PROFILE)
         self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
@@ -53,7 +53,7 @@ class TestUI(BaseCaseAuth):
             (pages_locators.BasePageAuth.NavPanel.TOOLS, settings.TOOLS_URL),
         ]
     )
-    @pytest.mark.ui
+    @pytest.mark.UI
     def test_navpanel(self, locator, url):
         self.base_page_auth.click(locator)
         self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
