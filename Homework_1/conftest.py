@@ -1,7 +1,7 @@
 import pytest
 from selenium import webdriver
-from ui.pages.base_page import BasePage
-from ui.pages.main_page import MainPage
+from ui.pages.base_page_no_auth import BasePageNoAuth
+from ui.pages.main_page_no_auth import MainPageNoAuth
 
 import settings
 
@@ -14,10 +14,10 @@ def driver():
 
 
 @pytest.fixture(scope='function')
-def base_page(driver):
-    return BasePage(driver=driver)
+def base_page_no_auth(driver):
+    return BasePageNoAuth(driver=driver)
 
 
 @pytest.fixture(scope='function')
-def main_page(driver):
-    return MainPage(driver=driver)
+def main_page_no_auth(driver):
+    return MainPageNoAuth(driver=driver)

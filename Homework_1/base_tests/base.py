@@ -1,11 +1,11 @@
 import pytest
-from ui.pages.base_page import BasePage
-from ui.pages.main_page import MainPage
+from ui.pages.base_page_no_auth import BasePageNoAuth
+from ui.pages.main_page_no_auth import MainPageNoAuth
 
 
-class BaseCase:
+class BaseCaseNoAuth:
     @pytest.fixture(scope='function', autouse=True)
-    def setup(self, driver, base_page, main_page):
+    def setup(self, driver, base_page_no_auth, main_page_no_auth):
         self.driver = driver
-        self.base_page: BasePage = base_page
-        self.main_page: MainPage = main_page
+        self.base_page_no_auth: BasePageNoAuth = base_page_no_auth
+        self.main_page_no_auth: MainPageNoAuth = main_page_no_auth

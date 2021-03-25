@@ -7,7 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import settings
 
 
-class BasePage:
+class BasePageNoAuth:
+    """Базовый объект страницы"""
     URL = settings.BASE_URL
 
     def __init__(self, driver):

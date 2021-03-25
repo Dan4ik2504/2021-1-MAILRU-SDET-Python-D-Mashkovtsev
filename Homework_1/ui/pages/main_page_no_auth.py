@@ -2,15 +2,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 import settings
-from ui.pages.base_page import BasePage
+from ui.pages.base_page_no_auth import BasePageNoAuth
 from ui.locators import pages_locators
 
 from time import sleep
 
 
-class MainPage(BasePage):
+class MainPageNoAuth(BasePageNoAuth):
+    """Объект страницы, отображающейся до авторизации"""
     
-    locators = pages_locators.MainPage
+    locators = pages_locators.MainPageNoAuth
 
     class LoginException(Exception):
         """Пользователь не авторизован"""
@@ -32,8 +33,8 @@ class MainPage(BasePage):
     def logout(self, checking=True):
         """Выход из аккаунта"""
         self.open_page(settings.DASHBOARD_URL)
-        self.click(pages_locators.Dashboard.HEDAER_USER_MENU_BUTTON)
-        self.click(pages_locators.Dashboard.HEAD_USER_MENU_LOGOUT_BUTTON)
+        self.click(pages_locators.BasePageAuth.HEADER_USER_MENU_BUTTON)
+        self.click(pages_locators.BasePageAuth.HEADER_USER_MENU_LOGOUT_BUTTON)
         if checking:
             self.is_not_authorized(open_new_tab=False)
 
