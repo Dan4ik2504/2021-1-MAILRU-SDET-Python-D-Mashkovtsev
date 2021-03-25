@@ -1,7 +1,7 @@
 import pytest
 
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
 
 import settings
@@ -34,15 +34,32 @@ class BasePageNoAuth:
             except TimeoutException as exc:
                 if i == settings.CLICK_RETRY - 1:
                     raise exc
+            except StaleElementReferenceException as exc:
+                if i == settings.CLICK_RETRY - 1:
+                    raise exc
+                self.driver.refresh()
             else:
                 element.click()
                 return element
 
     def fill_field(self, locator, text: str):
-        """Заполнить поле текстом"""
+        """Заполняет поле текстом"""
         element = self.find(locator)
         element.clear()
         element.send_keys(text)
+        return element
+
+    def fill_field_and_return_previous_text(self, locator, text: str):
+        """Заполняет поле текстом и возвращает старый текст"""
+        element = self.find(locator)
+        prev_text = element.text
+        element.clear()
+        element.send_keys(text)
+        return prev_text
+
+    def get_input_value(self, locator):
+        """Возвращает значение, записанное в поле input"""
+        return self.find(locator).get_attribute("value")
 
     def checking_in_new_tab(self, check_func, *args, **kwargs):
         """Запускает функцию внутри новой вкладки"""
