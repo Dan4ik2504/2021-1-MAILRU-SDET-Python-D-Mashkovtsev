@@ -1,12 +1,12 @@
 from selenium.webdriver.support import expected_conditions as EC
 
-from ui.pages.base_page_no_auth import BasePageNoAuth
+from ui.pages.base_page import BasePage
 from ui.locators import pages_locators
 
 import settings
 
 
-class BasePageAuth(BasePageNoAuth):
+class BasePageAuth(BasePage):
     """Базовый объект страниц, отображающихся после авторизации"""
 
     locators = pages_locators.BasePageAuth

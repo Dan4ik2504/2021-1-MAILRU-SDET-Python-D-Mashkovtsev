@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import settings
 
 
-class BasePageNoAuth:
+class BasePage:
     """Базовый объект страницы"""
     URL = settings.BASE_URL
 
