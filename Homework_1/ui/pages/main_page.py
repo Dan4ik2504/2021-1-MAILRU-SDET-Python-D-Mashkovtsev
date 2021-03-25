@@ -18,7 +18,7 @@ class MainPage(BasePage):
     class LogoutException(Exception):
         """Пользователь авторизован"""
 
-    def login(self, login=settings.LOGIN, password=settings.PASSWORD):
+    def login(self, login=settings.LOGIN, password=settings.PASSWORD, checking=True):
         """Авторизация"""
         self.open_page()
         self.click(self.locators.LOGIN_BUTTON)
@@ -26,7 +26,16 @@ class MainPage(BasePage):
         self.fill_field(self.locators.EMAIL_FIELD, login)
         self.fill_field(self.locators.PASSWORD_FIELD, password)
         self.click(self.locators.LOGIN_CONFIRM_BUTTON)
-        self.is_authorized(open_new_tab=False)
+        if checking:
+            self.is_authorized(open_new_tab=False)
+
+    def logout(self, checking=True):
+        """Выход из аккаунта"""
+        self.open_page(settings.DASHBOARD_URL)
+        self.click(pages_locators.Dashboard.HEDAER_USER_MENU_BUTTON)
+        self.click(pages_locators.Dashboard.HEAD_USER_MENU_LOGOUT_BUTTON)
+        if checking:
+            self.is_not_authorized(open_new_tab=False)
 
     def is_authorized(self, open_new_tab=True):
         """Проверка того, что пользователь авторизован"""
