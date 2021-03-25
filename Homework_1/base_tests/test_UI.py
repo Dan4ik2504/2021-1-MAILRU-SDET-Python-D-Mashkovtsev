@@ -34,8 +34,7 @@ class TestUI(BaseCaseAuth):
     @pytest.mark.UI
     def test_edit_contact_information(self, new_text, prev_text, locator):
         self.base_page_auth.click(self.base_page_auth.locators.NavPanel.PROFILE)
-        self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
-        assert settings.PROFILE_URL in self.driver.current_url
+        self.base_page_auth.wait().until(EC.url_contains(settings.PROFILE_URL))
 
         self.profile_page.change_contacts_info_data(locator, new_text)
         self.driver.refresh()
@@ -56,5 +55,4 @@ class TestUI(BaseCaseAuth):
     @pytest.mark.UI
     def test_navpanel(self, locator, url):
         self.base_page_auth.click(locator)
-        self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
-        assert url in self.driver.current_url
+        self.base_page_auth.wait().until(EC.url_contains(url))
