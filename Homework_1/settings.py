@@ -10,3 +10,4 @@ CLICK_RETRY = 3
 # User data
 LOGIN = "tebivan222@bombaya.com"
 PASSWORD = "Qwerty123456"
+USERNAME = "Тестов Тест Тестович"
