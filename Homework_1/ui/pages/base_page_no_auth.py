@@ -34,13 +34,14 @@ class BasePageNoAuth:
             except TimeoutException as exc:
                 if i == settings.CLICK_RETRY - 1:
                     raise exc
-            except StaleElementReferenceException as exc:
-                if i == settings.CLICK_RETRY - 1:
-                    raise exc
-                self.driver.refresh()
             else:
-                element.click()
-                return element
+                try:
+                    element.click()
+                    return element
+                except StaleElementReferenceException as exc:
+                    if i == settings.CLICK_RETRY - 1:
+                        raise exc
+                    self.driver.refresh()
 
     def fill_field(self, locator, text: str):
         """Заполняет поле текстом"""
