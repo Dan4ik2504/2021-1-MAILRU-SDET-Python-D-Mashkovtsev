@@ -43,6 +43,18 @@ class BasePage:
         element.clear()
         element.send_keys(text)
 
+    def checking_in_new_tab(self, check_func, *args, **kwargs):
+        """Запускает функцию внутри новой вкладки"""
+        with self.NewTab(self.driver):
+            return check_func(self, *args, **kwargs)
+
+    def checking_in_new_tab_wrapper(self, check_func, open_new_tab=True, *args, **kwargs):
+        """Решает, открывать ли новую вкладку, в зависимости от флага open_new_tab"""
+        if open_new_tab:
+            self.checking_in_new_tab(self, check_func=check_func, open_new_tab=open_new_tab, *args, **kwargs)
+        else:
+            return check_func(self, open_new_tab=open_new_tab, *args, **kwargs)
+
     class NewTab:
         """Новая вкладка"""
         def __init__(self, driver):
