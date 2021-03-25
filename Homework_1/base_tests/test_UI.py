@@ -2,7 +2,6 @@ import pytest
 import settings
 from base_tests.base import BaseCaseNoAuth, BaseCaseAuth
 from ui.locators import pages_locators
-from selenium.webdriver.support import expected_conditions as EC
 
 
 class TestLoginLogout(BaseCaseNoAuth):
@@ -41,3 +40,15 @@ class TestUI(BaseCaseAuth):
 
         # Возвращаем старое значение
         self.profile_page.change_contacts_info_data(locator, prev_text)
+
+    @pytest.mark.parametrize(
+        ("locator", "url"),
+        [
+            (pages_locators.BasePageAuth.NavPanel.STATISTICS, settings.STATISTICS_URL),
+            (pages_locators.BasePageAuth.NavPanel.TOOLS, settings.TOOLS_URL),
+        ]
+    )
+    @pytest.mark.ui
+    def test_navpanel(self, locator, url):
+        self.base_page_auth.click(locator)
+        assert self.driver.current_url.startswith(url)
