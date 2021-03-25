@@ -1,4 +1,7 @@
 import pytest
+
+from selenium.webdriver.support import expected_conditions as EC
+
 import settings
 from base_tests.base import BaseCaseNoAuth, BaseCaseAuth
 from ui.locators import pages_locators
@@ -30,7 +33,8 @@ class TestUI(BaseCaseAuth):
     @pytest.mark.ui
     def test_edit_contact_information(self, new_text, prev_text, locator):
         self.base_page_auth.click(self.base_page_auth.locators.NavPanel.PROFILE)
-        assert self.driver.current_url.startswith(settings.PROFILE_URL)
+        self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
+        assert settings.PROFILE_URL in self.driver.current_url
 
         self.profile_page.change_contacts_info_data(locator, new_text)
         self.driver.refresh()
@@ -51,4 +55,5 @@ class TestUI(BaseCaseAuth):
     @pytest.mark.ui
     def test_navpanel(self, locator, url):
         self.base_page_auth.click(locator)
-        assert self.driver.current_url.startswith(url)
+        self.base_page_auth.wait().until(EC.url_changes(settings.DASHBOARD_URL))
+        assert url in self.driver.current_url

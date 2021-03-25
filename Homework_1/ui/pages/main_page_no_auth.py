@@ -24,6 +24,7 @@ class MainPageNoAuth(BasePageNoAuth):
         self.fill_field(self.locators.EMAIL_FIELD, login)
         self.fill_field(self.locators.PASSWORD_FIELD, password)
         self.click(self.locators.LOGIN_CONFIRM_BUTTON)
+        self.wait().until(EC.url_changes(settings.BASE_URL))
 
     def is_not_authorized(self, open_new_tab=True):
         """Проверка того, что пользователь не авторизован"""

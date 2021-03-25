@@ -23,6 +23,7 @@ class BasePageAuth(BasePageNoAuth):
         self.click(self.locators.HEADER_USER_MENU_BUTTON)
         self.wait().until(EC.visibility_of_element_located(self.locators.HEADER_USER_MENU))
         self.click(self.locators.HEADER_USER_MENU_LOGOUT_BUTTON)
+        self.wait().until(EC.url_changes(settings.DASHBOARD_URL))
 
     def is_authorized(self, open_new_tab=True):
         """Проверка того, что пользователь авторизован"""
