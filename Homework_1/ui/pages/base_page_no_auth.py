@@ -52,7 +52,7 @@ class BasePageNoAuth:
     def checking_in_new_tab_wrapper(self, check_func, open_new_tab=True, *args, **kwargs):
         """Решает, открывать ли новую вкладку, в зависимости от флага open_new_tab"""
         if open_new_tab:
-            self.checking_in_new_tab(self, check_func=check_func, open_new_tab=open_new_tab, *args, **kwargs)
+            return self.checking_in_new_tab(check_func=check_func, open_new_tab=open_new_tab, *args, **kwargs)
         else:
             return check_func(self, open_new_tab=open_new_tab, *args, **kwargs)
 
