@@ -3,6 +3,7 @@ import pytest
 from selenium import webdriver
 
 from ui.pages.base_page import BasePage
+from ui.pages.base_page_no_auth import BasePageNoAuth
 from ui.pages.main_page_no_auth import MainPageNoAuth
 from ui.pages.base_page_auth import BasePageAuth
 from ui.pages.profile_page import ProfilePage
@@ -20,6 +21,11 @@ def driver():
 @pytest.fixture(scope='function')
 def base_page(driver):
     return BasePage(driver=driver)
+
+
+@pytest.fixture(scope='function')
+def base_page_no_auth(driver):
+    return BasePageNoAuth(driver=driver)
 
 
 @pytest.fixture(scope='function')
