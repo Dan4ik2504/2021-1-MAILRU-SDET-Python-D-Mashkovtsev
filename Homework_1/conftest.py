@@ -16,3 +16,8 @@ def driver():
 @pytest.fixture(scope='function')
 def base_page(driver):
     return BasePage(driver=driver)
+
+
+@pytest.fixture(scope='function')
+def main_page(driver):
+    return MainPage(driver=driver)
