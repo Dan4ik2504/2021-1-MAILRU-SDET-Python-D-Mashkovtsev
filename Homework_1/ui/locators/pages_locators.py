@@ -11,6 +11,7 @@ class MainPageNoAuth:
 
 class BasePageAuth:
     HEADER_USERNAME = (By.CSS_SELECTOR, "[class^='right-module-userNameWrap-']")
+    HEADER_USER_MENU = (By.CSS_SELECTOR, "[class^='rightMenu-module-rightMenu-'")
     HEADER_USER_MENU_BUTTON = (By.CSS_SELECTOR, "[class^='right-module-rightButton-']")
     HEADER_USER_MENU_LOGOUT_BUTTON = (By.XPATH, "//li/a[contains(@class, 'rightMenu-module-rightMenuLink') and contains(@href, '/logout')]")
 

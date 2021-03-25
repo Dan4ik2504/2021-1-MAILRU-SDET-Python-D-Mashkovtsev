@@ -16,16 +16,12 @@ class BasePageAuth(BasePageNoAuth):
 
     def __init__(self, driver):
         super().__init__(driver)
-        header = self.NavPanel(self)
-
-    class NavPanel:
-        def __init__(self, page):
-            self.page = page
 
     def logout(self):
         """Выход из аккаунта"""
         self.open_page(settings.DASHBOARD_URL)
         self.click(self.locators.HEADER_USER_MENU_BUTTON)
+        self.wait().until(EC.visibility_of_element_located(self.locators.HEADER_USER_MENU))
         self.click(self.locators.HEADER_USER_MENU_LOGOUT_BUTTON)
 
     def is_authorized(self, open_new_tab=True):
