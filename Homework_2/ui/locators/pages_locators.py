@@ -34,3 +34,6 @@ class BasePageAuth:
         PROFILE = (By.XPATH, _BASE_XPATH.format("/" + settings.Url._PATHS["profile"]))
         TOOLS = (By.XPATH, _BASE_XPATH.format("/" + settings.Url._PATHS["tools"]))
         HELP = (By.XPATH, _BASE_XPATH.format("/" + settings.Url._PATHS["help"]))
+
+class Dashboard(BasePageAuth):
+    PAGE_LOADING_SPINNER = (By.XPATH, "//*[contains(@class, 'spinner')]")
