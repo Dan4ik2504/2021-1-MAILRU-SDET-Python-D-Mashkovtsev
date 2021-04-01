@@ -30,9 +30,13 @@ class Url:
         "help": "help/advertisers/ru",
     }
 
+    _FULL_PATHS = {
+        "segments": "segments/segments_list",
+    }
+
     LOGIN = "https://account.my.com/login"
     DASHBOARD = BASE + _PATHS["dashboard"]
-    SEGMENTS = BASE + _PATHS["segments"]
+    SEGMENTS = BASE + _FULL_PATHS["segments"]
     BILLING = BASE + _PATHS["billing"]
     STATISTICS = BASE + _PATHS["statistics"]
     PRO = BASE + _PATHS["pro"]
