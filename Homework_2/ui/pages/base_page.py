@@ -118,7 +118,7 @@ class BasePage:
         """Клик по элементу"""
         allure.step(f'Clicking on {locator[1]} (type: {locator[0]})')
         for i in range(settings.Basic.CLICK_RETRY):
-            self.logger.info(f'Clicking on {locator}. Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
+            self.logger.info(f'Clicking on {locator[1]} (type: {locator[0]}). Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
             try:
                 self.wait_until_load()
                 elem = self.find(locator, timeout=timeout)
