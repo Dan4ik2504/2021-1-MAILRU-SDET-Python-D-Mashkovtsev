@@ -34,7 +34,6 @@ class MainPageNoAuth(BasePageNoAuth):
 
         if checking:
             if settings.Url.DASHBOARD in self.driver.current_url:
-                allure.step(f"Page opening: {self.driver.current_url}")
                 return DashboardPage(driver=self.driver)
             else:
                 if raise_error_if_login_failed:
@@ -43,7 +42,6 @@ class MainPageNoAuth(BasePageNoAuth):
                     if settings.Url.BASE == self.driver.current_url:
                         return self
                     elif settings.Url.LOGIN in self.driver.current_url:
-                        allure.step(f"Page opening: {self.driver.current_url}")
                         return LoginPage(driver=self.driver)
                     else:
                         raise self.LoginError(f"Login failed. \
