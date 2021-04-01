@@ -18,6 +18,7 @@ class Logging:
 class Url:
     """Ссылки"""
     BASE = "https://target.my.com/"
+
     _PATHS = {
         "dashboard": "dashboard",
         "segments": "segments",
@@ -28,6 +29,8 @@ class Url:
         "tools": "tools",
         "help": "help/advertisers/ru",
     }
+
+    LOGIN = "https://account.my.com/login"
     DASHBOARD = BASE + _PATHS["dashboard"]
     SEGMENTS = BASE + _PATHS["segments"]
     BILLING = BASE + _PATHS["billing"]

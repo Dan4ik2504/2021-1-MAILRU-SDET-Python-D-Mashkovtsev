@@ -9,6 +9,12 @@ class MainPageNoAuth:
     AUTH_FORM = (By.CSS_SELECTOR, "[class^='authForm-module-wrap-']")
     EMAIL_FIELD = (By.NAME, "email")
     PASSWORD_FIELD = (By.NAME, "password")
+    FORM_ERROR = (By.XPATH, "//div[contains(@class, 'notify-module-error-')]")
+
+
+class LoginPage(MainPageNoAuth):
+    LOGIN_MSG_TITLE = (By.CSS_SELECTOR, "div[class='formMsg_title']")
+    LOGIN_MSG_TEXT = (By.CSS_SELECTOR, "div[class='formMsg_text']")
 
 
 class BasePageAuth:
