@@ -2,7 +2,7 @@ import pytest
 
 from selenium.webdriver.support import expected_conditions as EC
 
-from base_tests.base import BaseCaseNoAuth
+from base_tests.base import BaseCaseNoAuth, BaseCaseAuth
 from ui.locators import pages_locators
 from ui.pages.login_page import LoginPage
 from ui.pages.main_page_no_auth import MainPageNoAuth
@@ -14,7 +14,7 @@ import settings
 class TestLogin(BaseCaseNoAuth):
     @pytest.mark.UI
     def test_login_positive(self):
-        self.main_page_no_auth.login()
+        self.page.login()
         assert self.driver.current_url == settings.Url.DASHBOARD
 
     @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ class TestLogin(BaseCaseNoAuth):
     )
     @pytest.mark.UI
     def test_login_negative__wrong_login_or_password(self, login, password):
-        login_page = self.main_page_no_auth.login(login=login, password=password, checking=True,
+        login_page = self.page.login(login=login, password=password, checking=True,
                                                   raise_error_if_login_failed=False)
         assert isinstance(login_page, LoginPage)
         assert settings.Url.LOGIN in self.driver.current_url
@@ -51,7 +51,7 @@ class TestLogin(BaseCaseNoAuth):
     )
     @pytest.mark.UI
     def test_login_form_negative__incorrect_login(self, login):
-        main_page = self.main_page_no_auth.login(login=login, password=random_string.get_random_letters(),
+        main_page = self.page.login(login=login, password=random_string.get_random_letters(),
                                                  checking=True, raise_error_if_login_failed=False)
         assert isinstance(main_page, MainPageNoAuth)
         elem = main_page.find(main_page.locators.FORM_ERROR)

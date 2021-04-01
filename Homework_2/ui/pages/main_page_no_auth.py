@@ -4,6 +4,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 
 from ui.pages.base_page_no_auth import BasePageNoAuth
+from ui.pages.dashboard_page import DashboardPage
 from ui.pages.login_page import LoginPage
 from ui.locators import pages_locators
 
@@ -33,8 +34,8 @@ class MainPageNoAuth(BasePageNoAuth):
 
         if checking:
             if settings.Url.DASHBOARD in self.driver.current_url:
-                allure.step(f"Page opened: {self.driver.current_url}")
-                return
+                allure.step(f"Page opening: {self.driver.current_url}")
+                return DashboardPage(driver=self.driver)
             else:
                 if raise_error_if_login_failed:
                     raise self.LoginError("Login failed")
@@ -42,8 +43,8 @@ class MainPageNoAuth(BasePageNoAuth):
                     if settings.Url.BASE == self.driver.current_url:
                         return self
                     elif settings.Url.LOGIN in self.driver.current_url:
-                        allure.step(f"Page opened: {self.driver.current_url}")
-                        return LoginPage(self.driver)
+                        allure.step(f"Page opening: {self.driver.current_url}")
+                        return LoginPage(driver=self.driver)
                     else:
                         raise self.LoginError(f"Login failed. \
                         Current url does not matches login page: {self.driver.current_url} != {settings.Url.LOGIN}")

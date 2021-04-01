@@ -18,6 +18,7 @@ class BasePage:
 
     def __init__(self, driver):
         self.driver = driver
+        self.open_page()
 
     class PageIsNotOpenedException(Exception):
         pass
@@ -39,7 +40,8 @@ class BasePage:
         """Открыть страницу в браузере"""
         URL = url if url else self.URL
         allure.step(f"Page opening: {URL}")
-        self.driver.get(URL)
+        if self.driver.current_url.split('?')[0].rstrip("/") != URL:
+            self.driver.get(URL)
         self.wait_until_load(url=URL)
         self.logger.info(f'{self.__class__.__name__} page is opened.')
 

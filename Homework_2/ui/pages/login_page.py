@@ -9,4 +9,5 @@ import settings
 
 
 class LoginPage(BasePageNoAuth):
+    URL = settings.Url.LOGIN
     locators = pages_locators.LoginPage
