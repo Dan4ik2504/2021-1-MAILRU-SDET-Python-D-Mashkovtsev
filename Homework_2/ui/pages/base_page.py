@@ -4,7 +4,7 @@ import logging
 import allure
 
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 
@@ -30,6 +30,9 @@ class BasePage:
         pass
 
     class CustomWaitTimeoutException(Exception):
+        pass
+
+    class ElementIsNotVisible(Exception):
         pass
 
     @property
@@ -97,7 +100,7 @@ class BasePage:
         """Ждать пока текст элемента не станет равен"""
         self.logger.info(f'Waiting until {elem.tag_name} text is equal {text}')
         return self.custom_wait(self.is_elem_text_equal, check=True, timeout=2, error=self.ComparisonException,
-                                text=text, elem=elem,)
+                                text=text, elem=elem, )
 
     def wait(self, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Ожидание"""
@@ -118,7 +121,8 @@ class BasePage:
         """Клик по элементу"""
         allure.step(f'Clicking on {locator[1]} (type: {locator[0]})')
         for i in range(settings.Basic.CLICK_RETRY):
-            self.logger.info(f'Clicking on {locator[1]} (type: {locator[0]}). Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
+            self.logger.info(
+                f'Clicking on {locator[1]} (type: {locator[0]}). Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
             try:
                 self.wait_until_load()
                 elem = self.find(locator, timeout=timeout)
@@ -134,7 +138,9 @@ class BasePage:
         """Заполняет поле текстом"""
         allure.step(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
         self.logger.info(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
-        element = self.find(locator)
+
+        element = self.wait().until(EC.visibility_of_element_located(locator))
+        self.scroll_to(element)
         element.clear()
         element.send_keys(text)
         return element
@@ -153,7 +159,7 @@ class BasePage:
         return self.find(locator).get_attribute("value")
 
     def custom_wait(self, method, error=Exception, timeout=settings.Basic.DEFAULT_TIMEOUT,
-             interval=settings.Basic.DEFAULT_CHECKING_INTERVAL, check=False, **kwargs):
+                    interval=settings.Basic.DEFAULT_CHECKING_INTERVAL, check=False, **kwargs):
         self.logger.info(f"Waiting for {method.__name__}")
         st = time.time()
         last_exception = None
@@ -172,3 +178,34 @@ class BasePage:
 
         raise self.CustomWaitTimeoutException(
             f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
+
+    def elem_is_visible(self, elem):
+        return self.driver.execute_script(settings.Js_code.is_visible, elem)
+
+    def is_visible(self, locator):
+        elem = self.find(locator)
+        if self.elem_is_visible(elem):
+            return True
+        raise self.ElementIsNotVisible(
+            f"Element {elem.tag_name} found by {locator[1]} (type: {locator[0]}) is not visible")
+
+    def wait_until_visible(self, locator):
+        self.logger.info(f'Waiting for an element to become visible: {locator[1]} (type: {locator[0]})')
+        return self.custom_wait(self.is_visible, check=True, error=self.ElementIsNotVisible,
+                                locator=locator)
+
+    def is_not_visible(self, locator):
+        try:
+            elem = self.driver.find_element(*locator)
+            return not self.elem_is_visible(elem)
+        except NoSuchElementException:
+            return True
+
+    def is_element_exists(self, locator):
+        try:
+            elem = self.driver.find_element(*locator)
+            if elem:
+                return True
+            return False
+        except NoSuchElementException:
+            return False
