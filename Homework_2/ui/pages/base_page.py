@@ -43,7 +43,7 @@ class BasePage:
         if self.driver.current_url.split('?')[0].rstrip("/") != URL:
             self.driver.get(URL)
         self.wait_until_load(url=URL)
-        self.logger.info(f'{self.__class__.__name__} page is opened.')
+        self.logger.info(f'Page opened: {URL}')
 
     def is_opened(self, url=None):
         URL = url if url else self.URL
