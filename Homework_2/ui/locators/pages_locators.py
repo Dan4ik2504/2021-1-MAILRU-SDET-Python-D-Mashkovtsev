@@ -45,7 +45,6 @@ class Dashboard(BasePageAuth):
                                "'nameCell-module-campaignNameLink')]")
 
 
-
 class NewCampaign(BasePageAuth):
     BUTTON_GOAL_TRAFFIC = (By.CSS_SELECTOR, "div[class*='_traffic']")
     INPUT_URL = (By.CSS_SELECTOR, "input[class*='mainUrl-module-searchInput-Su-Rad']")
@@ -75,9 +74,9 @@ class NewCampaign(BasePageAuth):
     BANNER_IMAGE_INPUT = (By.XPATH, "//div[contains(@class, 'upload-module-wrapper')]/input[@type='file' and "
                                     "@data-test='image_1080x607']")
     BANNER_SMALL_IMAGE_INPUT = (By.XPATH, "//div[contains(@class, 'upload-module-wrapper')]/input[@type='file' and "
-                                    "@data-test='image_600x600']")
+                                          "@data-test='image_600x600']")
     BANNER_ICON_INPUT = (By.XPATH, "//div[contains(@class, 'upload-module-wrapper')]/input[@type='file' and "
-                                    "@data-test='icon_256x256']")
+                                   "@data-test='icon_256x256']")
     BANNER_IMAGE_SAVING_SUBMIT_BUTTON = (
         By.XPATH, "//input[contains(@class, 'image-cropper__save') and @type='submit']")
     _BANNER_EDITOR_BASE_XPATH = "//div[contains(@class, 'bannerEditor-module-editorForm-')]"
@@ -89,3 +88,28 @@ class NewCampaign(BasePageAuth):
     BANNER_SAVE_INPUT = (By.XPATH, "//div[contains(@class, 'bannerEditor-module-bottomControlsWrap-')]//div[contains(" \
                                    "@class, 'button-module-textWrapper-')]")
     SUBMIT_BUTTON = (By.XPATH, "//div[contains(@class, 'footer__button')]//button[@data-class-name='Submit']")
+
+
+class Segments(BasePageAuth):
+    CREATE_SEGMENT_INSTRUCTION_LINK = (By.CSS_SELECTOR, "a[href*='/segments/segments_list/new/']")
+    CREATE_SEGMENT_BUTTON = \
+        (By.XPATH, "//div[contains(@class, 'segments-list__tbl-settings-wrap')]//button[@data-class-name='Submit']")
+    PAGE_LOADING_SPINNER = (By.CSS_SELECTOR, "[class*='spinner']:not([style*='display: none;'])")
+    SEGMENT_CREATING_FORM_ACTIVE_SEGMENTS = \
+        (By.XPATH, "//div[contains(@class, 'adding-segments-item') and not(contains(@class, "
+                   "'adding-segments-item_empty')) and not(text()='Список сегментов')]")
+    SEGMENT_CREATING_FORM_AG_IN_SN = \
+        (By.XPATH, "//div[contains(@class, 'adding-segments-item') and text()='Приложения и игры в соцсетях']")
+    SEGMENT_CREATING_FORM_AG_IN_SN_CHECKBOX = \
+        (By.XPATH, "//div[contains(@class, 'adding-segments-source__header') and (//following-sibling::div["
+                   "@class='adding-segments-source__text-wrap']"
+                   "//span[text()='Игравшие и платившие в платформе'])]//input[@type='checkbox']")
+    SEGMENT_CREATING_FORM_ADDING_SUBMIT_BUTTON = \
+        (By.XPATH, "//div[contains(@class, 'adding-segments-modal__btn-wrap')]//button[@data-class-name='Submit']")
+    SEGMENT_CREATING_FORM_CREATING_SUBMIT_BUTTON = \
+        (By.XPATH, "//div[contains(@class, 'create-segment-form__btn-wrap')]/button[@data-class-name='Submit']")
+    SEGMENT_CREATING_FORM_NAME_INPUT = \
+        (By.XPATH, "//div[contains(@class, 'input_create-segment-form')]//input[@type='text']")
+    TABLE_SEGMENT_NAME = \
+        (By.XPATH, "//div[contains(@class, 'main-module-Table-')]//div[contains(@class, 'main-module-Cell-') "
+                   "and contains(@data-test, 'name')]/div[contains(@class, 'cells-module-nameCell-1VoH91')]/a")
