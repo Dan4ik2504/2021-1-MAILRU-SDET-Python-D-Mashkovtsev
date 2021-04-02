@@ -7,6 +7,7 @@ import allure
 
 from ui.fixtures import *
 import settings
+from utils import random_values
 
 
 def pytest_addoption(parser):
@@ -26,16 +27,28 @@ def repo_root():
     return os.path.abspath(os.path.join(__file__, os.pardir))
 
 
-def pytest_configure(config):
+def is_master(config):
+    if hasattr(config, 'workerinput'):
+        return False
+    return True
+
+
+def create_test_dir(config):
     base_test_dir = settings.Logging.BASE_TEST_DIR
+    if os.path.exists(base_test_dir):
+        shutil.rmtree(base_test_dir)
+    os.makedirs(base_test_dir)
 
-    if not hasattr(config, 'workerinput'):  # execute only once on main worker
-        if os.path.exists(base_test_dir):
-            shutil.rmtree(base_test_dir)
-        os.makedirs(base_test_dir)
 
-    # save to config for all workers
-    config.base_test_dir = base_test_dir
+def pytest_configure(config):
+
+    if is_master(config):
+        create_test_dir(config)
+        random_values.Caching.create_cache()
+    else:
+        random_values.Caching.read_cache_from_json()
+
+    config.base_test_dir = settings.Logging.BASE_TEST_DIR
 
 
 @pytest.fixture(scope='function')

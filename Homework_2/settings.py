@@ -5,6 +5,7 @@ class Basic:
     CLICK_RETRY = 3
     SELENIUM_DRIVER_DOWNLOAD_DIR = "/opt/WebDriver/bin/"
     TEST_FILES_DIR = 'test_files'
+    TEMPORARY_FILES_DIR = 'temporary_files'
 
 
 class Logging:
