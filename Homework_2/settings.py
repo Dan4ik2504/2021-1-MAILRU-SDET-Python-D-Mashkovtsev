@@ -39,6 +39,7 @@ class Url:
     LOGIN = "https://account.my.com/login"
     DASHBOARD = BASE + _PATHS["dashboard"]
     SEGMENTS = BASE + _FULL_PATHS["segments"]
+    SEGMENT_CREATING = SEGMENTS + "/new"
     BILLING = BASE + _PATHS["billing"]
     STATISTICS = BASE + _PATHS["statistics"]
     PRO = BASE + _PATHS["pro"]

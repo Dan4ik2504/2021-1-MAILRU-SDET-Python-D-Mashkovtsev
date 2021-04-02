@@ -7,6 +7,8 @@ import settings
 
 
 class NewSegment:
+    URL = settings.Url.SEGMENT_CREATING
+
     def __init__(self, page):
         self.page = page
         self.SEGMENT_TYPES = {
@@ -21,9 +23,12 @@ class NewSegment:
         create_segment_btns = (self.page.locators.CREATE_SEGMENT_BUTTON,
                                self.page.locators.CREATE_SEGMENT_INSTRUCTION_LINK)
         for locator in create_segment_btns:
-            if self.page.is_element_exists(locator):
-                self.page.click(locator)
-                return self
+            try:
+                if self.page.is_visible(locator):
+                    self.page.click(locator)
+                    return self
+            except self.page.ElementIsNotVisible:
+                continue
         raise self.page.NewSegmentCreatingException(
             f"Failed to open form to create a new segment: {create_segment_btns[0][1]} "
             f"(type: {create_segment_btns[0][0]}) or {create_segment_btns[1][1]} (type: {create_segment_btns[1][0]})")
@@ -69,6 +74,40 @@ class NewSegment:
         self._save()
 
 
+class Segment:
+    def __init__(self, table, id):
+        self.table = table
+        self.ID = id
+
+        name_locator = self.table.page.locators.TABLE_CELL_NAME_BY_ID
+        new_segm_name_locator = (name_locator[0], name_locator[1].format(item_id=self.ID))
+        name = self.table.page.driver.find_element(*new_segm_name_locator).text
+        self.NAME = name
+
+        rm_btn_locator = self.table.page.locators.TABLE_CELL_REMOVE_BUTTON_BY_ID
+        self.REMOVE_BTN_LOCATOR = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=id))
+
+    def remove(self):
+        self.table.page.click(self.REMOVE_BTN_LOCATOR)
+
+    def __eq__(self, other):
+        other = str(other)
+        if other.isdigit():
+            return self.ID == other
+        return self.NAME == other
+
+    def __repr__(self):
+        return "Segment object. Id: {id}; Name: {name}".format(id=self.ID, name=self.NAME)
+
+
+class SegmentsTable:
+    def __init__(self, page):
+        self.page = page
+
+    def get_segments(self):
+        return [Segment(self, n.text) for n in self.page.driver.find_elements(*self.page.locators.TABLE_CELL_ID)]
+
+
 class SegmentsPage(BasePageAuth):
     URL = settings.Url.SEGMENTS
     locators = pages_locators.Segments
@@ -76,6 +115,7 @@ class SegmentsPage(BasePageAuth):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.new_segment = NewSegment(self)
+        self.segments_table = SegmentsTable(self)
 
     class NewSegmentCreatingException(Exception):
         pass
@@ -89,7 +129,3 @@ class SegmentsPage(BasePageAuth):
             if not self.is_element_exists(spinner_locator):
                 return True
         raise self.PageIsNotLoadedException(f"Spinner exists: {spinner_locator[1]} (type: {spinner_locator[0]})")
-
-    def get_all_segments(self):
-        segments = [n.text for n in self.driver.find_elements(*self.locators.TABLE_SEGMENT_NAME)]
-        return segments

@@ -109,11 +109,15 @@ class TestSegments(BaseCaseAuth):
     @pytest.mark.UI
     def test_create_segment(self):
         self.page: SegmentsPage = self.page.nav_panel.segments()
-        assert self.page.URL == self.page.driver.current_url
+        assert self.page.URL == self.page.driver.current_url.rstrip('/')
+
         segment_name = random_string.get_random_letters()
         with self.page.new_segment as segment:
+            assert self.page.new_segment.URL == self.page.driver.current_url.rstrip('/')
             segment.select_segment_type(segment.TYPES.APPS)
             segment.name = segment_name
-        segments_list = self.page.get_all_segments()
-        assert segment_name in segments_list
+        assert self.page.URL == self.page.driver.current_url.rstrip('/')
+
+        segments = self.page.segments_table.get_segments()
+        assert segment_name in segments
 

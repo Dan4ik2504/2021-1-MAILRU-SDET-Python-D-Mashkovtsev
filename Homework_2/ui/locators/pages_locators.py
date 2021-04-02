@@ -110,6 +110,15 @@ class Segments(BasePageAuth):
         (By.XPATH, "//div[contains(@class, 'create-segment-form__btn-wrap')]/button[@data-class-name='Submit']")
     SEGMENT_CREATING_FORM_NAME_INPUT = \
         (By.XPATH, "//div[contains(@class, 'input_create-segment-form')]//input[@type='text']")
-    TABLE_SEGMENT_NAME = \
-        (By.XPATH, "//div[contains(@class, 'main-module-Table-')]//div[contains(@class, 'main-module-Cell-') "
-                   "and contains(@data-test, 'name')]/div[contains(@class, 'cells-module-nameCell-1VoH91')]/a")
+    _TABLE_XPATH = "//div[contains(@class, 'main-module-Table-')]"
+    _TABLE_CELL_BASE_XPATH = \
+        _TABLE_XPATH + "//div[contains(@class, 'main-module-Cell-') and contains(@data-test, '{cell_name}')]"
+    TABLE_CELL_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="id") + "//span")
+    TABLE_CELL_NAME = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name") +
+                       "/div[contains(@class, 'cells-module-nameCell')]/a")
+    TABLE_CELL_REMOVE_BUTTON = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove") +
+                       "/div[contains(@class, 'cells-module-removeCell')]/span")
+    TABLE_CELL_NAME_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name-{item_id}") +
+                       "/div[contains(@class, 'cells-module-nameCell')]/a")
+    TABLE_CELL_REMOVE_BUTTON_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove-{item_id}") +
+                       "/div[contains(@class, 'cells-module-removeCell')]/span")
