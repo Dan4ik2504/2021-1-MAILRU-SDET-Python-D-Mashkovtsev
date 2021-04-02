@@ -20,7 +20,6 @@ import settings
 
 class TestLogin(BaseCaseNoAuth):
     @pytest.mark.UI
-    @pytest.mark.skip
     def test_login_positive(self):
         self.page.login()
         assert self.driver.current_url == settings.Url.DASHBOARD
@@ -35,7 +34,6 @@ class TestLogin(BaseCaseNoAuth):
         )
     )
     @pytest.mark.UI
-    @pytest.mark.skip
     def test_login_negative__wrong_login_or_password(self, login, password):
         login_page = self.page.login(login=login, password=password, checking=True,
                                      raise_error_if_login_failed=False)
@@ -59,7 +57,6 @@ class TestLogin(BaseCaseNoAuth):
         )
     )
     @pytest.mark.UI
-    @pytest.mark.skip
     def test_login_form_negative__incorrect_login(self, login):
         main_page = self.page.login(login=login, password=random_string.get_random_letters(),
                                     checking=True, raise_error_if_login_failed=False)
@@ -71,7 +68,6 @@ class TestLogin(BaseCaseNoAuth):
 
 class TestCampaigns(BaseCaseAuth):
     @pytest.mark.UI
-    @pytest.mark.skip
     def test_creating_campaign(self, repo_root):
         self.page: NewCampaignPage = self.page.go_to_create_campaign()
         assert self.driver.current_url == self.page.URL
@@ -118,6 +114,31 @@ class TestSegments(BaseCaseAuth):
             segment.name = segment_name
         assert self.page.URL == self.page.driver.current_url.rstrip('/')
 
-        segments = self.page.segments_table.get_segments()
-        assert segment_name in segments
+        all_segments = self.page.segments_table.get_segments()
+        assert segment_name in all_segments
 
+    @pytest.mark.UI
+    def test_delete_segment(self):
+        self.page: SegmentsPage = self.page.nav_panel.segments()
+        assert self.page.URL == self.page.driver.current_url.rstrip('/')
+
+        segment_name = random_string.get_random_letters()
+        with self.page.new_segment as segment:
+            assert self.page.new_segment.URL == self.page.driver.current_url.rstrip('/')
+            segment.select_segment_type(segment.TYPES.APPS)
+            segment.name = segment_name
+        assert self.page.URL == self.page.driver.current_url.rstrip('/')
+
+        all_segments = self.page.segments_table.get_segments()
+        assert segment_name in all_segments
+
+        segment_object = None
+        for sgm in all_segments:
+            if sgm.name == segment_name:
+                segment_object = sgm
+                break
+
+        segment_object.remove()
+
+        all_segments = self.page.segments_table.get_segments()
+        assert segment_name not in all_segments

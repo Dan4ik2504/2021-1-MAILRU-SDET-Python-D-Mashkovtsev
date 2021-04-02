@@ -77,27 +77,31 @@ class NewSegment:
 class Segment:
     def __init__(self, table, id):
         self.table = table
-        self.ID = id
+        self.id = id
 
         name_locator = self.table.page.locators.TABLE_CELL_NAME_BY_ID
-        new_segm_name_locator = (name_locator[0], name_locator[1].format(item_id=self.ID))
-        name = self.table.page.driver.find_element(*new_segm_name_locator).text
-        self.NAME = name
+        self.new_segm_name_locator = (name_locator[0], name_locator[1].format(item_id=self.id))
+        name = self.table.page.driver.find_element(*self.new_segm_name_locator).text
+        self.name = name
 
         rm_btn_locator = self.table.page.locators.TABLE_CELL_REMOVE_BUTTON_BY_ID
         self.REMOVE_BTN_LOCATOR = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=id))
 
     def remove(self):
         self.table.page.click(self.REMOVE_BTN_LOCATOR)
+        confirm_remove_btn = self.table.page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
+        self.table.page.click(confirm_remove_btn)
+        self.table.page.custom_wait(self.table.page.is_not_visible, check=True, locator=confirm_remove_btn)
+        self.table.page.custom_wait(self.table.page.is_not_visible, check=True, locator=self.new_segm_name_locator)
 
     def __eq__(self, other):
         other = str(other)
         if other.isdigit():
-            return self.ID == other
-        return self.NAME == other
+            return self.id == other
+        return self.name == other
 
     def __repr__(self):
-        return "Segment object. Id: {id}; Name: {name}".format(id=self.ID, name=self.NAME)
+        return "Segment object. Id: {id}; Name: {name}".format(id=self.id, name=self.name)
 
 
 class SegmentsTable:

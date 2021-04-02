@@ -117,8 +117,9 @@ class Segments(BasePageAuth):
     TABLE_CELL_NAME = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name") +
                        "/div[contains(@class, 'cells-module-nameCell')]/a")
     TABLE_CELL_REMOVE_BUTTON = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove") +
-                       "/div[contains(@class, 'cells-module-removeCell')]/span")
+                       "/span[contains(@class, 'cells-module-removeCell')]")
     TABLE_CELL_NAME_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name-{item_id}") +
                        "/div[contains(@class, 'cells-module-nameCell')]/a")
     TABLE_CELL_REMOVE_BUTTON_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove-{item_id}") +
-                       "/div[contains(@class, 'cells-module-removeCell')]/span")
+                       "/span[contains(@class, 'cells-module-removeCell')]")
+    SEGMENT_CONFIRM_REMOVE_BUTTON = (By.XPATH, "//button[contains(@class, 'button_confirm-remove')]")
