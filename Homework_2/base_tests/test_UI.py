@@ -14,7 +14,7 @@ from ui.pages.main_page_no_auth import MainPageNoAuth
 from ui.pages.new_campaign_page import NewCampaignPage
 from ui.pages.segments_page import SegmentsPage
 
-from utils.random_values import RandomValues as random_values
+from utils import random_values
 import settings
 
 
@@ -27,10 +27,10 @@ class TestLogin(BaseCaseNoAuth):
     @pytest.mark.parametrize(
         ("login", "password"),
         (
-                (random_values.email, random_values.password),
-                (random_values.phone_number, random_values.password),
-                (random_values.email, settings.User.PASSWORD),
-                (settings.User.LOGIN, random_values.password),
+                (pytest.lazy_fixture("random_email"), pytest.lazy_fixture("random_password")),
+                (pytest.lazy_fixture("random_phone_number"), pytest.lazy_fixture("random_password")),
+                (pytest.lazy_fixture("random_email"), settings.User.PASSWORD),
+                (settings.User.LOGIN, pytest.lazy_fixture("random_password")),
         )
     )
     @pytest.mark.UI
@@ -46,8 +46,7 @@ class TestLogin(BaseCaseNoAuth):
     @pytest.mark.parametrize(
         "login",
         (
-                random_values.incorrect_login,
-                ''.join((random_values.phone_number, "qwe")),
+                pytest.lazy_fixture("random_incorrect_login"),
                 "mail@mail",
                 "mail@.ru",
                 "@mail.ru",
