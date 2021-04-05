@@ -18,7 +18,6 @@ class BasePage:
 
     def __init__(self, driver):
         self.driver = driver
-        self.open_page()
 
     class PageIsNotOpenedException(Exception):
         pass
@@ -51,7 +50,7 @@ class BasePage:
     def is_opened(self, url=None):
         URL = url if url else self.URL
         URL = URL.rstrip("/")
-        current_url = self.driver.current_url.split('?')[0].rstrip("/")
+        current_url = self.driver.current_url.split('?')[0].rstrip("#").rstrip("/")
         if current_url == URL:
             return True
         raise self.PageIsNotOpenedException(f"{current_url} != {URL}")

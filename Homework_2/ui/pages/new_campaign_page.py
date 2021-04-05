@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 
 from ui.pages.base_page_auth import BasePageAuth
+
 from ui.locators import pages_locators
 import settings
 
@@ -23,12 +24,8 @@ class NewCampaignPage(BasePageAuth):
         "multiformat": locators.MULTIFORMAT_BANNER_FORMAT_ITEM_BUTTON,
     }
 
-    def __init__(self, driver, DashboardClass):
-        super().__init__(driver)
-        self.DashboardClass = DashboardClass
-
     def is_loaded(self):
-        if super(NewCampaignPage, self).is_loaded():
+        if super().is_loaded():
             elems = self.driver.find_elements(*self.locators.PAGE_LOADING_SPINNER)
             try:
                 result = [self.elem_is_visible(r) for r in elems]
@@ -99,4 +96,3 @@ class NewCampaignPage(BasePageAuth):
     def save_campaign(self):
         self.click(self.locators.SUBMIT_BUTTON)
         self.wait().until(EC.url_changes(self.URL))
-        return self.DashboardClass(driver=self.driver)

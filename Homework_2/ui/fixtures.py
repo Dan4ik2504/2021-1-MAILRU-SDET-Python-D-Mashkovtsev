@@ -10,11 +10,14 @@ from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
-from ui.pages.base_page import BasePage
-from ui.pages.base_page_no_auth import BasePageNoAuth
 from ui.pages.main_page_no_auth import MainPageNoAuth
+from ui.pages.nav_panel import NavPanel
 import settings
-from utils import random_values
+
+
+@pytest.fixture(scope='function')
+def login(main_page_no_auth):
+    return main_page_no_auth.login()
 
 
 @pytest.fixture(scope='function')
@@ -26,7 +29,7 @@ class UnsupportedBrowserType(Exception):
     pass
 
 
-def get_driver(browser_name='chrome', download_dir=settings.Basic.SELENIUM_DRIVER_DOWNLOAD_DIR):
+def get_driver(browser_name='chrome', download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR):
     if browser_name == 'chrome':
         options = ChromeOptions()
         options.add_experimental_option("prefs", {"download.default_directory": download_dir})
@@ -35,18 +38,18 @@ def get_driver(browser_name='chrome', download_dir=settings.Basic.SELENIUM_DRIVE
         browser = webdriver.Chrome(executable_path=manager.install(), options=options)
         return browser
     elif browser_name == 'firefox':
-        manager = GeckoDriverManager(version='latest')
+        manager = GeckoDriverManager(version='latest', log_level=0)
         browser = webdriver.Firefox(executable_path=manager.install())
         return browser
     else:
-        raise UnsupportedBrowserType(f' Unsupported browser {browser_name}')
+        raise UnsupportedBrowserType(f'Unsupported browser {browser_name}')
 
 
 @pytest.fixture(scope='function')
 def driver(config, test_dir):
     browser_name = config['browser']
 
-    browser = get_driver(browser_name, download_dir=settings.Basic.SELENIUM_DRIVER_DOWNLOAD_DIR)
+    browser = get_driver(browser_name, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
 
     browser.maximize_window()
     yield browser
@@ -55,7 +58,7 @@ def driver(config, test_dir):
 
 @pytest.fixture(scope='function', params=['chrome', 'firefox'])
 def all_drivers(config, request, test_dir):
-    browser = get_driver(request.param, download_dir=settings.Basic.SELENIUM_DRIVER_DOWNLOAD_DIR)
+    browser = get_driver(request.param, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
 
     browser.maximize_window()
     yield browser
@@ -79,4 +82,3 @@ def ui_report(driver, request, test_dir):
 
         with open(browser_logfile, 'r') as f:
             allure.attach(f.read(), settings.Logging.BROWSER_LOG_FILE_NAME, attachment_type=allure.attachment_type.TEXT)
-

@@ -19,7 +19,7 @@ class DashboardPage(BasePageAuth):
                 return True
         raise self.PageIsNotLoadedException(f"Spinner exists: {spinner_locator[1]} (type: {spinner_locator[0]})")
 
-    def go_to_create_campaign(self):
+    def go_to_create_campaign_page(self):
         create_campaign_btns = (self.locators.CREATE_CAMPAIGN_BUTTON, self.locators.CREATE_CAMPAIGN_INSTRUCTION_LINK)
         for locator in create_campaign_btns:
             try:
@@ -29,7 +29,7 @@ class DashboardPage(BasePageAuth):
             except self.ElementIsNotVisible:
                 continue
         self.wait().until(EC.url_changes(self.URL))
-        new_campaign_page = NewCampaignPage(driver=self.driver, DashboardClass=DashboardPage)
+        new_campaign_page = NewCampaignPage(driver=self.driver)
         return new_campaign_page
 
     def get_all_campaigns(self):
