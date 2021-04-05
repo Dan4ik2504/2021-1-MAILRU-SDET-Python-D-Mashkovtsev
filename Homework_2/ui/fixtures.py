@@ -25,6 +25,11 @@ def main_page_no_auth(driver):
     return MainPageNoAuth(driver=driver)
 
 
+@pytest.fixture(scope='function')
+def nav_panel(driver):
+    return NavPanel(driver=driver)
+
+
 class UnsupportedBrowserType(Exception):
     pass
 
