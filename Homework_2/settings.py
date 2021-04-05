@@ -1,16 +1,26 @@
+import sys
+
+
+def different_os_path(path: str):
+    """Changing the path to be able to work on different operating systems"""
+    if sys.platform.startswith('win'):
+        return "".join(("C:\\tests", path.replace("/", "\\")))
+    return path
+
+
 class Basic:
     """Основные настройки"""
     DEFAULT_TIMEOUT = 10
     DEFAULT_CHECKING_INTERVAL = 0.1
     CLICK_RETRY = 3
-    SELENIUM_DRIVER_DOWNLOAD_DIR = "/opt/WebDriver/bin/"
+    BROWSER_DOWNLOAD_DIR = different_os_path("/tmp/browser_downloads")
     TEST_FILES_DIR = 'test_files'
     TEMPORARY_FILES_DIR = 'temporary_files'
 
 
 class Logging:
     """Настройки логгирования"""
-    BASE_TEST_DIR = '/tmp/selenium_tests'
+    BASE_TEST_DIR = different_os_path('/tmp/selenium_tests')
     TEST_LOG_FILE_NAME = 'test.log'
     SCREENSHOT_FILE_NAME = 'failure.png'
     BROWSER_LOG_FILE_NAME = 'browser.log'
@@ -58,6 +68,7 @@ class User:
     USERNAME = "Тестов Тест Тестович"
     PHONE = "+70000000000"
     EMAIL = "qwertyuiop@bombaya.com"
+
 
 class Js_code:
     is_visible = """
