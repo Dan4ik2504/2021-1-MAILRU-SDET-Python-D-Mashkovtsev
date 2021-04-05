@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 
+from utils.javascript_code import JsCode
 import settings
 
 
@@ -179,7 +180,7 @@ class BasePage:
             f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
 
     def elem_is_visible(self, elem):
-        return self.driver.execute_script(settings.Js_code.is_visible, elem)
+        return self.driver.execute_script(JsCode.is_visible, elem)
 
     def is_visible(self, locator):
         elem = self.find(locator)
