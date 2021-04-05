@@ -38,6 +38,8 @@ class BasePageAuth:
 
 class Dashboard(BasePageAuth):
     PAGE_LOADING_SPINNER = (By.XPATH, "//*[contains(@class, 'spinner')]")
+    CREATE_CAMPAIGN_INSTRUCTION_LINK = \
+        (By.XPATH, "//li[contains(@class, 'instruction-module-item-')]//a[contains(@href, '/campaign/new')]")
     CREATE_CAMPAIGN_BUTTON = (By.XPATH,
                               "//div[contains(@class, 'button-module-textWrapper-') and text() = 'Создать кампанию']")
     CAMPAIGN_NAME = (By.XPATH, "//div[@data-entity-type='campaign' and contains(@class, "
