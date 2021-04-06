@@ -68,11 +68,7 @@ class TestLogin(BaseCase):
 
 
 class TestCampaigns(BaseCase):
-    @pytest.mark.UI
-    def test_creating_campaign(self, repo_root):
-        new_campaign_page: NewCampaignPage = self.dashboard_page.go_to_create_campaign_page()
-        new_campaign_page.custom_wait(new_campaign_page.check.is_page_opened)
-        assert self.driver.current_url == new_campaign_page.URL
+    def fill_campaign_form(self, new_campaign_page, repo_root):
         new_campaign_page.select_goal('traffic')
         new_campaign_page.change_url(random_values.get_random_letters() + ".ru")
         campaign_name = random_values.get_random_letters()
@@ -89,7 +85,7 @@ class TestCampaigns(BaseCase):
 
         new_campaign_page.select_banner_format("multiformat")
         new_campaign_page.load_image(repo_root=repo_root, img_name='Image1.jpg', small_img_name='Image2.jpg',
-                                          icon_name='Image3.jpg')
+                                     icon_name='Image3.jpg')
 
         new_campaign_page.set_banner_title(random_values.get_random_letters())
         new_campaign_page.set_banner_text(random_values.get_random_letters(80))
@@ -97,6 +93,17 @@ class TestCampaigns(BaseCase):
         new_campaign_page.set_banner_name(random_values.get_random_letters())
 
         new_campaign_page.save_banner()
+
+        return campaign_name
+
+    @pytest.mark.UI
+    def test_creating_campaign(self, repo_root):
+        new_campaign_page: NewCampaignPage = self.dashboard_page.go_to_create_campaign_page()
+        new_campaign_page.custom_wait(new_campaign_page.check.is_page_opened)
+        assert self.driver.current_url == new_campaign_page.URL
+
+        campaign_name = self.fill_campaign_form(new_campaign_page, repo_root)
+
         new_campaign_page.save_campaign()
 
         self.dashboard_page.custom_wait(self.dashboard_page.check.is_page_opened)
@@ -106,19 +113,22 @@ class TestCampaigns(BaseCase):
 
 
 class TestSegments(BaseCase):
-    @pytest.mark.UI
-    def test_create_segment(self):
-        segments_page: SegmentsPage = self.nav_panel.go_to_segments()
-        segments_page.custom_wait(segments_page.check.is_page_opened)
-        assert segments_page.check.is_links_equal(
-            segments_page.URL, segments_page.driver.current_url, raise_exception=False)
-
+    def create_segment(self, segments_page):
         segment_name = random_values.get_random_letters()
         with segments_page.new_segment as segment:
             assert segments_page.new_segment.URL == segments_page.driver.current_url.rstrip('/')
             segment.select_segment_type(segment.TYPES.APPS)
             segment.name = segment_name
-        assert segments_page.URL == segments_page.driver.current_url.rstrip('/')
+        assert segments_page.check.is_page_url_match_driver_url()
+
+        return segment_name
+
+    @pytest.mark.UI
+    def test_create_segment(self):
+        segments_page: SegmentsPage = self.nav_panel.go_to_segments()
+        assert segments_page.check.is_page_url_match_driver_url()
+
+        segment_name = self.create_segment(segments_page)
 
         all_segments = segments_page.segments_table.get_segments()
         assert segment_name in all_segments
@@ -126,16 +136,9 @@ class TestSegments(BaseCase):
     @pytest.mark.UI
     def test_delete_segment(self):
         segments_page: SegmentsPage = self.nav_panel.go_to_segments()
-        segments_page.custom_wait(segments_page.check.is_page_opened)
-        assert segments_page.check.is_links_equal(
-            segments_page.URL, segments_page.driver.current_url, raise_exception=False)
+        assert segments_page.check.is_page_url_match_driver_url()
 
-        segment_name = random_values.get_random_letters()
-        with segments_page.new_segment as segment:
-            assert segments_page.new_segment.URL == segments_page.driver.current_url.rstrip('/')
-            segment.select_segment_type(segment.TYPES.APPS)
-            segment.name = segment_name
-        assert segments_page.URL == segments_page.driver.current_url.rstrip('/')
+        segment_name = self.create_segment(segments_page)
 
         all_segments = segments_page.segments_table.get_segments()
         assert segment_name in all_segments
