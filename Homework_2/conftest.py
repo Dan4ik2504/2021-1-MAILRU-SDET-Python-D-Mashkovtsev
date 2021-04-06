@@ -71,6 +71,7 @@ def logger(test_dir, config):
     log = logging.getLogger(settings.Logging.LOGGER_NAME)
     log.propagate = False
     log.setLevel(log_level)
+    log.handlers.clear()
     log.addHandler(file_handler)
 
     yield log
