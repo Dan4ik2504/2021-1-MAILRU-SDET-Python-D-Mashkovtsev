@@ -1,5 +1,6 @@
 
 class JsCode:
+    """JavaScript code to executing with 'driver.execute_script'"""
     is_visible = """
     function isVisible(elem) {
         if (!(elem instanceof Element)) throw Error('DomUtil: elem is not an element.');

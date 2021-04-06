@@ -15,6 +15,7 @@ from time import sleep
 
 
 class NewCampaignPage(BasePageAuth):
+    """Object of the page with the form for creating a new campaign"""
     URL = settings.Url.NEW_CAMPAIGN
     locators = pages_locators.NewCampaign
     GOALS = {

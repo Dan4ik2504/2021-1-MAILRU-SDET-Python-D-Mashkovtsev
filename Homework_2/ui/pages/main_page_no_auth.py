@@ -12,7 +12,7 @@ import settings
 
 
 class MainPageNoAuth(BasePageNoAuth):
-    """Объект страницы, отображающейся до авторизации"""
+    """The object of the page displayed before authorization"""
     URL = settings.Url.BASE
     locators = pages_locators.MainPageNoAuth
 
@@ -21,9 +21,9 @@ class MainPageNoAuth(BasePageNoAuth):
 
     def login(self, login=settings.User.LOGIN, password=settings.User.PASSWORD, checking=True,
               raise_error_if_login_failed=True):
-        """Авторизация"""
+        """Authorization"""
         log_msg = f"Login ({login})"
-        allure.step(f"Login ({login})")
+        allure.step(log_msg)
         self.logger.info(log_msg)
         if self.driver.current_url != settings.Url.BASE:
             self.open_page()

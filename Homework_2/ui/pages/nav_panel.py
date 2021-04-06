@@ -6,9 +6,11 @@ from ui.pages.base_page_auth import BasePageAuth
 
 
 class NavPanel(BasePageAuth):
+    """The object of the navbar displayed after authorization, with methods for navigating to the pages"""
 
     @allure.step("Going to dashboard page")
     def go_to_dashboard(self):
+        """Redirects to a dashboard page and returns an object for that page"""
         self.logger.info("Opening dashboard page")
         self.click(self.locators.NavPanel.DASHBOARD)
         dashboard_page = DashboardPage(driver=self.driver)
@@ -18,6 +20,7 @@ class NavPanel(BasePageAuth):
 
     @allure.step("Going to segments page")
     def go_to_segments(self):
+        """Redirects to a segments page and returns an object for that page"""
         self.logger.info("Opening segments page")
         self.click(self.locators.NavPanel.SEGMENTS)
         segments_page = SegmentsPage(driver=self.driver)

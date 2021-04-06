@@ -5,15 +5,14 @@ import settings
 
 logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
+
 class NewTab:
-    """Новая вкладка"""
 
     def __init__(self, driver):
         self.driver = driver
         self.original_tab = self.driver.current_window_handle
 
     def open(self):
-        """Открыть вкладку"""
         allure.step("Opening new tab")
         self.driver.execute_script("window.open('');")
         self.new_tab = self.driver.window_handles[-1]
@@ -22,7 +21,6 @@ class NewTab:
         return self.new_tab
 
     def close(self):
-        """Закрыть вкладку"""
         allure.step("Closing new tab")
         self.driver.close()
         self.driver.switch_to.window(self.original_tab)

@@ -13,7 +13,7 @@ import settings
 
 
 class BasePage:
-    """Базовый объект страницы"""
+    """Base page object"""
     URL = settings.Url.BASE
     logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
@@ -30,40 +30,49 @@ class BasePage:
 
     @property
     def action_chains(self):
+        """ActionChains"""
         return ActionChains(self.driver)
 
+    def wait(self, timeout=settings.Basic.DEFAULT_TIMEOUT):
+        """WebDriverWait"""
+        self.logger.info(f'Waiting')
+        return WebDriverWait(self.driver, timeout)
+
     def open_page(self, url=None):
-        """Открыть страницу в браузере"""
+        """Open the page"""
         url = url if url else self.URL
         allure.step(f"Page opening: {url}")
-        if self.driver.current_url.split('?')[0].rstrip("/") != url:
+        if not self.check.is_links_equal(self.driver.current_url, url, raise_exception=False):
             self.driver.get(url)
         self.custom_wait(self.check.is_page_opened)
         self.logger.info(f'Page opened: {url}')
 
-    def wait(self, timeout=settings.Basic.DEFAULT_TIMEOUT):
-        """Ожидание"""
-        self.logger.info(f'Waiting')
-        return WebDriverWait(self.driver, timeout)
-
     def scroll_to_element(self, element):
-        """Скроллинг к элементу"""
+        """Scrolling to the element found by locator"""
         self.logger.info(f'Scrolling to {element.tag_name}')
         self.driver.execute_script(JsCode.scroll_into_view, element)
 
     def find(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
-        """Поиск элемента"""
+        """Finding item by locator"""
         self.logger.info(f'Searching {locator[1]} (type: {locator[0]})')
         return self.wait(timeout).until(EC.presence_of_element_located(locator))
 
+    def fast_find(self, locator):
+        """Finding item by locator without waiting"""
+        try:
+            elem = self.driver.find_element(*locator)
+            return elem
+        except NoSuchElementException:
+            return None
+
     def find_elements(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
+        """Finding an items by locator"""
         self.logger.info(f'Searching {locator[1]} (type: {locator[0]})')
-        self.wait(timeout).until(EC.presence_of_element_located(locator))
         elements = self.driver.find_elements(*locator)
         return elements
 
     def click(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
-        """Клик по элементу"""
+        """Click on an element found by locator"""
         allure.step(f'Clicking on {locator[1]} (type: {locator[0]})')
         for i in range(settings.Basic.CLICK_RETRY):
             self.logger.info(
@@ -80,7 +89,7 @@ class BasePage:
                     raise exc
 
     def fill_field(self, locator, text: str):
-        """Заполняет поле текстом"""
+        """Fills field found by locator with the given text"""
         allure.step(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
         self.logger.info(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
 
@@ -91,7 +100,7 @@ class BasePage:
         return element
 
     def fill_field_and_return_previous_text(self, locator, text: str):
-        """Заполняет поле текстом и возвращает старый текст"""
+        """Fills field found by locator with the given text and returns the previously text"""
         allure.step(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
         self.logger.info(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
 
@@ -104,11 +113,12 @@ class BasePage:
         return prev_text
 
     def get_input_value(self, locator):
-        """Возвращает текст, записанный в поле input"""
+        """Returns the text of the input field found by locator"""
         return self.find(locator).get_attribute("value")
 
     def custom_wait(self, method, *args, error=None, timeout=settings.Basic.DEFAULT_TIMEOUT,
                     interval=settings.Basic.DEFAULT_CHECKING_INTERVAL, check=True, **kwargs):
+        """A custom function to wait for the passed function to succeed"""
         log_msg = f"Waiting for {method.__name__}"
         allure.step(log_msg)
         self.logger.info(log_msg)
@@ -141,16 +151,17 @@ class BasePage:
         def __init__(self, page):
             self.page = page
             self.exceptions = {
-                "is_visible": self.ElementNotVisibleException,
                 "is_element_visible": self.ElementNotVisibleException,
+                "is_visible": self.ElementNotVisibleException,
                 "is_element_not_visible": self.ElementVisibleException,
+                "is_not_visible": self.ElementVisibleException,
                 "is_exists": self.ElementNotExistsException,
-                "is_element_exists": self.ElementNotExistsException,
-                "is_element_not_exists": self.ElementExistsException,
+                "is_not_exists": self.ElementExistsException,
                 "is_element_text_equal": self.ComparisonException,
                 "is_element_text_not_equal": self.ComparisonException,
+                "is_links_equal": self.ComparisonException,
+                "is_page_url_match_driver_url": self.PageUrlDoesNotMatchDriverUrl,
                 "is_page_opened": self.PageNotOpenedException,
-
             }
 
         class ComparisonException(Exception):
@@ -171,10 +182,14 @@ class BasePage:
         class PageNotOpenedException(Exception):
             pass
 
+        class PageUrlDoesNotMatchDriverUrl(Exception):
+            pass
+
         def _is_element_visible(self, element):
             return self.page.driver.execute_script(JsCode.is_visible, element)
 
         def is_element_visible(self, element, raise_exception=True):
+            """Checking that an element is visible"""
             if self._is_element_visible(element):
                 return True
 
@@ -185,6 +200,7 @@ class BasePage:
                 return False
 
         def is_visible(self, locator, raise_exception=True):
+            """Checking that an element found by locator is visible"""
             elem = self.page.find(locator)
             if self.is_element_visible(elem, raise_exception=False):
                 return True
@@ -196,6 +212,7 @@ class BasePage:
                 return False
 
         def is_element_not_visible(self, element, raise_exception=True):
+            """Checking that an element is not visible"""
             if not self._is_element_visible(element):
                 return True
 
@@ -206,6 +223,7 @@ class BasePage:
                 return False
 
         def is_not_visible(self, locator, raise_exception=True):
+            """Checking that an element found by locator is not visible"""
             try:
                 elem = self.page.driver.find_element(*locator)
                 if self.is_element_not_visible(elem, raise_exception=False):
@@ -220,6 +238,7 @@ class BasePage:
                 return False
 
         def is_exists(self, locator, raise_exception=True):
+            """Checking that an element found by locator exists"""
             try:
                 elem = self.page.driver.find_element(*locator)
                 if elem:
@@ -234,6 +253,7 @@ class BasePage:
                 return False
 
         def is_not_exists(self, locator, raise_exception=True):
+            """Checking that an element found by locator does not exist"""
             try:
                 elem = self.page.driver.find_element(*locator)
                 if elem:
@@ -247,24 +267,27 @@ class BasePage:
             return True
 
         def is_element_text_equal(self, elem, text, raise_exception=True):
+            """Checking that the text of an element is equal to the given text"""
             if elem.text == text:
                 return True
             else:
                 if raise_exception:
-                    raise self.ComparisonException(f"{elem.text} != {text}")
+                    raise self.ComparisonException(f'{elem.tag_name} text "{elem.text}" != "{text}"')
                 else:
                     return False
 
         def is_element_text_not_equal(self, elem, text, raise_exception=True):
+            """Checking that the text of an element is not equal to the given text"""
             if elem.text != text:
                 return True
             else:
                 if raise_exception:
-                    raise self.ComparisonException(f"elem.text is {text}")
+                    raise self.ComparisonException(f'{elem.tag_name} text == "{text}"')
                 else:
                     return False
 
         def is_links_equal(self, url_1, url_2, raise_exception=True):
+            """Url comparison without arguments"""
             urls = (url_1, url_2)
             new_urls = []
             for url in urls:
@@ -278,11 +301,26 @@ class BasePage:
                 return True
             else:
                 if raise_exception:
-                    raise self.ComparisonException(f"{url_1} != {url_2}")
+                    raise self.ComparisonException(f'URL "{url_1}" != URL "{url_2}"')
                 else:
                     return False
 
+        def is_page_url_match_driver_url(self, raise_exception=True):
+            """Checking that the current url matches the url of the page"""
+            url_1 = self.page.driver.current_url
+            url_2 = self.page.URL
+            result = self.is_links_equal(url_1, url_2, raise_exception=False)
+            if result:
+                return True
+
+            if raise_exception:
+                raise self.PageUrlDoesNotMatchDriverUrl(
+                    f'Current url "{url_1}" does not match page object url "{url_2}"')
+            else:
+                return False
+
         def is_page_opened(self, url=None, check_url=True, raise_exception=True):
+            """Checking that the page has been opened and fully loaded"""
             if check_url:
                 url = url if url else self.page.URL
                 current_url = self.page.driver.current_url

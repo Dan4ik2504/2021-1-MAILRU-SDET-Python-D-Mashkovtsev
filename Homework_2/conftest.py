@@ -83,6 +83,9 @@ def logger(test_dir, config):
         allure.attach(f.read(), settings.Logging.TEST_LOG_FILE_NAME, attachment_type=allure.attachment_type.TEXT)
 
 
+# Generation of random values equal between different browsers in the same session when running tests in parallel
+# Avoiding the error "Different tests were collected..."
+
 class RandomValues:
     _cache = None
     CACHE_FILENAME = "random_values_cache.json"

@@ -8,6 +8,7 @@ from ui.pages.nav_panel import NavPanel
 
 class BaseCase:
     authorize = True
+
     @pytest.fixture(scope='function', autouse=True)
     def setup(self, driver, config, request: FixtureRequest, logger):
         self.driver = driver

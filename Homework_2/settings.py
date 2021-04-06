@@ -9,7 +9,6 @@ def different_os_path(path: str):
 
 
 class Basic:
-    """Основные настройки"""
     DEFAULT_TIMEOUT = 10
     DEFAULT_CHECKING_INTERVAL = 0.1
     CLICK_RETRY = 3
@@ -19,7 +18,6 @@ class Basic:
 
 
 class Logging:
-    """Настройки логгирования"""
     BASE_TEST_DIR = different_os_path('/tmp/selenium_tests')
     TEST_LOG_FILE_NAME = 'test.log'
     SCREENSHOT_FILE_NAME = 'failure.png'
@@ -28,7 +26,6 @@ class Logging:
 
 
 class Url:
-    """Ссылки"""
     BASE = "https://target.my.com/"
 
     _PATHS = {
@@ -62,7 +59,6 @@ class Url:
 
 
 class User:
-    """Данные о пользователе"""
     LOGIN = "tebivan222@bombaya.com"
     PASSWORD = "Qwerty123456"
     USERNAME = "Тестов Тест Тестович"
