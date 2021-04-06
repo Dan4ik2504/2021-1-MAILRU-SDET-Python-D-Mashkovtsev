@@ -11,13 +11,31 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
 from ui.pages.main_page_no_auth import MainPageNoAuth
+from ui.pages.dashboard_page import DashboardPage
 from ui.pages.nav_panel import NavPanel
 import settings
 
 
+@pytest.fixture(scope='session')
+def cookies(config):
+    driver = get_driver(config['browser'])
+    main_page_no_auth = MainPageNoAuth(driver=driver)
+    main_page_no_auth.login()
+
+    cookies = driver.get_cookies()
+    driver.quit()
+
+    return cookies
+
+
 @pytest.fixture(scope='function')
-def login(main_page_no_auth):
-    return main_page_no_auth.login()
+def login(driver, cookies, main_page_no_auth):
+    driver.get(settings.Url.BASE)
+    for cookie in cookies:
+        driver.add_cookie(cookie)
+    dashboard_page = DashboardPage(driver=driver)
+    dashboard_page.open_page()
+    return dashboard_page
 
 
 @pytest.fixture(scope='function')
