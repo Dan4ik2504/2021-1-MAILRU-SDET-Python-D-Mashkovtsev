@@ -27,3 +27,6 @@ class JsCode:
     }
     return isVisible(arguments[0]);
     """
+
+    document_ready_state = "return document.readyState"
+    scroll_into_view = "arguments[0].scrollIntoView(true)"

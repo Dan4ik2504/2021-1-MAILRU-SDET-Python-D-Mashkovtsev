@@ -12,24 +12,20 @@ class DashboardPage(BasePageAuth):
     URL = settings.Url.DASHBOARD
     locators = pages_locators.Dashboard
 
-    def is_loaded(self):
+    def is_opened(self):
         spinner_locator = self.locators.PAGE_LOADING_SPINNER
-        if super().is_loaded():
-            if not self.is_element_exists(spinner_locator):
-                return True
-        raise self.PageIsNotLoadedException(f"Spinner exists: {spinner_locator[1]} (type: {spinner_locator[0]})")
+        if not self.check.is_exists(spinner_locator, raise_exception=False):
+            return True
+        raise self.check.PageNotOpenedException(f"Spinner exists: {spinner_locator[1]} (type: {spinner_locator[0]})")
 
     def go_to_create_campaign_page(self):
         create_campaign_btns = (self.locators.CREATE_CAMPAIGN_BUTTON, self.locators.CREATE_CAMPAIGN_INSTRUCTION_LINK)
         for locator in create_campaign_btns:
-            try:
-                if self.is_visible(locator):
-                    self.click(locator)
-                    break
-            except self.ElementIsNotVisible:
-                continue
-        self.wait().until(EC.url_changes(self.URL))
-        new_campaign_page = NewCampaignPage(driver=self.driver)
+            if self.check.is_visible(locator, raise_exception=False):
+                self.click(locator)
+                break
+        new_campaign_page = NewCampaignPage(self, driver=self.driver)
+        new_campaign_page.custom_wait(new_campaign_page.check.is_page_opened)
         return new_campaign_page
 
     def get_all_campaigns(self):

@@ -67,4 +67,3 @@ class User:
     PASSWORD = "Qwerty123456"
     USERNAME = "Тестов Тест Тестович"
     PHONE = "+70000000000"
-    EMAIL = "qwertyuiop@bombaya.com"

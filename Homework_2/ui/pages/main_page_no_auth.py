@@ -22,7 +22,9 @@ class MainPageNoAuth(BasePageNoAuth):
     def login(self, login=settings.User.LOGIN, password=settings.User.PASSWORD, checking=True,
               raise_error_if_login_failed=True):
         """Авторизация"""
+        log_msg = f"Login ({login})"
         allure.step(f"Login ({login})")
+        self.logger.info(log_msg)
         if self.driver.current_url != settings.Url.BASE:
             self.open_page()
 
@@ -34,7 +36,9 @@ class MainPageNoAuth(BasePageNoAuth):
 
         if checking:
             if settings.Url.DASHBOARD in self.driver.current_url:
-                return DashboardPage(driver=self.driver)
+                dashboard_page = DashboardPage(driver=self.driver)
+                dashboard_page.custom_wait(dashboard_page.check.is_page_opened)
+                return dashboard_page
             else:
                 if raise_error_if_login_failed:
                     raise self.LoginError("Login failed")

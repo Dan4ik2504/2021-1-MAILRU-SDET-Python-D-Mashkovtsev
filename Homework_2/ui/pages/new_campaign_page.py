@@ -24,23 +24,28 @@ class NewCampaignPage(BasePageAuth):
         "multiformat": locators.MULTIFORMAT_BANNER_FORMAT_ITEM_BUTTON,
     }
 
-    def is_loaded(self):
-        if super().is_loaded():
-            elems = self.driver.find_elements(*self.locators.PAGE_LOADING_SPINNER)
-            try:
-                result = [self.elem_is_visible(r) for r in elems]
-            except StaleElementReferenceException:
-                return False
-            if len(result) > 1 and not any(result):
-                return True
-        return False
+    def __init__(self, dashboard_page, driver):
+        super().__init__(driver)
+        self.dashboard_page = dashboard_page
+
+    def is_opened(self):
+        elems = self.find_elements(self.locators.PAGE_LOADING_SPINNER)
+        try:
+            result = [self.check.is_element_visible(elem, raise_exception=False) for elem in elems]
+        except StaleElementReferenceException:
+            return False
+        if len(result) > 1 and not any(result):
+            return True
 
     def select_goal(self, goal):
         self.click(self.GOALS[goal])
 
     def open_setting(self, setting_locator, setting_wrapper_locator):
-        if self.is_not_visible(setting_locator):
+        if self.check.is_not_visible(setting_locator, raise_exception=False):
             self.click(setting_wrapper_locator)
+
+    def change_url(self, url):
+        self.fill_field(self.locators.INPUT_URL, url)
 
     def select_sex(self, female=True, male=True):
         self.open_setting(self.locators.SEX_CHECKBOX_MALE, self.locators.SEX_WRAPPER_BUTTON)
@@ -48,9 +53,6 @@ class NewCampaignPage(BasePageAuth):
             self.click(self.locators.SEX_CHECKBOX_FEMALE)
         if not male:
             self.click(self.locators.SEX_CHECKBOX_MALE)
-
-    def change_url(self, url):
-        self.fill_field(self.locators.INPUT_URL, url)
 
     def change_campaign_name(self, name):
         self.fill_field(self.locators.INPUT_CAMPAIGN_NAME, name)
@@ -65,18 +67,17 @@ class NewCampaignPage(BasePageAuth):
         self.fill_field(self.locators.BUDGET_PER_DAY_INPUT, per_day)
         self.fill_field(self.locators.BUDGET_TOTAL_INPUT, total)
 
-    def select_banner_format(self, format):
-        self.click(self.BANNERS[format])
+    def select_banner_format(self, form):
+        self.click(self.BANNERS[form])
 
     def load_image(self, repo_root, img_name=None, small_img_name=None, icon_name=None,
                    test_files_dir=settings.Basic.TEST_FILES_DIR):
         for img, locator in zip((img_name, small_img_name, icon_name),
                                 (self.locators.BANNER_IMAGE_INPUT, self.locators.BANNER_SMALL_IMAGE_INPUT,
                                  self.locators.BANNER_ICON_INPUT)):
-            if img:
-                image_input = self.find(locator)
-                image_input.send_keys(os.path.join(repo_root, test_files_dir, img))
-                self.click(self.locators.BANNER_IMAGE_SAVING_SUBMIT_BUTTON)
+            image_input = self.find(locator)
+            image_input.send_keys(os.path.join(repo_root, test_files_dir, img))
+            self.click(self.locators.BANNER_IMAGE_SAVING_SUBMIT_BUTTON)
 
     def set_banner_title(self, text):
         self.fill_field(self.locators.BANNER_TITLE_INPUT, text)
@@ -95,4 +96,4 @@ class NewCampaignPage(BasePageAuth):
 
     def save_campaign(self):
         self.click(self.locators.SUBMIT_BUTTON)
-        self.wait().until(EC.url_changes(self.URL))
+        self.dashboard_page.custom_wait(self.dashboard_page.check.is_page_opened)

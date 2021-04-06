@@ -9,16 +9,19 @@ class NavPanel(BasePageAuth):
 
     @allure.step("Going to dashboard page")
     def go_to_dashboard(self):
+        self.logger.info("Opening dashboard page")
         self.click(self.locators.NavPanel.DASHBOARD)
         dashboard_page = DashboardPage(driver=self.driver)
-        dashboard_page.wait_until_load()
+        dashboard_page.custom_wait(dashboard_page.check.is_page_opened)
         self.logger.info("Dashboard page opened")
         return dashboard_page
 
     @allure.step("Going to segments page")
     def go_to_segments(self):
+        self.logger.info("Opening segments page")
         self.click(self.locators.NavPanel.SEGMENTS)
         segments_page = SegmentsPage(driver=self.driver)
-        segments_page.wait_until_load()
+        segments_page.open_page()
+        segments_page.custom_wait(segments_page.check.is_page_opened)
         self.logger.info("Segments page opened")
         return segments_page
