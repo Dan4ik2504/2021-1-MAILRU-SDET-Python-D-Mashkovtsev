@@ -11,6 +11,9 @@ import settings
 from utils import random_values
 
 
+logger = logging.getLogger(settings.Logging.LOGGER_NAME)
+
+
 def is_master_process(config):
     if hasattr(config, 'workerinput'):
         return False
@@ -59,7 +62,7 @@ def test_dir(request):
 
 @pytest.fixture(scope='function', autouse=True)
 def logger(test_dir, config):
-    log_formatter = logging.Formatter('%(asctime)s - %(filename)-15s - %(levelname)-6s - %(message)s')
+    log_formatter = logging.Formatter('%(asctime)s - %(filename)-20s - %(levelname)-6s - %(message)s')
     log_file = os.path.join(test_dir, settings.Logging.TEST_LOG_FILE_NAME)
 
     log_level = logging.DEBUG if config['debug_log'] else logging.INFO
@@ -125,12 +128,15 @@ class RandomValues:
             self.random_values_create_cache(random_values_cache_file_path)
         else:
             self.random_values_load_cache(random_values_cache_file_path)
+        cache_str = '; '.join([f'{k}:{v}' for k, v in dataclasses.asdict(self.cache).items()])
+        logging.debug(f"Random values cache: {cache_str}")
 
     def random_values_load_cache(self, random_values_cache_file_path):
         with open(random_values_cache_file_path, 'r') as f:
             result = json.load(f)
         if result:
             self.cache = result
+            logging.info("Random values loaded from cache file")
         else:
             raise self.NoCacheException("Cache file is empty")
 
@@ -141,6 +147,7 @@ class RandomValues:
         self.create_file(random_values_cache_file_path)
         with open(random_values_cache_file_path, 'w') as f:
             json.dump(dataclasses.asdict(self.cache), f)
+        logging.info("Random values are generated and written to the cache file")
 
     @staticmethod
     def create_file(path):

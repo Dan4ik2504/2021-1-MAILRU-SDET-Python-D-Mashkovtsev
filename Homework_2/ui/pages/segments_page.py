@@ -20,6 +20,7 @@ class NewSegment:
     class TYPES:
         APPS = "A&G in SN"
 
+    @allure.step("Opening the form for creating a new segment")
     def _open_form(self):
         create_segment_btns = (self.segments_page.locators.CREATE_SEGMENT_BUTTON,
                                self.segments_page.locators.CREATE_SEGMENT_INSTRUCTION_LINK)
@@ -28,30 +29,46 @@ class NewSegment:
             elem = self.segments_page.fast_find(locator)
             if elem and self.segments_page.check.is_element_visible(elem, raise_exception=False):
                 self.segments_page.click(locator)
+                self.segments_page.logger.info('Form for creating a new segment opened')
                 return self
 
         raise self.segments_page.NewSegmentCreatingException(
             f"Failed to open form to create a new segment: {create_segment_btns[0][1]} "
             f"(type: {create_segment_btns[0][0]}) or {create_segment_btns[1][1]} (type: {create_segment_btns[1][0]})")
 
+    @allure.step('Segment type selecting')
     def select_segment_type(self, segment_type):
+        self.segments_page.logger.info('Segment type selecting')
         type_locator = self.SEGMENT_TYPES[segment_type]
+        self.segments_page.logger.debug(f'Segment type button locator: "{type_locator[0]}" (type: {type_locator[1]})')
         self.segments_page.click(type_locator)
-        checkbox_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_AG_IN_SN_CHECKBOX
-        self.segments_page.click(checkbox_locator)
+        self.segments_page.logger.info(f'Segment type selected: {segment_type}')
 
+        self.segments_page.logger.info('Segment source selecting')
+        checkbox_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_AG_IN_SN_CHECKBOX
+        self.segments_page.logger.debug(
+            f'Segment source checkbox locator: "{checkbox_locator[0]}" (type: {checkbox_locator[1]})')
+        self.segments_page.click(checkbox_locator)
+        self.segments_page.logger.info(f'Segment source selected')
+
+    @allure.step('Segment addition confirmation')
     def _submit_adding_segment(self):
+        self.segments_page.logger.info('Segment addition confirmation')
         adding_submit_btn_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_ADDING_SUBMIT_BUTTON
         elem = self.segments_page.find(adding_submit_btn_locator)
+        self.segments_page.logger.debug(f'Segment addition confirmation button located: "{elem.tag_name}"')
         if elem.get_attribute("disabled"):
             self.segments_page.NewSegmentSavingException(
                 f"Adding segment submit button disabled: {adding_submit_btn_locator[1]} "
                 f"(type: {adding_submit_btn_locator[0]})")
+        
         elem.click()
+        self.segments_page.logger.info('Segment addition confirmed')
 
     def _set_segment_name(self, name):
         self.segments_page.fill_field(self.segments_page.locators.SEGMENT_CREATING_FORM_NAME_INPUT, name)
 
+    @allure.step("New segment saving")
     def _save(self):
         self._submit_adding_segment()
 
@@ -90,15 +107,19 @@ class Segment:
 
         rm_btn_locator = self.table.segments_page.locators.TABLE_CELL_REMOVE_BUTTON_BY_ID
         self.REMOVE_BTN_LOCATOR = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=self.segment_id))
-
+    
+    @allure.step('Segment removing')
     def remove(self):
+        self.table.segments_page.logger.info('Click on the segment remove button')
         self.table.segments_page.click(self.REMOVE_BTN_LOCATOR)
         confirm_remove_btn = self.table.segments_page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
         self.table.segments_page.click(confirm_remove_btn)
+        self.table.segments_page.logger.info('Segment remove button clicked')
         self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
                                              locator=confirm_remove_btn)
         self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
                                              locator=self.new_segm_name_locator)
+        self.table.segments_page.logger.info('Segment removed')
 
     def __eq__(self, other):
         other = str(other)
@@ -106,18 +127,27 @@ class Segment:
             return self.segment_id == other
         return self.name == other
 
+    def __str__(self):
+        return f'{self.segment_id}-{self.name}'
+
     def __repr__(self):
-        return "Segment object. Id: {id}; Name: {name}".format(id=self.segment_id, name=self.name)
+        return "Segment object. Id: {id}. Name: {name}.".format(id=self.segment_id, name=self.name)
 
 
 class SegmentsTable:
     """Object of the table displayed on the segments page"""
     def __init__(self, segments_page):
         self.segments_page = segments_page
-
+    
+    @allure.step("Searcning for segments in the table")
     def get_segments(self):
-        return [Segment(self, n.text) for n in self.segments_page.find_elements(
+        self.segments_page.logger.info('Searching for segments')
+        segments = [Segment(self, n.text) for n in self.segments_page.find_elements(
             self.segments_page.locators.TABLE_CELL_ID)]
+        self.segments_page.logger.info(f'Found {len(segments)} segments')
+        self.segments_page.logger.debug(f'Found {len(segments)} segments: {"; ".join([str(s) for s in segments])}')
+        return segments
+        
 
 
 class SegmentsPage(BasePageAuth):
@@ -138,5 +168,6 @@ class SegmentsPage(BasePageAuth):
     def is_opened(self):
         spinner_locator = self.locators.PAGE_LOADING_SPINNER
         if self.check.is_not_exists(spinner_locator, raise_exception=False):
+            self.logger.info(f'Segments page loaded')
             return True
         raise self.check.PageNotOpenedException(f"Spinner exists: {spinner_locator[1]} (type: {spinner_locator[0]})")

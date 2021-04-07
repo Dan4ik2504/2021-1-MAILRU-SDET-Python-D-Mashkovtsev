@@ -19,23 +19,27 @@ class MainPageNoAuth(BasePageNoAuth):
     class LoginError(Exception):
         pass
 
+    @allure.step('Login "{login}"')
     def login(self, login=settings.User.LOGIN, password=settings.User.PASSWORD, checking=True,
               raise_error_if_login_failed=True):
         """Authorization"""
-        log_msg = f"Login ({login})"
-        allure.step(log_msg)
-        self.logger.info(log_msg)
+        self.logger.info(f'Login "{login}"')
         if self.driver.current_url != settings.Url.BASE:
             self.open_page()
 
+        self.logger.info('Filling out the login form')
         self.click(self.locators.LOGIN_BUTTON)
         self.wait().until(EC.visibility_of_element_located(self.locators.AUTH_FORM))
         self.fill_field(self.locators.EMAIL_FIELD, login)
         self.fill_field(self.locators.PASSWORD_FIELD, password)
+
+        self.logger.info('Login confirmation')
         self.click(self.locators.LOGIN_CONFIRM_BUTTON)
 
         if checking:
             if settings.Url.DASHBOARD in self.driver.current_url:
+                log_msg = 'Redirection to dashboard page'
+                self.logger.info(log_msg)
                 dashboard_page = DashboardPage(driver=self.driver)
                 dashboard_page.custom_wait(dashboard_page.check.is_page_opened)
                 return dashboard_page
@@ -43,9 +47,13 @@ class MainPageNoAuth(BasePageNoAuth):
                 if raise_error_if_login_failed:
                     raise self.LoginError("Login failed")
                 else:
+                    log_msg = 'Login failed'
+                    self.logger.info(log_msg)
                     if settings.Url.BASE == self.driver.current_url:
+                        self.logger.info("Login form validation failed")
                         return self
                     elif settings.Url.LOGIN in self.driver.current_url:
+                        self.logger.info("Login data validation failed. Redirect to login page")
                         return LoginPage(driver=self.driver)
                     else:
                         raise self.LoginError(f"Login failed. \

@@ -24,6 +24,9 @@ class BasePage:
     class CustomWaitTimeoutException(Exception):
         pass
 
+    class FindingException(Exception):
+        pass
+
     def is_opened(self):
         """Additional check to see that page has been opened"""
         return True
@@ -35,114 +38,166 @@ class BasePage:
 
     def wait(self, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """WebDriverWait"""
-        self.logger.info(f'Waiting')
         return WebDriverWait(self.driver, timeout)
 
     def open_page(self, url=None):
         """Open the page"""
         url = url if url else self.URL
-        allure.step(f"Page opening: {url}")
-        if not self.check.is_links_equal(self.driver.current_url, url, raise_exception=False):
-            self.driver.get(url)
-        self.custom_wait(self.check.is_page_opened)
-        self.logger.info(f'Page opened: {url}')
+        log_msg = f"Page opening: {url}"
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+            if not self.check.is_links_equal(self.driver.current_url, url, raise_exception=False):
+                self.logger.info(f'Opens URL: "{url}". Previous URL: "{self.driver.current_url}"')
+                self.driver.get(url)
+            self.custom_wait(self.check.is_page_opened)
+            self.logger.info(f'Page opened: "{url}"')
 
     def scroll_to_element(self, element):
         """Scrolling to the element found by locator"""
-        self.logger.info(f'Scrolling to {element.tag_name}')
-        self.driver.execute_script(JsCode.scroll_into_view, element)
+        log_msg = f'Scrolling to "{element.tag_name}"'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+            self.driver.execute_script(JsCode.scroll_into_view, element)
 
     def find(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Finding item by locator"""
-        self.logger.info(f'Searching {locator[1]} (type: {locator[0]})')
-        return self.wait(timeout).until(EC.presence_of_element_located(locator))
+        log_msg = f'Searching of the element by locator: "{locator[1]}" (type: {locator[0]})'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+            try:
+                element = self.wait(timeout).until(EC.presence_of_element_located(locator))
+                self.logger.info(f'Element have been found: "{element.tag_name}"')
+                return element
+            except TimeoutException as exc:
+                raise self.FindingException(f'Element not found by locator: "{locator[1]}" (type: {locator[0]})')
 
     def fast_find(self, locator):
         """Finding item by locator without waiting"""
-        try:
-            elem = self.driver.find_element(*locator)
-            return elem
-        except NoSuchElementException:
-            return None
+        log_msg = f'Fast searching of the element by locator: "{locator[1]}" (type: {locator[0]})'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+            try:
+                element = self.driver.find_element(*locator)
+                self.logger.info(f'Element have been found: "{element.tag_name}"')
+                return element
+            except NoSuchElementException:
+                self.logger.info(f'Element have not been found')
+                return None
 
-    def find_elements(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
+    def find_elements(self, locator):
         """Finding an items by locator"""
-        self.logger.info(f'Searching {locator[1]} (type: {locator[0]})')
-        elements = self.driver.find_elements(*locator)
-        return elements
+        log_msg = f'Searching elements by locator: "{locator[1]}" (type: {locator[0]})'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+            elements = self.driver.find_elements(*locator)
+
+            elements_names = []
+            for e in elements:
+                try:
+                    elements_names.append(e.tag_name)
+                except StaleElementReferenceException:
+                    pass
+
+            if len(elements) > 0:
+                self.logger.info(f'{len(elements)} element(s) have been found')
+                self.logger.debug(f'Element(s) have been found: "{", ".join(elements_names)}"')
+            else:
+                self.logger.info(f'No items found')
+            return elements
 
     def click(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Click on an element found by locator"""
-        allure.step(f'Clicking on {locator[1]} (type: {locator[0]})')
-        for i in range(settings.Basic.CLICK_RETRY):
-            self.logger.info(
-                f'Clicking on {locator[1]} (type: {locator[0]}). Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
-            try:
-                self.custom_wait(self.check.is_page_opened, check_url=False)
-                elem = self.find(locator, timeout=timeout)
-                self.scroll_to_element(elem)
-                elem = self.wait(timeout).until(EC.element_to_be_clickable(locator))
-                elem.click()
-                return
-            except (TimeoutException, StaleElementReferenceException) as exc:
-                if i == settings.Basic.CLICK_RETRY - 1:
-                    raise exc
+        with allure.step(f'Clicking on "{locator[1]}" (type: {locator[0]})'):
+            for i in range(settings.Basic.CLICK_RETRY):
+                self.logger.info(f'Clicking on "{locator[1]}" (type: {locator[0]}). Try {i + 1} of {settings.Basic.CLICK_RETRY}...')
+                try:
+                    self.custom_wait(self.check.is_page_opened, check_url=False)
+                    elem = self.find(locator, timeout=timeout)
+                    self.scroll_to_element(elem)
+                    elem = self.wait(timeout).until(EC.element_to_be_clickable(locator))
+                    with allure.step(f'Clicking on "{elem.tag_name}"'):
+                        self.logger.info(f'Clicked on an element: {elem.tag_name}')
+                        elem.click()
+                    return
+                except (TimeoutException, StaleElementReferenceException, self.FindingException) as exc:
+                    if i == settings.Basic.CLICK_RETRY - 1:
+                        raise exc
+                    self.logger.debug(f'Error thrown: {exc}. Trying again')
 
-    def fill_field(self, locator, text: str):
+    def _fill_field(self, locator, text):
+        log_msg = f'Filling field "{locator[1]}" (type: {locator[0]}) with "{text}"'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+
+            # element = self.find(locator)
+            element = self.wait().until(EC.visibility_of_element_located(locator))
+            self.scroll_to_element(element)
+            # self.custom_wait(self.check.is_visible, locator)
+
+            log_msg = f'Filling element "{element.tag_name}" with "{text}"'
+            with allure.step(log_msg):
+                self.logger.info(log_msg)
+                prev_text = element.text
+                element.clear()
+                element.send_keys(text)
+
+            self.logger.info(f'Field "{element.tag_name}" filled')
+            return element, prev_text
+
+    def fill_field(self, locator, text):
         """Fills field found by locator with the given text"""
-        allure.step(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
-        self.logger.info(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
-
-        element = self.wait().until(EC.visibility_of_element_located(locator))
-        self.scroll_to_element(element)
-        element.clear()
-        element.send_keys(text)
+        element, _ = self._fill_field(locator, text)
         return element
 
     def fill_field_and_return_previous_text(self, locator, text: str):
         """Fills field found by locator with the given text and returns the previously text"""
-        allure.step(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
-        self.logger.info(f"Filling field {locator[1]} (type: {locator[0]}) with {text}")
-
-        self.custom_wait(self.check.is_visible, locator)
-        element = self.find(locator)
-        self.scroll_to_element(element)
-        prev_text = element.text
-        element.clear()
-        element.send_keys(text)
+        _, prev_text = self._fill_field(locator, text)
         return prev_text
 
     def get_input_value(self, locator):
         """Returns the text of the input field found by locator"""
-        return self.find(locator).get_attribute("value")
+        log_msg = f'Getting the value of the input field: "{locator[1]}" (type: {locator[0]})'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
+
+            result = self.find(locator).get_attribute("value")
+            self.logger.info(f'Received the value of the input field: "{locator[1]}" (type: {locator[0]})')
+            self.logger.debug(f'Value of the input field: {result}')
+            return result
 
     def custom_wait(self, method, *args, error=None, timeout=settings.Basic.DEFAULT_TIMEOUT,
                     interval=settings.Basic.DEFAULT_CHECKING_INTERVAL, check=True, **kwargs):
         """A custom function to wait for the passed function to succeed"""
-        log_msg = f"Waiting for {method.__name__}"
-        allure.step(log_msg)
-        self.logger.info(log_msg)
+        log_msg = f'Waiting for successfully method "{method.__name__}" execution'
+        with allure.step(log_msg):
+            self.logger.info(log_msg)
 
-        if not error:
-            error = self.check.exceptions.get(method.__name__, Exception)
+            if not error:
+                error = self.check.exceptions.get(method.__name__, Exception)
+            self.logger.debug(f'Expected method Exception: {error.__name__}')
 
-        st = time.perf_counter()
-        last_exception = None
-        while time.perf_counter() - st < timeout:
-            try:
-                result = method(*args, **kwargs)
-                if check:
-                    if result:
+            st = time.perf_counter()
+            last_exception = None
+            i = 0
+            while time.perf_counter() - st < timeout:
+                try:
+                    i += 1
+                    self.logger.debug(f'Method execution: "{method.__name__}". Try: {i}')
+                    result = method(*args, **kwargs)
+                    if check:
+                        if result:
+                            self.logger.debug(f'Method "{method.__name__}" execution result: "{result}"')
+                            return result
+                        last_exception = f'Method "{method.__name__}" returned "{result}"'
+                    else:
+                        self.logger.debug(f'Method "{method.__name__}" execution result: "{result}"')
                         return result
-                    last_exception = f'Method {method.__name__} returned {result}'
-                else:
-                    return result
-            except error as e:
-                last_exception = e
-            time.sleep(interval)
+                except error as e:
+                    last_exception = e
+                time.sleep(interval)
 
-        raise self.CustomWaitTimeoutException(
-            f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
+            raise self.CustomWaitTimeoutException(
+                f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
 
     class _Check:
         page = None
@@ -185,6 +240,13 @@ class BasePage:
         class PageUrlDoesNotMatchDriverUrl(Exception):
             pass
 
+        def raise_exception_wrapper(self, exc, exc_msg, raise_exception, result=False):
+            self.page.logger.debug(f'Raised exception "{exc.__name__}" with message: "{exc_msg}"')
+            if raise_exception:
+                raise exc(exc_msg)
+            else:
+                return result
+
         def _is_element_visible(self, element):
             return self.page.driver.execute_script(JsCode.is_visible, element)
 
@@ -193,11 +255,8 @@ class BasePage:
             if self._is_element_visible(element):
                 return True
 
-            if raise_exception:
-                raise self.ElementNotVisibleException(
-                    f'Element "{element.tag_name}" is not visible')
-            else:
-                return False
+            exc_msg = f'Element "{element.tag_name}" is not visible'
+            return self.raise_exception_wrapper(self.ElementNotVisibleException, exc_msg, raise_exception)
 
         def is_visible(self, locator, raise_exception=True):
             """Checking that an element found by locator is visible"""
@@ -205,22 +264,16 @@ class BasePage:
             if self.is_element_visible(elem, raise_exception=False):
                 return True
 
-            if raise_exception:
-                raise self.ElementNotVisibleException(
-                    f'Element "{elem.tag_name}" found by "{locator[1]}" (type: {locator[0]}) is not visible')
-            else:
-                return False
+            exc_msg = f'Element "{elem.tag_name}" found by "{locator[1]}" (type: {locator[0]}) is not visible'
+            return self.raise_exception_wrapper(self.ElementNotVisibleException, exc_msg, raise_exception)
 
         def is_element_not_visible(self, element, raise_exception=True):
             """Checking that an element is not visible"""
             if not self._is_element_visible(element):
                 return True
 
-            if raise_exception:
-                raise self.ElementVisibleException(
-                    f'Element "{element.tag_name}" is visible')
-            else:
-                return False
+            exc_msg = f'Element "{element.tag_name}" is visible'
+            return self.raise_exception_wrapper(self.ElementVisibleException, exc_msg, raise_exception)
 
         def is_not_visible(self, locator, raise_exception=True):
             """Checking that an element found by locator is not visible"""
@@ -231,11 +284,8 @@ class BasePage:
             except NoSuchElementException:
                 return True
 
-            if raise_exception:
-                raise self.ElementVisibleException(
-                    f"Element {elem.tag_name} found by {locator[1]} (type: {locator[0]}) is visible")
-            else:
-                return False
+            exc_msg = f'Element "{elem.tag_name}" found by "{locator[1]}" (type: {locator[0]}) is visible'
+            return self.raise_exception_wrapper(self.ElementVisibleException, exc_msg, raise_exception)
 
         def is_exists(self, locator, raise_exception=True):
             """Checking that an element found by locator exists"""
@@ -246,23 +296,17 @@ class BasePage:
             except NoSuchElementException:
                 pass
 
-            if raise_exception:
-                raise self.ElementNotExistsException(
-                    f"Element {locator[1]} (type: {locator[0]}) is not found")
-            else:
-                return False
+            exc_msg = f"Element {locator[1]} (type: {locator[0]}) is not found"
+            return self.raise_exception_wrapper(self.ElementNotExistsException, exc_msg, raise_exception)
 
         def is_not_exists(self, locator, raise_exception=True):
             """Checking that an element found by locator does not exist"""
             try:
                 elem = self.page.driver.find_element(*locator)
                 if elem:
-                    if raise_exception:
-                        raise self.ElementExistsException(
-                            f"Element {elem.tag_name} found by {locator[1]} (type: {locator[0]}) is exists")
-                    else:
-                        return False
-            except NoSuchElementException:
+                    exc_msg = f"Element {elem.tag_name} found by {locator[1]} (type: {locator[0]}) is exists"
+                    return self.raise_exception_wrapper(self.ElementExistsException, exc_msg, raise_exception)
+            except (NoSuchElementException, StaleElementReferenceException):
                 pass
             return True
 
@@ -271,20 +315,16 @@ class BasePage:
             if elem.text == text:
                 return True
             else:
-                if raise_exception:
-                    raise self.ComparisonException(f'{elem.tag_name} text "{elem.text}" != "{text}"')
-                else:
-                    return False
+                exc_msg = f'{elem.tag_name} text "{elem.text}" != given text "{text}"'
+                return self.raise_exception_wrapper(self.ComparisonException, exc_msg, raise_exception)
 
         def is_element_text_not_equal(self, elem, text, raise_exception=True):
             """Checking that the text of an element is not equal to the given text"""
             if elem.text != text:
                 return True
             else:
-                if raise_exception:
-                    raise self.ComparisonException(f'{elem.tag_name} text == "{text}"')
-                else:
-                    return False
+                exc_msg = f'{elem.tag_name} text == "{text}"'
+                return self.raise_exception_wrapper(self.ComparisonException, exc_msg, raise_exception)
 
         def is_links_equal(self, url_1, url_2, raise_exception=True):
             """Url comparison without arguments"""
@@ -300,10 +340,8 @@ class BasePage:
             if result:
                 return True
             else:
-                if raise_exception:
-                    raise self.ComparisonException(f'URL "{url_1}" != URL "{url_2}"')
-                else:
-                    return False
+                exc_msg = f'URL "{url_1}" != URL "{url_2}"'
+                return self.raise_exception_wrapper(self.ComparisonException, exc_msg, raise_exception)
 
         def is_page_url_match_driver_url(self, raise_exception=True):
             """Checking that the current url matches the url of the page"""
@@ -313,11 +351,8 @@ class BasePage:
             if result:
                 return True
 
-            if raise_exception:
-                raise self.PageUrlDoesNotMatchDriverUrl(
-                    f'Current url "{url_1}" does not match page object url "{url_2}"')
-            else:
-                return False
+            exc_msg = f'Current url "{url_1}" does not match page object url "{url_2}"'
+            return self.raise_exception_wrapper(self.PageUrlDoesNotMatchDriverUrl, exc_msg, raise_exception)
 
         def is_page_opened(self, url=None, check_url=True, raise_exception=True):
             """Checking that the page has been opened and fully loaded"""
@@ -325,18 +360,18 @@ class BasePage:
                 url = url if url else self.page.URL
                 current_url = self.page.driver.current_url
                 if not self.is_links_equal(current_url, url, raise_exception=False):
-                    raise self.PageNotOpenedException(f"{current_url} != {url}")
+                    exc_msg = f'Current url "{current_url}" != "{url}"'
+                    return self.raise_exception_wrapper(self.PageNotOpenedException, exc_msg, raise_exception)
 
             status = self.page.driver.execute_script(JsCode.document_ready_state)
             expected = "complete"
             if not status == expected:
-                if raise_exception:
-                    raise self.PageNotOpenedException(f"{status} != {expected}")
-                else:
-                    return False
+                exc_msg = f'Current page loading status "{status}" != expected status "{expected}"'
+                return self.raise_exception_wrapper(self.PageNotOpenedException, exc_msg, raise_exception)
 
             result = self.page.is_opened()
             if not result:
-                raise self.PageNotOpenedException("Page is not opened")
+                exc_msg = "Page is not opened"
+                return self.raise_exception_wrapper(self.PageNotOpenedException, exc_msg, raise_exception)
 
             return True

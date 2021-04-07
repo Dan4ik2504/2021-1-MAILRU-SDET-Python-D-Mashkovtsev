@@ -17,6 +17,7 @@ import settings
 
 
 @pytest.fixture(scope='session')
+@allure.step('Getting authorization cookies')
 def cookies(config):
     driver = get_driver(config['browser'])
     main_page_no_auth = MainPageNoAuth(driver=driver)
@@ -29,6 +30,7 @@ def cookies(config):
 
 
 @pytest.fixture(scope='function')
+@allure.step("Authorization")
 def login(driver, cookies, main_page_no_auth):
     driver.get(settings.Url.BASE)
     for cookie in cookies:
