@@ -121,17 +121,38 @@ class TestCampaigns(BaseCase):
         return campaign_name
 
     @allure.step('Verifying that the campaign "{campaign_name}" has been created')
-    def verify_campaign_creation(self, new_campaign_page, campaign_name):
-        campaigns = self.dashboard_page.get_all_campaigns()
+    def verify_campaign_creation(self, campaign_name):
+        campaigns = self.dashboard_page.campaigns_table.campaigns_list
         assert campaign_name in campaigns
         return campaigns
 
+    @allure.step('Removing campaign "{name}"')
+    def delete_campaign(self, name):
+        campaign_obj = self.dashboard_page.campaigns_table.get_campaign_by_name(name)
+        campaign_obj.enable_checkbox()
+        self.dashboard_page.campaigns_table.actions.delete_selected_campaigns()
+
+    @allure.step('Verifying that the campaign "{campaign_name}" has been deleted')
+    def verify_campaign_deletion(self, campaign_name):
+        active_campaigns = self.dashboard_page.campaigns_table.campaigns_list
+        assert campaign_name not in active_campaigns
+
     @pytest.mark.UI
     @allure.title("Campaign creation test")
-    def test_creating_campaign(self, repo_root):
+    def test_create_campaign(self, repo_root):
         new_campaign_page = self.open_new_campaign_page()
         campaign_name = self.create_campaign(new_campaign_page, repo_root)
-        self.verify_campaign_creation(new_campaign_page, campaign_name)
+        self.verify_campaign_creation(campaign_name)
+        self.delete_campaign(campaign_name)
+
+    @pytest.mark.UI
+    @allure.title("Campaign deletion test")
+    def test_delete_campaign(self, repo_root):
+        new_campaign_page = self.open_new_campaign_page()
+        campaign_name = self.create_campaign(new_campaign_page, repo_root)
+        self.verify_campaign_creation(campaign_name)
+        self.delete_campaign(campaign_name)
+        self.verify_campaign_deletion(campaign_name)
 
 
 class TestSegments(BaseCase):
@@ -158,12 +179,31 @@ class TestSegments(BaseCase):
         assert segment_name in all_segments
         return all_segments
 
+    @allure.step('Removing segment "{segment_name}"')
+    def remove_segment(self, all_segments, segment_name):
+        with allure.step('Segment search'):
+            segment_object = None
+            for sgm in all_segments:
+                if sgm.name == segment_name:
+                    segment_object = sgm
+                    break
+
+            assert segment_object
+        with allure.step('Segment remove'):
+            segment_object.remove()
+
+    @allure.step('Verifying that the segment "{segment_name}" has been deleted')
+    def verify_segment_deletion(self, segments_page, segment_name):
+        all_segments = segments_page.segments_table.get_segments()
+        assert segment_name not in all_segments
+
     @pytest.mark.UI
     @allure.title("Segment creation test")
     def test_create_segment(self):
         segments_page = self.open_segments_page()
         segment_name = self.create_segment(segments_page)
-        self.verify_segment_creation(segments_page, segment_name)
+        all_segments = self.verify_segment_creation(segments_page, segment_name)
+        self.remove_segment(all_segments, segment_name)
 
     @pytest.mark.UI
     @allure.title("Segment deletion test")
@@ -171,19 +211,5 @@ class TestSegments(BaseCase):
         segments_page = self.open_segments_page()
         segment_name = self.create_segment(segments_page)
         all_segments = self.verify_segment_creation(segments_page, segment_name)
-
-        with allure.step(f'Removing segment "{segment_name}"'):
-            with allure.step(f'Segment search'):
-                segment_object = None
-                for sgm in all_segments:
-                    if sgm.name == segment_name:
-                        segment_object = sgm
-                        break
-
-                assert segment_object
-
-            segment_object.remove()
-
-        with allure.step(f'Verifying that the segment "{segment_name}" has been deleted'):
-            all_segments = segments_page.segments_table.get_segments()
-            assert segment_name not in all_segments
+        self.remove_segment(all_segments, segment_name)
+        self.verify_segment_deletion(segments_page, segment_name)

@@ -42,9 +42,34 @@ class Dashboard(BasePageAuth):
         (By.XPATH, "//li[contains(@class, 'instruction-module-item-')]//a[contains(@href, '/campaign/new')]")
     CREATE_CAMPAIGN_BUTTON = (By.XPATH,
                               "//div[contains(@class, 'button-module-textWrapper-') and text() = 'Создать кампанию']")
-    CAMPAIGN_NAME = (By.XPATH, "//div[@data-entity-type='campaign' and contains(@class, "
-                               "'nameCell-module-campaignNameCell-')]/a[contains(@class, "
-                               "'nameCell-module-campaignNameLink')]")
+
+    # CAMPAIGN_NAME = (By.XPATH, "//div[@data-entity-type='campaign' and contains(@class, "
+    #                            "'nameCell-module-campaignNameCell-')]/a[contains(@class, "
+    #                            "'nameCell-module-campaignNameLink')]")
+    class Table:
+        _TABLES_XPATH = "//div[contains(@class, 'main-module-TableWrapper-')]"
+        _TABLE_CELL_BASE_XPATH = \
+            _TABLES_XPATH + "//div[contains(@class, 'main-module-Cell') and contains(@data-test, '{cell_name_1}') " \
+                            "and not(contains(@data-test, '{cell_name_2}-0'))]"
+        TABLE_CELL_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name_1='id', cell_name_2='id') + "/div")
+        TABLE_CELL_NAME_BY_ID = (By.XPATH,
+                                 _TABLE_CELL_BASE_XPATH.format(cell_name_1="name-{campaign_id}", cell_name_2="name") +
+                                 "//a[contains(@class, 'nameCell-module-campaignNameLink-')]")
+        TABLE_CELL_CHECKBOX_BY_ID = (By.XPATH,
+                                     _TABLE_CELL_BASE_XPATH.format(cell_name_1="name-{campaign_id}",
+                                                                   cell_name_2="name") +
+                                     "//input[@type='checkbox' and contains(@class, 'nameCell-module-checkbox-')]")
+        TABLE_CELL_STATUS_BY_ID = (By.XPATH,
+                                   _TABLE_CELL_BASE_XPATH.format(cell_name_1="status-{campaign_id}",
+                                                                 cell_name_2="status") +
+                                   "//span[contains(@class, 'translation-module-statusText-')]")
+        TABLE_ACTIONS_WRAPPER_BUTTON = \
+            (By.XPATH, "//div[contains(@class, 'select-module-selectWrap-')][div[contains(@class, "
+                       "'tableControls-module-massActionsSelect-')]]")
+
+        DELETE_ACTION_BUTTON = \
+            (By.XPATH, "//ul[contains(@class, 'optionsList-module-optionsList-')]"
+                       "//li[contains(@class, 'optionsList-module-option-') and @title='Удалить']")
 
 
 class NewCampaign(BasePageAuth):
@@ -87,8 +112,8 @@ class NewCampaign(BasePageAuth):
     BANNER_ABOUT_COMPANY_INPUT = (By.XPATH, _BANNER_EDITOR_BASE_XPATH +
                                   "//textarea[contains(@data-name, 'about_company_')]")
     BANNER_NAME_INPUT = (By.XPATH, _BANNER_EDITOR_BASE_XPATH + "//input[contains(@data-name, 'banner-name')]")
-    BANNER_SAVE_INPUT = (By.XPATH, "//div[contains(@class, 'bannerEditor-module-bottomControlsWrap-')]//div[contains(" \
-                                   "@class, 'button-module-textWrapper-')]")
+    BANNER_SAVE_INPUT = (By.XPATH, "//div[contains(@class, 'bannerEditor-module-bottomControlsWrap-')]//div"
+                                   "[contains(@class, 'button-module-textWrapper-')]")
     SUBMIT_BUTTON = (By.XPATH, "//div[contains(@class, 'footer__button')]//button[@data-class-name='Submit']")
 
 
@@ -119,9 +144,9 @@ class Segments(BasePageAuth):
     TABLE_CELL_NAME = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name") +
                        "/div[contains(@class, 'cells-module-nameCell')]/a")
     TABLE_CELL_REMOVE_BUTTON = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove") +
-                       "/span[contains(@class, 'cells-module-removeCell')]")
+                                "/span[contains(@class, 'cells-module-removeCell')]")
     TABLE_CELL_NAME_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name-{item_id}") +
-                       "/div[contains(@class, 'cells-module-nameCell')]/a")
+                             "/div[contains(@class, 'cells-module-nameCell')]/a")
     TABLE_CELL_REMOVE_BUTTON_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove-{item_id}") +
-                       "/span[contains(@class, 'cells-module-removeCell')]")
+                                      "/span[contains(@class, 'cells-module-removeCell')]")
     SEGMENT_CONFIRM_REMOVE_BUTTON = (By.XPATH, "//button[contains(@class, 'button_confirm-remove')]")

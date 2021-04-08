@@ -44,6 +44,7 @@ class NewCampaignPage(BasePageAuth):
         self.click(self.GOALS[goal])
         self.logger.info(f'Goal selected: {goal}')
 
+    @allure.step('Setting wrapper opening')
     def open_setting(self, setting_locator, setting_wrapper_locator):
         if self.check.is_not_visible(setting_locator, raise_exception=False):
             self.click(setting_wrapper_locator)

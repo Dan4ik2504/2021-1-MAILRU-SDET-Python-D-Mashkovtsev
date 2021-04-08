@@ -4,7 +4,8 @@ import logging
 import allure
 
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, \
+    JavascriptException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 
@@ -25,6 +26,9 @@ class BasePage:
         pass
 
     class FindingException(Exception):
+        pass
+
+    class FastFindingException(Exception):
         pass
 
     def is_opened(self):
@@ -80,9 +84,8 @@ class BasePage:
                 element = self.driver.find_element(*locator)
                 self.logger.info(f'Element have been found: "{element.tag_name}"')
                 return element
-            except NoSuchElementException:
-                self.logger.info(f'Element have not been found')
-                return None
+            except (NoSuchElementException, StaleElementReferenceException):
+                raise self.FastFindingException(f'Element not found by locator: "{locator[1]}" (type: {locator[0]})')
 
     def find_elements(self, locator):
         """Finding an items by locator"""
@@ -134,7 +137,7 @@ class BasePage:
             self.scroll_to_element(element)
             # self.custom_wait(self.check.is_visible, locator)
 
-            log_msg = f'Filling element "{element.tag_name}" with "{text}"'
+            log_msg = f'Filling element found by locator "{locator[1]}" (type: {locator[0]}) with "{text}"'
             with allure.step(log_msg):
                 self.logger.info(log_msg)
                 prev_text = element.text
@@ -248,14 +251,17 @@ class BasePage:
                 return result
 
         def _is_element_visible(self, element):
-            return self.page.driver.execute_script(JsCode.is_visible, element)
+            try:
+                return self.page.driver.execute_script(JsCode.is_visible, element)
+            except (JavascriptException, StaleElementReferenceException):
+                return False
 
         def is_element_visible(self, element, raise_exception=True):
             """Checking that an element is visible"""
             if self._is_element_visible(element):
                 return True
 
-            exc_msg = f'Element "{element.tag_name}" is not visible'
+            exc_msg = f'Element is not visible'
             return self.raise_exception_wrapper(self.ElementNotVisibleException, exc_msg, raise_exception)
 
         def is_visible(self, locator, raise_exception=True):
@@ -264,7 +270,7 @@ class BasePage:
             if self.is_element_visible(elem, raise_exception=False):
                 return True
 
-            exc_msg = f'Element "{elem.tag_name}" found by "{locator[1]}" (type: {locator[0]}) is not visible'
+            exc_msg = f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible'
             return self.raise_exception_wrapper(self.ElementNotVisibleException, exc_msg, raise_exception)
 
         def is_element_not_visible(self, element, raise_exception=True):
@@ -272,20 +278,32 @@ class BasePage:
             if not self._is_element_visible(element):
                 return True
 
-            exc_msg = f'Element "{element.tag_name}" is visible'
+            exc_msg = f'Element is visible'
             return self.raise_exception_wrapper(self.ElementVisibleException, exc_msg, raise_exception)
 
         def is_not_visible(self, locator, raise_exception=True):
             """Checking that an element found by locator is not visible"""
+            self.page.logger.debug(
+                f'Checking that element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
             try:
-                elem = self.page.driver.find_element(*locator)
-                if self.is_element_not_visible(elem, raise_exception=False):
-                    return True
-            except NoSuchElementException:
+                elem = self.page.fast_find(locator)
+            except self.page.FastFindingException:
+                self.page.logger.debug(f'Element is not founded by locator "{locator[1]}" (type: {locator[0]})')
                 return True
 
-            exc_msg = f'Element "{elem.tag_name}" found by "{locator[1]}" (type: {locator[0]}) is visible'
-            return self.raise_exception_wrapper(self.ElementVisibleException, exc_msg, raise_exception)
+            if self.is_element_not_visible(elem, raise_exception=raise_exception):
+                self.page.logger.debug(
+                    f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
+                return True
+            else:
+                self.page.logger.debug(
+                    f'Element found by locator "{locator[1]}" (type: {locator[0]}) is visible')
+
+                if raise_exception:
+                    exc_msg = f'Element found by "{locator[1]}" (type: {locator[0]}) is visible'
+                    return self.raise_exception_wrapper(self.ElementVisibleException, exc_msg, raise_exception)
+                else:
+                    return False
 
         def is_exists(self, locator, raise_exception=True):
             """Checking that an element found by locator exists"""
@@ -304,7 +322,7 @@ class BasePage:
             try:
                 elem = self.page.driver.find_element(*locator)
                 if elem:
-                    exc_msg = f"Element {elem.tag_name} found by {locator[1]} (type: {locator[0]}) is exists"
+                    exc_msg = f'Element "{elem.tag_name}" found by {locator[1]} (type: {locator[0]}) is exists'
                     return self.raise_exception_wrapper(self.ElementExistsException, exc_msg, raise_exception)
             except (NoSuchElementException, StaleElementReferenceException):
                 pass
@@ -315,7 +333,7 @@ class BasePage:
             if elem.text == text:
                 return True
             else:
-                exc_msg = f'{elem.tag_name} text "{elem.text}" != given text "{text}"'
+                exc_msg = f'Element text "{elem.text}" != given text "{text}"'
                 return self.raise_exception_wrapper(self.ComparisonException, exc_msg, raise_exception)
 
         def is_element_text_not_equal(self, elem, text, raise_exception=True):
@@ -323,7 +341,7 @@ class BasePage:
             if elem.text != text:
                 return True
             else:
-                exc_msg = f'{elem.tag_name} text == "{text}"'
+                exc_msg = f'Element text == "{text}"'
                 return self.raise_exception_wrapper(self.ComparisonException, exc_msg, raise_exception)
 
         def is_links_equal(self, url_1, url_2, raise_exception=True):

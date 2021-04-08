@@ -26,11 +26,15 @@ class NewSegment:
                                self.segments_page.locators.CREATE_SEGMENT_INSTRUCTION_LINK)
 
         for locator in create_segment_btns:
-            elem = self.segments_page.fast_find(locator)
-            if elem and self.segments_page.check.is_element_visible(elem, raise_exception=False):
-                self.segments_page.click(locator)
-                self.segments_page.logger.info('Form for creating a new segment opened')
-                return self
+            try:
+                elem = self.segments_page.fast_find(locator)
+            except self.segments_page.FastFindingException:
+                pass
+            else:
+                if self.segments_page.check.is_element_visible(elem, raise_exception=False):
+                    self.segments_page.click(locator)
+                    self.segments_page.logger.info('Form for creating a new segment opened')
+                    return self
 
         raise self.segments_page.NewSegmentCreatingException(
             f"Failed to open form to create a new segment: {create_segment_btns[0][1]} "
@@ -102,16 +106,15 @@ class Segment:
 
         name_locator = self.table.segments_page.locators.TABLE_CELL_NAME_BY_ID
         self.new_segm_name_locator = (name_locator[0], name_locator[1].format(item_id=self.segment_id))
-        name = self.table.segments_page.driver.find_element(*self.new_segm_name_locator).text
-        self.name = name
+        self.name = self.table.segments_page.find(self.new_segm_name_locator).text
 
         rm_btn_locator = self.table.segments_page.locators.TABLE_CELL_REMOVE_BUTTON_BY_ID
-        self.REMOVE_BTN_LOCATOR = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=self.segment_id))
+        self.remove_btn_locator = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=self.segment_id))
     
     @allure.step('Segment removing')
     def remove(self):
         self.table.segments_page.logger.info('Click on the segment remove button')
-        self.table.segments_page.click(self.REMOVE_BTN_LOCATOR)
+        self.table.segments_page.click(self.remove_btn_locator)
         confirm_remove_btn = self.table.segments_page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
         self.table.segments_page.click(confirm_remove_btn)
         self.table.segments_page.logger.info('Segment remove button clicked')
@@ -123,6 +126,9 @@ class Segment:
 
     def __eq__(self, other):
         other = str(other)
+        self.table.segments_page.logger.debug(
+            f'Comparison of the name "{self.name}" or ID "{self.segment_id}" of the segment '
+            f'with the given string: "{other}"')
         if other.isdigit():
             return self.segment_id == other
         return self.name == other
@@ -139,9 +145,9 @@ class SegmentsTable:
     def __init__(self, segments_page):
         self.segments_page = segments_page
     
-    @allure.step("Searcning for segments in the table")
+    @allure.step("Searching for segments in the table")
     def get_segments(self):
-        self.segments_page.logger.info('Searching for segments')
+        self.segments_page.logger.info('Searching for segments in the table')
         segments = [Segment(self, n.text) for n in self.segments_page.find_elements(
             self.segments_page.locators.TABLE_CELL_ID)]
         self.segments_page.logger.info(f'Found {len(segments)} segments')
