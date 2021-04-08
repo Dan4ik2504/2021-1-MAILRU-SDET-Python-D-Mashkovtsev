@@ -6,10 +6,10 @@ import os
 
 import allure
 
+from api.client import ApiClient
 from ui.fixtures import *
 import settings
 from utils import random_values
-
 
 logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
@@ -30,6 +30,11 @@ def config(request):
     browser = request.config.getoption('--browser')
     debug_log = request.config.getoption('--debug_log')
     return {'browser': browser, 'debug_log': debug_log}
+
+
+@pytest.fixture(scope='function')
+def api_client(config):
+    return ApiClient()
 
 
 @pytest.fixture(scope='session')

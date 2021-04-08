@@ -10,7 +10,7 @@ class BaseCase:
     authorize = True
 
     @pytest.fixture(scope='function', autouse=True)
-    def setup(self, driver, config, request: FixtureRequest, logger):
+    def setup(self, driver, config, request: FixtureRequest, logger, ui_report):
         self.driver = driver
         self.config = config
         self.logger = logger

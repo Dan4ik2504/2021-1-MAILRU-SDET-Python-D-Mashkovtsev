@@ -1,5 +1,6 @@
 import errno
 import json
+import logging
 import os
 
 import pytest
@@ -10,34 +11,47 @@ from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
+from api.client import ApiClient
 from ui.pages.main_page_no_auth import MainPageNoAuth
 from ui.pages.dashboard_page import DashboardPage
 from ui.pages.nav_panel import NavPanel
 import settings
 
 
+logger = logging.getLogger(settings.Logging.LOGGER_NAME)
+
+
 @pytest.fixture(scope='session')
 @allure.step('Getting authorization cookies')
 def cookies(config):
-    driver = get_driver(config['browser'])
-    main_page_no_auth = MainPageNoAuth(driver=driver)
-    main_page_no_auth.login()
-
-    cookies = driver.get_cookies()
-    driver.quit()
-
-    return cookies
+    api_client = ApiClient()
+    api_client.post_login()
+    return api_client.cookies_list
 
 
 @pytest.fixture(scope='function')
 @allure.step("Authorization")
-def login(driver, cookies, main_page_no_auth):
-    driver.get(settings.Url.BASE)
-    for cookie in cookies:
-        driver.add_cookie(cookie)
-    dashboard_page = DashboardPage(driver=driver)
-    dashboard_page.open_page()
-    return dashboard_page
+def login(driver, cookies, ui_report):
+    logger.info("Authorization")
+
+    log_msg = 'Getting the start page'
+    logger.info(log_msg)
+    with allure.step(log_msg):
+        driver.get(settings.Url.BASE)
+
+    log_msg = 'Setting cookies'
+    logger.info(log_msg)
+    with allure.step(log_msg):
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+
+    log_msg = 'Dashboard page opening'
+    logger.info(log_msg)
+    with allure.step(log_msg):
+        dashboard_page = DashboardPage(driver=driver)
+        dashboard_page.stop_page_loading()
+        dashboard_page.open_page()
+        return dashboard_page
 
 
 @pytest.fixture(scope='function')
@@ -54,10 +68,12 @@ class UnsupportedBrowserType(Exception):
     pass
 
 
-def get_driver(browser_name='chrome', download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR):
+def get_driver(browser_name='chrome', download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR, page_load_strategy=None):
     if browser_name == 'chrome':
         options = ChromeOptions()
         options.add_experimental_option("prefs", {"download.default_directory": download_dir})
+        if page_load_strategy:
+            options.page_load_strategy = page_load_strategy
 
         manager = ChromeDriverManager(version='latest')
         browser = webdriver.Chrome(executable_path=manager.install(), options=options)
@@ -90,7 +106,7 @@ def all_drivers(config, request, test_dir):
     browser.quit()
 
 
-@pytest.fixture(scope='function', autouse=True)
+@pytest.fixture(scope='function')
 def ui_report(driver, request, test_dir):
     failed_tests_count = request.session.testsfailed
     yield
