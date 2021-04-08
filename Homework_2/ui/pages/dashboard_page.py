@@ -163,8 +163,9 @@ class CampaignsTable:
     def get_checked_campaigns(self):
         checked_campaigns = list(filter(lambda campaign: campaign.checkbox_status, self.campaigns_list))
         self.dashboard_page.logger.info(f'Found {len(checked_campaigns)} checked campaigns')
-        self.dashboard_page.logger.debug(f'Found {len(checked_campaigns)} checked campaigns: '
-                                         f'{self.get_campaigns_list_in_str(checked_campaigns)}')
+        if len(checked_campaigns) > 0:
+            self.dashboard_page.logger.debug(f'Found {len(checked_campaigns)} checked campaigns: '
+                                             f'{self.get_campaigns_list_in_str(checked_campaigns)}')
         return checked_campaigns
 
     @allure.step('Searching for campaign with name "{name}"')
@@ -266,6 +267,7 @@ class DashboardPage(BasePageAuth):
     class NewCampaignPageOpenException(Exception):
         pass
 
+    @allure.step('Checking that the dashboard page is open')
     def is_opened(self):
         spinner_locator = self.locators.PAGE_LOADING_SPINNER
         if not self.check.is_exists(spinner_locator, raise_exception=False):

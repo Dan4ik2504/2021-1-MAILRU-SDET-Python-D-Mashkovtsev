@@ -40,20 +40,24 @@ class NewSegment:
             f"Failed to open form to create a new segment: {create_segment_btns[0][1]} "
             f"(type: {create_segment_btns[0][0]}) or {create_segment_btns[1][1]} (type: {create_segment_btns[1][0]})")
 
-    @allure.step('Segment type selecting')
+    @allure.step('Segment type and source selecting selecting')
     def select_segment_type(self, segment_type):
-        self.segments_page.logger.info('Segment type selecting')
-        type_locator = self.SEGMENT_TYPES[segment_type]
-        self.segments_page.logger.debug(f'Segment type button locator: "{type_locator[0]}" (type: {type_locator[1]})')
-        self.segments_page.click(type_locator)
-        self.segments_page.logger.info(f'Segment type selected: {segment_type}')
+        log_msg = f'Segment type selecting: {segment_type}'
+        with allure.step(log_msg):
+            self.segments_page.logger.info('Segment type selecting')
+            type_locator = self.SEGMENT_TYPES[segment_type]
+            self.segments_page.logger.debug(f'Segment type button locator: "{type_locator[0]}" (type: {type_locator[1]})')
+            self.segments_page.click(type_locator)
+            self.segments_page.logger.info(f'Segment type selected: {segment_type}')
 
-        self.segments_page.logger.info('Segment source selecting')
-        checkbox_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_AG_IN_SN_CHECKBOX
-        self.segments_page.logger.debug(
-            f'Segment source checkbox locator: "{checkbox_locator[0]}" (type: {checkbox_locator[1]})')
-        self.segments_page.click(checkbox_locator)
-        self.segments_page.logger.info(f'Segment source selected')
+        log_msg = 'Segment source selecting'
+        with allure.step(log_msg):
+            self.segments_page.logger.info(log_msg)
+            checkbox_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_AG_IN_SN_CHECKBOX
+            self.segments_page.logger.debug(
+                f'Segment source checkbox locator: "{checkbox_locator[0]}" (type: {checkbox_locator[1]})')
+            self.segments_page.click(checkbox_locator)
+            self.segments_page.logger.info(f'Segment source selected')
 
     @allure.step('Segment addition confirmation')
     def _submit_adding_segment(self):
@@ -69,6 +73,7 @@ class NewSegment:
         elem.click()
         self.segments_page.logger.info('Segment addition confirmed')
 
+    @allure.step('Setting segment name: "{name}"')
     def _set_segment_name(self, name):
         self.segments_page.fill_field(self.segments_page.locators.SEGMENT_CREATING_FORM_NAME_INPUT, name)
 
@@ -79,15 +84,19 @@ class NewSegment:
         if self.name:
             self._set_segment_name(self.name)
 
-        saving_submit_btn_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_CREATING_SUBMIT_BUTTON
-        elem = self.segments_page.find(saving_submit_btn_locator)
-        if elem.get_attribute("disabled"):
-            self.segments_page.NewSegmentSavingException(
-                f"Saving segment submit button disabled: {saving_submit_btn_locator[1]} "
-                f"(type: {saving_submit_btn_locator[0]})")
-        elem.click()
+        log_msg = 'Clicking on segment saving button'
+        with allure.step(log_msg):
+            self.segments_page.logger(log_msg)
+            saving_submit_btn_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_CREATING_SUBMIT_BUTTON
+            elem = self.segments_page.find(saving_submit_btn_locator)
+            if elem.get_attribute("disabled"):
+                self.segments_page.NewSegmentSavingException(
+                    f"Saving segment submit button disabled: {saving_submit_btn_locator[1]} "
+                    f"(type: {saving_submit_btn_locator[0]})")
+            elem.click()
 
-        self.segments_page.custom_wait(self.segments_page.check.is_page_opened, url=self.segments_page.URL)
+        with allure.step('Opening segments page'):
+            self.segments_page.custom_wait(self.segments_page.check.is_page_opened, url=self.segments_page.URL)
 
     def __enter__(self):
         return self._open_form()
@@ -113,16 +122,22 @@ class Segment:
     
     @allure.step('Segment removing')
     def remove(self):
-        self.table.segments_page.logger.info('Click on the segment remove button')
-        self.table.segments_page.click(self.remove_btn_locator)
-        confirm_remove_btn = self.table.segments_page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
-        self.table.segments_page.click(confirm_remove_btn)
-        self.table.segments_page.logger.info('Segment remove button clicked')
-        self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
-                                             locator=confirm_remove_btn)
-        self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
-                                             locator=self.new_segm_name_locator)
-        self.table.segments_page.logger.info('Segment removed')
+        log_msg = 'Clicking on the segment remove button'
+        with allure.step(log_msg):
+            self.table.segments_page.logger.info(log_msg)
+            self.table.segments_page.click(self.remove_btn_locator)
+            confirm_remove_btn = self.table.segments_page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
+            self.table.segments_page.click(confirm_remove_btn)
+            self.table.segments_page.logger.info('Segment remove button clicked')
+
+        log_msg = 'Waiting for segment deletion'
+        with allure.step(log_msg):
+            self.table.segments_page.logger.info(log_msg)
+            self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
+                                                 locator=confirm_remove_btn)
+            self.table.segments_page.custom_wait(self.table.segments_page.check.is_not_visible,
+                                                 locator=self.new_segm_name_locator)
+            self.table.segments_page.logger.info('Segment removed')
 
     def __eq__(self, other):
         other = str(other)
@@ -155,7 +170,6 @@ class SegmentsTable:
         return segments
         
 
-
 class SegmentsPage(BasePageAuth):
     URL = settings.Url.SEGMENTS
     locators = pages_locators.Segments
@@ -171,7 +185,9 @@ class SegmentsPage(BasePageAuth):
     class NewSegmentSavingException(Exception):
         pass
 
+    @allure.step('Checking that the segment page is open')
     def is_opened(self):
+        self.logger.info('Checking that the segment page is open')
         spinner_locator = self.locators.PAGE_LOADING_SPINNER
         if self.check.is_not_exists(spinner_locator, raise_exception=False):
             self.logger.info(f'Segments page loaded')

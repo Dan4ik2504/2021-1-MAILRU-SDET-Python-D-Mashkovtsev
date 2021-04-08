@@ -29,6 +29,7 @@ class NewCampaignPage(BasePageAuth):
         super().__init__(driver)
         self.dashboard_page = dashboard_page
 
+    @allure.step('Checking that the page with the form for creating a new campaign is open')
     def is_opened(self):
         elems = self.find_elements(self.locators.PAGE_LOADING_SPINNER)
         try:
