@@ -49,7 +49,6 @@ def login(driver, cookies, ui_report):
     logger.info(log_msg)
     with allure.step(log_msg):
         dashboard_page = DashboardPage(driver=driver)
-        dashboard_page.stop_page_loading()
         dashboard_page.open_page()
         return dashboard_page
 
