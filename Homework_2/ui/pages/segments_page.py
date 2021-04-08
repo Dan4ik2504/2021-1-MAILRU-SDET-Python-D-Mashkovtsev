@@ -86,7 +86,7 @@ class NewSegment:
 
         log_msg = 'Clicking on segment saving button'
         with allure.step(log_msg):
-            self.segments_page.logger(log_msg)
+            self.segments_page.logger.info(log_msg)
             saving_submit_btn_locator = self.segments_page.locators.SEGMENT_CREATING_FORM_CREATING_SUBMIT_BUTTON
             elem = self.segments_page.find(saving_submit_btn_locator)
             if elem.get_attribute("disabled"):

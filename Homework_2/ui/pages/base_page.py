@@ -455,7 +455,7 @@ class BasePage:
             """Checking that the current url matches the url of the page"""
             url_1 = self.page.driver.current_url
             url_2 = self.page.URL
-            self.page.logger.debug(f'Checking that current URL "{url_1}" == {self.page.__name__} page URL {url_2}')
+            self.page.logger.debug(f'Checking that current URL "{url_1}" == {self.page.__class__.__name__} page URL {url_2}')
             result = self.is_links_equal(url_1, url_2, raise_exception=False)
             if result:
                 return True
