@@ -151,7 +151,7 @@ class CampaignsTable:
 
     @property
     def campaigns_list(self):
-        return self.dashboard_page.custom_wait(self._get_campaigns, error=StaleElementReferenceException)
+        return self.dashboard_page.custom_wait(self._get_campaigns, error=StaleElementReferenceException, check=False)
 
     def get_campaigns_list_in_str(self, campaigns_list=None):
         if not campaigns_list:

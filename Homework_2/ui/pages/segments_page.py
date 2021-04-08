@@ -40,7 +40,7 @@ class NewSegment:
             f"Failed to open form to create a new segment: {create_segment_btns[0][1]} "
             f"(type: {create_segment_btns[0][0]}) or {create_segment_btns[1][1]} (type: {create_segment_btns[1][0]})")
 
-    @allure.step('Segment type and source selecting selecting')
+    @allure.step('Segment type and source selecting')
     def select_segment_type(self, segment_type):
         log_msg = f'Segment type selecting: {segment_type}'
         with allure.step(log_msg):
