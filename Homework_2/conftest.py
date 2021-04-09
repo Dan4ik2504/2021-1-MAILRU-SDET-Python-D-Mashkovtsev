@@ -23,13 +23,27 @@ def is_master_process(config):
 def pytest_addoption(parser):
     parser.addoption('--browser', default='chrome')
     parser.addoption('--debug_log', action='store_true')
+    parser.addoption('--selenoid', action='store_true')
+    parser.addoption('--selenoid_vnc', action='store_true')
 
 
 @pytest.fixture(scope='session')
 def config(request):
     browser = request.config.getoption('--browser')
     debug_log = request.config.getoption('--debug_log')
-    return {'browser': browser, 'debug_log': debug_log}
+
+    selenoid = None
+    vnc = False
+
+    option_selenoid = request.config.getoption('--selenoid')
+    option_selenoid_vnc = request.config.getoption('--selenoid_vnc')
+    if option_selenoid or option_selenoid_vnc:
+        selenoid = settings.Selenoid.URL
+
+        if option_selenoid_vnc:
+            vnc = True
+
+    return {'browser': browser, 'debug_log': debug_log, 'selenoid': selenoid, 'vnc': vnc}
 
 
 @pytest.fixture(scope='function')

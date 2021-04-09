@@ -17,7 +17,6 @@ from ui.pages.dashboard_page import DashboardPage
 from ui.pages.nav_panel import NavPanel
 import settings
 
-
 logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
 
@@ -67,29 +66,66 @@ class UnsupportedBrowserType(Exception):
     pass
 
 
-def get_driver(browser_name='chrome', download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR, page_load_strategy=None):
+@allure.step('Creating "{browser_name}" driver')
+def get_driver(config, browser_name='chrome', download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR,
+               page_load_strategy=None):
+    selenoid = config['selenoid']
+    vnc = config['vnc']
+
     if browser_name == 'chrome':
         options = ChromeOptions()
         options.add_experimental_option("prefs", {"download.default_directory": download_dir})
         if page_load_strategy:
             options.page_load_strategy = page_load_strategy
 
-        manager = ChromeDriverManager(version='latest')
-        browser = webdriver.Chrome(executable_path=manager.install(), options=options)
+        if selenoid is not None:
+            caps = {'browserName': browser_name,
+                    'platform': 'ANY',
+                    "selenoid:options": {
+                        "enableVNC": False,
+                        "enableVideo": False
+                    }
+                    }
+
+            if vnc:
+                caps['version'] = settings.Selenoid.CHROME_DEFAULT_VERSION_VNC
+                caps["selenoid:options"]["enableVNC"] = True
+            else:
+                caps['version'] = settings.Selenoid.CHROME_LATEST
+
+            browser = webdriver.Remote(selenoid, options=options, desired_capabilities=caps)
+            logger.info(f'Chrome driver for remote launch created. Chrome version: "{caps["version"]}"')
+        else:
+            chrome_version = 'latest'
+            manager = ChromeDriverManager(version=chrome_version)
+            browser = webdriver.Chrome(executable_path=manager.install(), options=options)
+            logger.info(f'Chrome driver for local launch created. Chrome version: "{chrome_version}"')
+
+        logger.debug(f'Browser download dir: {download_dir}')
+        if page_load_strategy:
+            logger.debug(f'Page loading strategy: "{page_load_strategy}"')
+        else:
+            logger.debug('Page loading strategy: "normal"')
+
         return browser
+
     elif browser_name == 'firefox':
-        manager = GeckoDriverManager(version='latest', log_level=0)
+        if selenoid:
+            logger.warning('Sorry, but there is no way to launch Firefox remotely yet')
+        firefox_version = 'latest'
+        manager = GeckoDriverManager(version=firefox_version, log_level=0)
         browser = webdriver.Firefox(executable_path=manager.install())
+        logger.info(f'Firefox driver for local launch created. Firefox version: "{firefox_version}"')
         return browser
     else:
-        raise UnsupportedBrowserType(f'Unsupported browser {browser_name}')
+        raise UnsupportedBrowserType(f'Unsupported browser: "{browser_name}"')
 
 
 @pytest.fixture(scope='function')
 def driver(config, test_dir):
     browser_name = config['browser']
 
-    browser = get_driver(browser_name, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
+    browser = get_driver(config, browser_name, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
 
     browser.maximize_window()
     yield browser
@@ -98,7 +134,7 @@ def driver(config, test_dir):
 
 @pytest.fixture(scope='function', params=['chrome', 'firefox'])
 def all_drivers(config, request, test_dir):
-    browser = get_driver(request.param, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
+    browser = get_driver(config, request.param, download_dir=settings.Basic.BROWSER_DOWNLOAD_DIR)
 
     browser.maximize_window()
     yield browser
