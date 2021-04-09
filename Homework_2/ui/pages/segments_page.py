@@ -113,11 +113,11 @@ class Segment:
         self.table = table
         self.segment_id = segment_id
 
-        name_locator = self.table.segments_page.locators.TABLE_CELL_NAME_BY_ID
+        name_locator = self.table.segments_page.locators.Table.TABLE_CELL_NAME_BY_ID
         self.new_segm_name_locator = (name_locator[0], name_locator[1].format(item_id=self.segment_id))
         self.name = self.table.segments_page.find(self.new_segm_name_locator).text
 
-        rm_btn_locator = self.table.segments_page.locators.TABLE_CELL_REMOVE_BUTTON_BY_ID
+        rm_btn_locator = self.table.segments_page.locators.Table.TABLE_CELL_REMOVE_BUTTON_BY_ID
         self.remove_btn_locator = (rm_btn_locator[0], rm_btn_locator[1].format(item_id=self.segment_id))
     
     @allure.step('Segment removing')
@@ -126,7 +126,7 @@ class Segment:
         with allure.step(log_msg):
             self.table.segments_page.logger.info(log_msg)
             self.table.segments_page.click(self.remove_btn_locator)
-            confirm_remove_btn = self.table.segments_page.locators.SEGMENT_CONFIRM_REMOVE_BUTTON
+            confirm_remove_btn = self.table.segments_page.locators.Table.TABLE_CELL_SEGMENT_CONFIRM_REMOVE_BUTTON
             self.table.segments_page.click(confirm_remove_btn)
             self.table.segments_page.logger.info('Segment remove button clicked')
 
@@ -164,7 +164,7 @@ class SegmentsTable:
     def get_segments(self):
         self.segments_page.logger.info('Searching for segments in the table')
         segments = [Segment(self, n.text) for n in self.segments_page.find_elements(
-            self.segments_page.locators.TABLE_CELL_ID)]
+            self.segments_page.locators.Table.TABLE_CELL_ID)]
         self.segments_page.logger.info(f'Found {len(segments)} segments')
         self.segments_page.logger.debug(f'Found {len(segments)} segments: {"; ".join([str(s) for s in segments])}')
         return segments

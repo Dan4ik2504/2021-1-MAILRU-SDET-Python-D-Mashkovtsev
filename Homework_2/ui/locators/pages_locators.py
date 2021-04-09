@@ -43,9 +43,6 @@ class Dashboard(BasePageAuth):
     CREATE_CAMPAIGN_BUTTON = (By.XPATH,
                               "//div[contains(@class, 'button-module-textWrapper-') and text() = 'Создать кампанию']")
 
-    # CAMPAIGN_NAME = (By.XPATH, "//div[@data-entity-type='campaign' and contains(@class, "
-    #                            "'nameCell-module-campaignNameCell-')]/a[contains(@class, "
-    #                            "'nameCell-module-campaignNameLink')]")
     class Table:
         _TABLES_XPATH = "//div[contains(@class, 'main-module-TableWrapper-')]"
         _TABLE_CELL_BASE_XPATH = \
@@ -142,16 +139,18 @@ class Segments(BasePageAuth):
         (By.XPATH, "//div[contains(@class, 'create-segment-form__btn-wrap')]/button[@data-class-name='Submit']")
     SEGMENT_CREATING_FORM_NAME_INPUT = \
         (By.XPATH, "//div[contains(@class, 'input_create-segment-form')]//input[@type='text']")
-    _TABLE_XPATH = "//div[contains(@class, 'main-module-Table-')]"
-    _TABLE_CELL_BASE_XPATH = \
-        _TABLE_XPATH + "//div[contains(@class, 'main-module-Cell-') and contains(@data-test, '{cell_name}')]"
-    TABLE_CELL_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="id") + "//span")
-    TABLE_CELL_NAME = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name") +
-                       "/div[contains(@class, 'cells-module-nameCell')]/a")
-    TABLE_CELL_REMOVE_BUTTON = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove") +
-                                "/span[contains(@class, 'cells-module-removeCell')]")
-    TABLE_CELL_NAME_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name-{item_id}") +
-                             "/div[contains(@class, 'cells-module-nameCell')]/a")
-    TABLE_CELL_REMOVE_BUTTON_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove-{item_id}") +
-                                      "/span[contains(@class, 'cells-module-removeCell')]")
-    SEGMENT_CONFIRM_REMOVE_BUTTON = (By.XPATH, "//button[contains(@class, 'button_confirm-remove')]")
+
+    class Table:
+        _TABLE_XPATH = "//div[contains(@class, 'main-module-Table-')]"
+        _TABLE_CELL_BASE_XPATH = \
+            _TABLE_XPATH + "//div[contains(@class, 'main-module-Cell-') and contains(@data-test, '{cell_name}')]"
+        TABLE_CELL_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="id") + "//span")
+        TABLE_CELL_NAME = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name") +
+                           "/div[contains(@class, 'cells-module-nameCell')]/a")
+        TABLE_CELL_REMOVE_BUTTON = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove") +
+                                    "/span[contains(@class, 'cells-module-removeCell')]")
+        TABLE_CELL_NAME_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="name-{item_id}") +
+                                 "/div[contains(@class, 'cells-module-nameCell')]/a")
+        TABLE_CELL_REMOVE_BUTTON_BY_ID = (By.XPATH, _TABLE_CELL_BASE_XPATH.format(cell_name="remove-{item_id}") +
+                                          "/span[contains(@class, 'cells-module-removeCell')]")
+        TABLE_CELL_SEGMENT_CONFIRM_REMOVE_BUTTON = (By.XPATH, "//button[contains(@class, 'button_confirm-remove')]")

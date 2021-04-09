@@ -8,6 +8,8 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
     JavascriptException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver import Firefox
 
 from utils.javascript_code import JsCode
 import settings
@@ -19,7 +21,7 @@ class BasePage:
     logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
     def __init__(self, driver):
-        self.driver = driver
+        self.driver: WebDriver = driver
         self.check = self._Check(self)
 
     class CustomWaitTimeoutException(Exception):
