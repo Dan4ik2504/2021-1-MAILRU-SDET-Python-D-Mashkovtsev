@@ -106,6 +106,11 @@ class NewCampaign(BasePageAuth):
                                    "@data-test='icon_256x256']")
     BANNER_IMAGE_SAVING_SUBMIT_BUTTON = (
         By.XPATH, "//input[contains(@class, 'image-cropper__save') and @type='submit']")
+    _BANNER_IMAGE_EDIT_BUTTON_BASE_XPATH = \
+        '//div[contains(@class, "roles-module-editButton-")][div[text()="{resolution}"]]'
+    BANNER_IMAGE_EDIT_BUTTON = (By.XPATH, _BANNER_IMAGE_EDIT_BUTTON_BASE_XPATH.format(resolution='1080 × 607'))
+    BANNER_SMALL_IMAGE_EDIT_BUTTON = (By.XPATH, _BANNER_IMAGE_EDIT_BUTTON_BASE_XPATH.format(resolution='600 × 600'))
+    BANNER_ICON_EDIT_BUTTON = (By.XPATH, _BANNER_IMAGE_EDIT_BUTTON_BASE_XPATH.format(resolution='256 × 256'))
     _BANNER_EDITOR_BASE_XPATH = "//div[contains(@class, 'bannerEditor-module-editorForm-')]"
     BANNER_TITLE_INPUT = (By.XPATH, _BANNER_EDITOR_BASE_XPATH + "//input[contains(@data-name, 'title_')]")
     BANNER_TEXT_INPUT = (By.XPATH, _BANNER_EDITOR_BASE_XPATH + "//textarea[contains(@data-name, 'text_')]")

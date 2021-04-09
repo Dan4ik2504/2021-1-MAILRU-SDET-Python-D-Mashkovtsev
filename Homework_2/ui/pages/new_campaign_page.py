@@ -96,15 +96,22 @@ class NewCampaignPage(BasePageAuth):
                  'Small image name: "{small_img_name}". Icon name: "{icon_name}"')
     def load_image(self, repo_root, img_name=None, small_img_name=None, icon_name=None,
                    test_files_dir=settings.Basic.TEST_FILES_DIR):
-        for img, locator in zip((img_name, small_img_name, icon_name),
+        for img, locator, success_locator in zip((img_name, small_img_name, icon_name),
                                 (self.locators.BANNER_IMAGE_INPUT, self.locators.BANNER_SMALL_IMAGE_INPUT,
-                                 self.locators.BANNER_ICON_INPUT)):
+                                 self.locators.BANNER_ICON_INPUT),
+                                 (self.locators.BANNER_IMAGE_EDIT_BUTTON, self.locators.BANNER_SMALL_IMAGE_EDIT_BUTTON,
+                                 self.locators.BANNER_ICON_EDIT_BUTTON)
+                                                 ):
             image_input = self.find(locator)
             log_msg = f'Uploading image "{img}" into "{locator[1]}" (type: {locator[0]})'
             with allure.step(log_msg):
                 self.dashboard_page.logger.info(log_msg)
                 image_input.send_keys(os.path.join(repo_root, test_files_dir, img))
                 self.click(self.locators.BANNER_IMAGE_SAVING_SUBMIT_BUTTON)
+                self.dashboard_page.logger.info("Image uploading confirmation")
+
+            with allure.step(f'Waiting until image "{img}" have been uploaded'):
+                self.custom_wait(self.check.is_exists, locator=success_locator)
                 self.logger.info(f'Image "{img_name}" uploaded into "{locator[1]}" (type: {locator[0]})')
 
     @allure.step('Creating campaign banner - changing banner title: "{text}"')
