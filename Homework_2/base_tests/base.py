@@ -20,5 +20,6 @@ class BaseCase:
             self.nav_panel: NavPanel = request.getfixturevalue("nav_panel")
         else:
             self.main_page: MainPageNoAuth = request.getfixturevalue("main_page_no_auth")
+            self.main_page.open_page()
 
         self.logger.debug('Initial setup done!')
