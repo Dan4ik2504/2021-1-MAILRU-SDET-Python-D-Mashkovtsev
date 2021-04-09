@@ -1,15 +1,11 @@
 import datetime
-import os
 import random
-from time import sleep
 import allure
 
 import pytest
 
-from selenium.webdriver.support import expected_conditions as EC
 
 from base_tests.base import BaseCase
-from ui.locators import pages_locators
 from ui.pages.login_page import LoginPage
 from ui.pages.main_page_no_auth import MainPageNoAuth
 from ui.pages.new_campaign_page import NewCampaignPage

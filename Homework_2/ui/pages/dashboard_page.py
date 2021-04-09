@@ -1,9 +1,8 @@
 import allure
-from selenium.webdriver.support import expected_conditions as EC
 
 from ui.pages.base_page_auth import BasePageAuth
 from ui.pages.new_campaign_page import NewCampaignPage
-from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 from ui.locators import pages_locators
 import settings
 

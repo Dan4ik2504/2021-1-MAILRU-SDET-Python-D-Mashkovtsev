@@ -1,5 +1,4 @@
 import time
-from contextlib import contextmanager
 import logging
 import allure
 
@@ -9,7 +8,6 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver import Firefox
 
 from utils.javascript_code import JsCode
 import settings
@@ -87,7 +85,7 @@ class BasePage:
                     element = self.wait(timeout).until(EC.presence_of_element_located(locator))
                 self.logger.info(f'Element have been found: "{element.tag_name}"')
                 return element
-            except TimeoutException as exc:
+            except TimeoutException:
                 raise self.FindingException(f'Element not found by locator: "{locator[1]}" (type: {locator[0]})')
 
     def fast_find(self, locator):
@@ -457,7 +455,8 @@ class BasePage:
             """Checking that the current url matches the url of the page"""
             url_1 = self.page.driver.current_url
             url_2 = self.page.URL
-            self.page.logger.debug(f'Checking that current URL "{url_1}" == {self.page.__class__.__name__} page URL {url_2}')
+            self.page.logger.debug(
+                f'Checking that current URL "{url_1}" == {self.page.__class__.__name__} page URL {url_2}')
             result = self.is_links_equal(url_1, url_2, raise_exception=False)
             if result:
                 return True

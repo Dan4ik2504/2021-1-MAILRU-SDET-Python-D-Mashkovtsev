@@ -3,15 +3,12 @@ import os
 import allure
 import datetime
 
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 
 from ui.pages.base_page_auth import BasePageAuth
 
 from ui.locators import pages_locators
 import settings
-
-from time import sleep
 
 
 class NewCampaignPage(BasePageAuth):
@@ -97,10 +94,12 @@ class NewCampaignPage(BasePageAuth):
     def load_image(self, repo_root, img_name=None, small_img_name=None, icon_name=None,
                    test_files_dir=settings.Basic.TEST_FILES_DIR):
         for img, locator, success_locator in zip((img_name, small_img_name, icon_name),
-                                (self.locators.BANNER_IMAGE_INPUT, self.locators.BANNER_SMALL_IMAGE_INPUT,
-                                 self.locators.BANNER_ICON_INPUT),
-                                 (self.locators.BANNER_IMAGE_EDIT_BUTTON, self.locators.BANNER_SMALL_IMAGE_EDIT_BUTTON,
-                                 self.locators.BANNER_ICON_EDIT_BUTTON)
+                                                 (self.locators.BANNER_IMAGE_INPUT,
+                                                  self.locators.BANNER_SMALL_IMAGE_INPUT,
+                                                  self.locators.BANNER_ICON_INPUT),
+                                                 (self.locators.BANNER_IMAGE_EDIT_BUTTON,
+                                                  self.locators.BANNER_SMALL_IMAGE_EDIT_BUTTON,
+                                                  self.locators.BANNER_ICON_EDIT_BUTTON)
                                                  ):
             image_input = self.find(locator)
             log_msg = f'Uploading image "{img}" into "{locator[1]}" (type: {locator[0]})'

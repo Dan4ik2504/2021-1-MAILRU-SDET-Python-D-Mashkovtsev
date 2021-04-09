@@ -46,7 +46,8 @@ class NewSegment:
         with allure.step(log_msg):
             self.segments_page.logger.info('Segment type selecting')
             type_locator = self.SEGMENT_TYPES[segment_type]
-            self.segments_page.logger.debug(f'Segment type button locator: "{type_locator[0]}" (type: {type_locator[1]})')
+            self.segments_page.logger.debug(
+                f'Segment type button locator: "{type_locator[0]}" (type: {type_locator[1]})')
             self.segments_page.click(type_locator)
             self.segments_page.logger.info(f'Segment type selected: {segment_type}')
 

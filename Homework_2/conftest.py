@@ -1,12 +1,8 @@
-import logging
 import shutil
 import dataclasses
-import pytest
-import os
+import json
+import errno
 
-import allure
-
-from api.client import ApiClient
 from ui.fixtures import *
 import settings
 from utils import random_values
@@ -56,7 +52,7 @@ def repo_root():
     return os.path.abspath(os.path.join(__file__, os.pardir))
 
 
-def create_test_dir(config):
+def create_test_dir():
     base_test_dir = settings.Logging.BASE_TEST_DIR
     if os.path.exists(base_test_dir):
         shutil.rmtree(base_test_dir)
@@ -66,7 +62,7 @@ def create_test_dir(config):
 def pytest_configure(config):
     is_master = is_master_process(config)
     if is_master:
-        create_test_dir(config)
+        create_test_dir()
     config.base_test_dir = settings.Logging.BASE_TEST_DIR
     config.is_master_process = is_master
 
