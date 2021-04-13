@@ -7,6 +7,8 @@ import os
 
 import settings
 
+from api.fixtures import *
+
 logger = logging.getLogger(settings.Logging.LOGGER_NAME)
 
 

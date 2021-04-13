@@ -9,8 +9,6 @@ def different_os_path(path: str):
 
 
 class Basic:
-    BROWSER_DOWNLOAD_DIR = different_os_path("/tmp/browser_downloads")
-    TEST_FILES_DIR = 'test_files'
     TEMPORARY_FILES_DIR = 'temporary_files'
 
 
@@ -20,6 +18,7 @@ class Logging:
     SCREENSHOT_FILE_NAME = 'failure.png'
     BROWSER_LOG_FILE_NAME = 'browser.log'
     LOGGER_NAME = 'mytarget_test'
+    MAX_RESPONSE_LENGTH = 200
 
 
 class Url:
@@ -61,10 +60,3 @@ class User:
     PASSWORD = "Qwerty123456"
     USERNAME = "Тестов Тест Тестович"
     PHONE = "+70000000000"
-
-
-class Selenoid:
-    URL = "http://127.0.0.1:4444/wd/hub"
-    CHROME_LATEST = 'latest'
-    CHROME_DEFAULT_VERSION = '89.0'
-    CHROME_DEFAULT_VERSION_VNC = '89.0_vnc'
