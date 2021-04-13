@@ -141,3 +141,5 @@ cython_debug/
 
 # My settings
 .idea/
+temporary_files/
+allure-report/

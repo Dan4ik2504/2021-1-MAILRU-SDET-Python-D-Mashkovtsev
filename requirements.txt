@@ -1,5 +1,7 @@
-allure-pytest==2.8.40
-pytest==6.2.2
-pytest-xdist==2.2.1
-selenium==3.141.0
-webdriver-manager==3.3.0
+allure-pytest~=2.8.40
+pytest~=6.2.2
+pytest-xdist~=2.2.1
+selenium~=3.141.0
+webdriver-manager~=3.3.0
+pytest-lazy-fixture~=0.6.3
+requests~=2.25.1
