@@ -1,7 +1,6 @@
 import allure
 
 import settings
-from api import settings_api
 from api.client import ApiClient
 
 

@@ -1,5 +1,4 @@
 from json import JSONDecodeError
-from urllib.parse import urljoin
 import logging
 import allure
 import requests

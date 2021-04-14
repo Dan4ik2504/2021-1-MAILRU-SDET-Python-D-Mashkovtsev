@@ -3,7 +3,6 @@ import errno
 import json
 import shutil
 import logging
-import time
 
 import allure
 import pytest
