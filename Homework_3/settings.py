@@ -33,6 +33,8 @@ class Url:
         "profile": "profile",
         "tools": "tools",
         "help": "help/advertisers/ru",
+        "logout": "logout",
+        "csrf": "csrf/",
     }
 
     _FULL_PATHS = {
@@ -42,6 +44,8 @@ class Url:
 
     LOGIN = "https://account.my.com/login"
     POST_LOGIN = 'https://auth-ac.my.com/auth'
+    CSRF = BASE + _PATHS["csrf"]
+    LOGOUT = BASE + _PATHS['logout']
     DASHBOARD = BASE + _PATHS["dashboard"]
     SEGMENTS = BASE + _FULL_PATHS["segments"]
     SEGMENT_CREATING = SEGMENTS + "/new"

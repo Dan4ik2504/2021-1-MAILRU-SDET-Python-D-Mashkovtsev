@@ -11,6 +11,9 @@ class LoginApi(ApiClient):
         class InvalidLogin(Exception):
             pass
 
+        class InvalidLogout(Exception):
+            pass
+
     @allure.step('Login via API: "{login}"')
     def post_login(self, login=settings.User.LOGIN, password=settings.User.PASSWORD):
         """POST request to get authorization cookie"""
@@ -36,3 +39,11 @@ class LoginApi(ApiClient):
             raise self.Exceptions.InvalidLogin("Unsuccessful login. Authorization cookie doesn't exists.")
 
         return response
+
+    @allure.step("Logout via API")
+    def logout(self):
+        """GET request to delete authorization cookie"""
+        self.logger.info("Logout via API")
+        self.get_request(settings.Url.LOGOUT, jsonify=False)
+        if self.get_cookie(settings_api.CookieNames.SESSION) is not None:
+            raise self.Exceptions.InvalidLogout("Unsuccessful logout. Authorization cookie exists.")

@@ -6,7 +6,7 @@ from api.client import ApiClient
 
 
 @pytest.fixture(scope='function')
-def login_page_api(api_session):
+def login_api(api_session):
     return LoginApi(api_session)
 
 
