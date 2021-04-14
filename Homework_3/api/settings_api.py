@@ -1,2 +1,4 @@
 class CookieNames:
-    SESSION_COOKIE = "mc"
+    SESSION = "mc"
+    CSRF = "csrftoken"
+

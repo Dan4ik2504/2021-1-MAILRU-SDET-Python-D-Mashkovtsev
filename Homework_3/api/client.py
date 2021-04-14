@@ -4,6 +4,7 @@ import logging
 import allure
 
 import settings
+from api import settings_api
 
 
 class ApiClient:
@@ -16,6 +17,9 @@ class ApiClient:
             pass
 
         class JsonUnserializable(Exception):
+            pass
+
+        class CsrfCookie(Exception):
             pass
 
     def __init__(self, session):
@@ -66,15 +70,15 @@ class ApiClient:
                 raise self.Exceptions.JsonUnserializable("Unable to decode response in json")
         return response
 
-    def get(self, location, jsonify=True, allow_redirects=True):
+    def get(self, location, jsonify=True, allow_redirects=True, expected_status=200):
         """GET request"""
         return self._request(self.Methods.GET, urljoin(self.base_url, location), jsonify=jsonify,
-                             allow_redirects=allow_redirects)
+                             allow_redirects=allow_redirects, expected_status=expected_status)
 
-    def post(self, location, data, jsonify=True, allow_redirects=True):
+    def post(self, location, data, jsonify=True, allow_redirects=True, expected_status=200):
         """POST request"""
         return self._request(self.Methods.POST, urljoin(self.base_url, location), jsonify=jsonify,
-                             allow_redirects=allow_redirects, data=data)
+                             allow_redirects=allow_redirects, data=data, expected_status=expected_status)
 
     @property
     def cookies_list(self):
@@ -89,3 +93,9 @@ class ApiClient:
             if cookie["name"] == name:
                 return cookie
         return None
+    
+    def get_csrf_token(self):
+        response = self.get('/csrf/', jsonify=False)
+        csrf = self.get_cookie(settings_api.CookieNames.CSRF)
+        if csrf is None:
+            raise self.Exceptions.CsrfCookie("CSRF token not received")

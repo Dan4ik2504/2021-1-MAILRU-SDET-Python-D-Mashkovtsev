@@ -31,7 +31,7 @@ class LoginApi(ApiClient):
         response = self._request(self.Methods.POST, location, headers=headers, data=data, jsonify=False,
                                  allow_redirects=False, expected_status=302)
 
-        auth_cookie = self.get_cookie(settings_api.CookieNames.SESSION_COOKIE)
+        auth_cookie = self.get_cookie(settings_api.CookieNames.SESSION)
         if auth_cookie is None:
             raise self.Exceptions.InvalidLogin("Unsuccessful login. Authorization cookie doesn't exists.")
 
