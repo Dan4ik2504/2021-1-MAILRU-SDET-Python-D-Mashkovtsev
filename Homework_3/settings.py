@@ -1,4 +1,5 @@
 import sys
+from urllib.parse import urljoin
 
 
 def different_os_path(path: str):
@@ -9,7 +10,17 @@ def different_os_path(path: str):
 
 
 class Basic:
+    TEST_FILES_DIR = 'test_files'
     TEMPORARY_FILES_DIR = 'temporary_files'
+
+
+class TestFiles:
+    ICON_NAME = "icon_256x256"
+    ICON_FILE = "256x256.jpg"
+    IMAGE_NAME = "image_600x600"
+    IMAGE_FILE = "600x600.jpg"
+    LARGE_IMAGE_NAME = "image_1080x607"
+    LARGE_IMAGE_FILE = "1080x607.jpg"
 
 
 class Logging:
@@ -33,8 +44,6 @@ class Url:
         "profile": "profile",
         "tools": "tools",
         "help": "help/advertisers/ru",
-        "logout": "logout",
-        "csrf": "csrf/",
     }
 
     _FULL_PATHS = {
@@ -44,19 +53,27 @@ class Url:
 
     LOGIN = "https://account.my.com/login"
     POST_LOGIN = 'https://auth-ac.my.com/auth'
-    CSRF = BASE + _PATHS["csrf"]
-    LOGOUT = BASE + _PATHS['logout']
-    DASHBOARD = BASE + _PATHS["dashboard"]
-    SEGMENTS = BASE + _FULL_PATHS["segments"]
-    SEGMENT_CREATING = SEGMENTS + "/new"
-    BILLING = BASE + _PATHS["billing"]
-    STATISTICS = BASE + _PATHS["statistics"]
-    PRO = BASE + _PATHS["pro"]
-    PROFILE = BASE + _PATHS["profile"]
-    TOOLS = BASE + _PATHS["tools"]
-    HELP = BASE + _PATHS["help"]
+    CSRF = urljoin(BASE, "csrf/")
+    LOGOUT = urljoin(BASE, "logout")
+    DASHBOARD = urljoin(BASE, _PATHS["dashboard"])
+    SEGMENTS = urljoin(BASE, _FULL_PATHS["segments"])
+    SEGMENT_CREATING = urljoin(SEGMENTS, "/new")
+    BILLING = urljoin(BASE, _PATHS["billing"])
+    STATISTICS = urljoin(BASE, _PATHS["statistics"])
+    PRO = urljoin(BASE, _PATHS["pro"])
+    PROFILE = urljoin(BASE, _PATHS["profile"])
+    TOOLS = urljoin(BASE, _PATHS["tools"])
+    HELP = urljoin(BASE, _PATHS["help"])
 
-    NEW_CAMPAIGN = BASE + _FULL_PATHS["new_campaign"]
+    NEW_CAMPAIGN = urljoin(BASE, _FULL_PATHS["new_campaign"])
+
+    class Api:
+        BASE = "https://target.my.com/api/v2/"
+        MEDIATEKA_GET_BY_ID = urljoin(BASE, "mediateka/{id}.json")
+        MEDIATEKA_POST = urljoin(BASE, "mediateka.json")
+        STATIC_POST = urljoin(BASE, "content/static.json")
+        CAMPAIGNS_POST = urljoin(BASE, "campaigns.json")
+        REGISTER_URL_GET = "https://target.my.com/api/v1/urls/"
 
 
 class User:

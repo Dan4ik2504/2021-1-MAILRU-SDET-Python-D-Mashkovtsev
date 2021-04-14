@@ -2,6 +2,7 @@ from json import JSONDecodeError
 from urllib.parse import urljoin
 import logging
 import allure
+import requests
 
 import settings
 from api import settings_api
@@ -23,32 +24,43 @@ class ApiClient:
             pass
 
     def __init__(self, session):
-        self.session = session
+        self.session: requests.Session = session
         self.logger = logging.getLogger(settings.Logging.LOGGER_NAME)
         self.base_url = settings.Url.BASE
 
-    @staticmethod
-    def _set_headers(headers):
+    def _set_headers(self, headers):
         """Adds the required headers"""
         if not isinstance(headers, dict):
             headers = {}
-        headers["Referer"] = settings.Url.BASE
+        if headers.get("Referer", None) is None:
+            headers["Referer"] = settings.Url.BASE
+
+        csrftoken = self.get_csrf_token(check=False)
+        if csrftoken is not None:
+            headers["X-CSRFToken"] = csrftoken["value"]
+
         return headers
 
     @allure.step("{method} request on {url}")
-    def _request(self, method: str, url: str, headers=None, data=None, expected_status=200, jsonify=True,
-                 allow_redirects=True):
+    def _request(self, method: str, url: str, params=None, data=None, headers=None, cookies=None, files=None,
+                 allow_redirects=True, expected_status=200, jsonify=True, json=None):
 
-        def log_pre(logger, method, url, headers, data, expected_status):
+        def log_pre(logger, url, params, data, headers, cookies, files, allow_redirects, json, jsonify):
             logger.info(f'Performing {method} request:\n'
                         f'URL: {url}\n'
                         f'HEADERS: {headers}\n'
-                        f'DATA: {data}\n\n'
+                        f'PARAMS: {params}\n'
+                        f'DATA: {data}\n'
+                        f'COOKIES: {cookies}\n'
+                        f'FILES: {files}\n'
+                        f'JSON: {json}\n'
+                        f'Is redirects allowed: {allow_redirects}\n'
+                        f'Is convert response to json: {jsonify}\n'
                         f'expected status: {expected_status}\n\n')
 
         def log_post(logger, response):
             log_str = 'Got response:\n' \
-                      'RESPONSE STATUS: {response.status_code}'
+                      f'RESPONSE STATUS: {response.status_code}'
 
             if len(response.text) > settings.Logging.MAX_RESPONSE_LENGTH:
                 if logger.level == logging.INFO:
@@ -62,10 +74,13 @@ class ApiClient:
             else:
                 logger.info(f'{log_str}\n'
                             f'RESPONSE CONTENT: {response.text}\n\n')
-        
-        log_pre(self.logger, method, url, headers, data, expected_status)
-        response = self.session.request(method, url, headers=self._set_headers(headers), data=data,
-                                        allow_redirects=allow_redirects)
+
+        headers = self._set_headers(headers)
+
+        log_pre(self.logger, url, params=params, data=data, headers=headers,
+                cookies=cookies, files=files, allow_redirects=allow_redirects, json=json, jsonify=jsonify)
+        response = self.session.request(method, url, params=params, data=data, headers=self._set_headers(headers),
+                                        cookies=cookies, files=files, allow_redirects=allow_redirects, json=json)
         log_post(self.logger, response)
 
         if int(response.status_code) != int(expected_status):
@@ -80,15 +95,19 @@ class ApiClient:
                 raise self.Exceptions.JsonUnserializable("Unable to decode response in json")
         return response
 
-    def get_request(self, url, data=None, headers=None, jsonify=True, allow_redirects=True, expected_status=200):
+    def get_request(self, url, params=None, data=None, headers=None, cookies=None, files=None,
+                    allow_redirects=True, expected_status=200, jsonify=True, json=None):
         """GET request"""
-        return self._request(self.Methods.GET, url, jsonify=jsonify, headers=headers,
-                             allow_redirects=allow_redirects, data=data, expected_status=expected_status)
+        return self._request(self.Methods.GET, url, params=params, data=data, headers=headers, cookies=cookies,
+                             files=files, allow_redirects=allow_redirects, expected_status=expected_status,
+                             jsonify=jsonify, json=json)
 
-    def post_request(self, url, data=None, headers=None, jsonify=True, allow_redirects=True, expected_status=200):
+    def post_request(self, url, params=None, data=None, headers=None, cookies=None, files=None,
+                     allow_redirects=True, expected_status=200, jsonify=True, json=None):
         """POST request"""
-        return self._request(self.Methods.POST, url, jsonify=jsonify, headers=headers,
-                             allow_redirects=allow_redirects, data=data, expected_status=expected_status)
+        return self._request(self.Methods.POST, url, params=params, data=data, headers=headers, cookies=cookies,
+                             files=files, allow_redirects=allow_redirects, expected_status=expected_status,
+                             jsonify=jsonify, json=json)
 
     @property
     def cookies_list(self):
@@ -103,10 +122,12 @@ class ApiClient:
             if cookie["name"] == name:
                 return cookie
         return None
-    
-    def get_csrf_token(self):
+
+    def get_csrf_token(self, check=True):
         """Get csrf cookie"""
-        self.get_request(settings.Url.CSRF, jsonify=False)
+        self.session.get(settings.Url.CSRF)
         csrf = self.get_cookie(settings_api.CookieNames.CSRF)
-        if csrf is None:
-            raise self.Exceptions.CsrfCookie("CSRF token not received")
+        if check:
+            if csrf is None:
+                raise self.Exceptions.CsrfCookie("CSRF token not received")
+        return csrf
