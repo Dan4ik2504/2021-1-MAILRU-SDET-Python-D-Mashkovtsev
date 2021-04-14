@@ -57,9 +57,11 @@ class TestCampaigns(ApiBase):
     
     def create_campaign(self, repo_root):
         new_camp = self.campaigns_api.get_new_campaign_object()
-
+        
+        campaign_name = "Test name"
+        
         new_camp.url = "qwerweqfqwefweqwef.com"
-        new_camp.name = "Test name"
+        new_camp.name = campaign_name
         new_camp.objective = new_camp.OBJECTIVES.TRAFFIC
         new_camp.enable_offline_goals = False
         new_camp.set_age(20, 50)
@@ -90,8 +92,33 @@ class TestCampaigns(ApiBase):
         new_camp.save_banner(new_banner)
 
         self.campaigns_api.save_new_campaign(new_camp)
+        
+        return campaign_name
+        
+        
+    def verify_campaign_creation(self, campaign_name):
+        campaigns = self.campaigns_api.get_active_campaigns()
+        assert campaign_name in campaigns
+
+    def delete_campaign(self, campaign_name):
+        campaign = self.campaigns_api.get_campaign_by_name(campaign_name)
+        campaign.delete()
+
+    def verify_campaign_deletion(self, campaign_name):
+        campaigns = self.campaigns_api.get_active_campaigns()
+        assert campaign_name not in campaigns
 
     @allure.title("Create campaign test")
     @pytest.mark.API
     def test_create_campaign(self, repo_root):
-        self.create_campaign(repo_root)
+        campaign_name = self.create_campaign(repo_root)
+        self.verify_campaign_creation(campaign_name)
+        self.delete_campaign(campaign_name)
+
+    @allure.title("Delete campaign test")
+    @pytest.mark.API
+    def test_delete_campaign(self, repo_root):
+        campaign_name = self.create_campaign(repo_root)
+        self.verify_campaign_creation(campaign_name)
+        self.delete_campaign(campaign_name)
+        self.verify_campaign_deletion(campaign_name)

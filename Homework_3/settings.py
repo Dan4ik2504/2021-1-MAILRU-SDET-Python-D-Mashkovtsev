@@ -70,10 +70,11 @@ class Url:
     class Api:
         BASE = "https://target.my.com/api/v2/"
         MEDIATEKA_GET_BY_ID = urljoin(BASE, "mediateka/{id}.json")
-        MEDIATEKA_POST = urljoin(BASE, "mediateka.json")
+        MEDIATEKA = urljoin(BASE, "mediateka.json")
         STATIC_POST = urljoin(BASE, "content/static.json")
-        CAMPAIGNS_POST = urljoin(BASE, "campaigns.json")
-        REGISTER_URL_GET = "https://target.my.com/api/v1/urls/"
+        CAMPAIGNS = urljoin(BASE, "campaigns.json")
+        CAMPAIGNS_REGISTER_URL_GET = "https://target.my.com/api/v1/urls/"
+        CAMPAIGNS_MASS_ACTION = urljoin(BASE, "campaigns/mass_action.json")
 
 
 class User:

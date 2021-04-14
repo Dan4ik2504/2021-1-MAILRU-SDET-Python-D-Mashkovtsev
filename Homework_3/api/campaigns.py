@@ -95,17 +95,17 @@ class NewCampaignJson:
 
         def get_json(self):
             json = {
-                    'urls': {'primary': {'id': self.url_id}},
-                    'textblocks': {
-                        'title_25': {'text': self.title},
-                        'text_90': {'text': self.text},
-                        'about_company_115': {'text': self.about_company},
-                        'cta_sites_full': {'text': 'visitSite'}},
-                    'content': {'image_600x600': {'id': self.image_id},
-                                'image_1080x607': {'id': self.large_image_id},
-                                'icon_256x256': {'id': self.icon_id}},
-                    'name': self.name
-                }
+                'urls': {'primary': {'id': self.url_id}},
+                'textblocks': {
+                    'title_25': {'text': self.title},
+                    'text_90': {'text': self.text},
+                    'about_company_115': {'text': self.about_company},
+                    'cta_sites_full': {'text': 'visitSite'}},
+                'content': {'image_600x600': {'id': self.image_id},
+                            'image_1080x607': {'id': self.large_image_id},
+                            'icon_256x256': {'id': self.icon_id}},
+                'name': self.name
+            }
 
             return json
 
@@ -115,7 +115,7 @@ class NewCampaignJson:
 
     def get_url_id(self):
         params = {"url": self.url}
-        response = self.campaigns_api.get_request(settings.Url.Api.REGISTER_URL_GET, params=params)
+        response = self.campaigns_api.get_request(settings.Url.Api.CAMPAIGNS_REGISTER_URL_GET, params=params)
         return response['id']
 
     def get_new_banner(self):
@@ -198,7 +198,35 @@ class NewCampaignJson:
         self.age = list(range(fr, to))
 
 
+class Campaign:
+    def __init__(self, data_dict, campaigns_api):
+        self.campaigns_api = campaigns_api
+        self.id = data_dict["id"]
+        self.name = data_dict["name"]
+
+    def delete(self):
+        data = [{
+            "id": self.id,
+            "status": "deleted"
+        }]
+        self.campaigns_api.post_request(settings.Url.Api.CAMPAIGNS_MASS_ACTION, json=data, expected_status=204,
+                                        jsonify=False)
+
+    def __eq__(self, other):
+        if other.isdigit() or isinstance(other, int):
+            return self.id == int(other)
+        else:
+            return self.name == str(other)
+
+    def __repr__(self):
+        return f'{self.id}-{self.name}'
+
+
 class CampaignsApi(ApiClient):
+
+    class Exceptions(ApiClient.Exceptions):
+        class CampaignNotExists(Exception):
+            pass
 
     @allure.step('Image "{img_name}" uploading')
     def load_image(self, img_name, repo_root, test_files_dir=settings.Basic.TEST_FILES_DIR):
@@ -221,4 +249,24 @@ class CampaignsApi(ApiClient):
     def save_new_campaign(self, new_campaign):
         self.logger.info(f'New campaign "{new_campaign.name}" saving')
         request_data = new_campaign.generate_json()
-        self.post_request(settings.Url.Api.CAMPAIGNS_POST, json=request_data)
+        self.post_request(settings.Url.Api.CAMPAIGNS, json=request_data)
+
+    def get_active_campaigns(self):
+        params = {
+            "fields": ','.join(['id', 'name', 'status']),
+            "sorting": "-id"
+        }
+        campaigns_dict = self.get_request(settings.Url.Api.CAMPAIGNS, params=params)['items']
+        campaigns_objects = []
+        for campaign_dict in campaigns_dict:
+            if campaign_dict['status'] == 'active':
+                campaign_object = Campaign(campaign_dict, self)
+                campaigns_objects.append(campaign_object)
+        return campaigns_objects
+
+    def get_campaign_by_name(self, campaign_name):
+        campaigns = self.get_active_campaigns()
+        for campaign in campaigns:
+            if campaign.name == campaign_name:
+                return campaign
+        raise self.Exceptions.CampaignNotExists(f'Campaign with name "{campaign_name}" does not exists')
