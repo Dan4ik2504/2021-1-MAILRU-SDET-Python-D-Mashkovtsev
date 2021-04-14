@@ -1,7 +1,7 @@
 import pytest
 
 
-class ApiBase:
+class ApiTestsBase:
     authorize = True
 
     @pytest.fixture(scope='function', autouse=True)

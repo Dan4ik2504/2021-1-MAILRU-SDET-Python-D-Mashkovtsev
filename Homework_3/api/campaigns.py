@@ -4,7 +4,6 @@ import os
 import allure
 
 import settings
-from api import settings_api
 from api.client import ApiClient
 
 
@@ -20,8 +19,6 @@ class NewCampaignJson:
     budget_limit_day: int = None
     budget_limit: int = None
 
-    _banners_list = None
-
     class OBJECTIVES:
         TRAFFIC = 'traffic'
 
@@ -30,10 +27,10 @@ class NewCampaignJson:
         sex_male = False
 
         def __init__(self):
-            self.interests_soc_dem = self._Interests_soc_dem()
+            self.interests_soc_dem = self._InterestsSocDem()
             self.interests = self._Interests()
 
-        class _Interests_soc_dem:
+        class _InterestsSocDem:
 
             INTEREST_ID = {
                 "employment__not_works": 10245,
@@ -112,21 +109,26 @@ class NewCampaignJson:
     def __init__(self, campaigns_api):
         self.campaigns_api = campaigns_api
         self.targetings = self._Targetings()
+        self._banners_list = []
 
+    @allure.step("Getting ID of the campaign URL")
     def get_url_id(self):
+        """Sends a request and returns ID of the campaign URL"""
+        self.campaigns_api.logger.info(f'Getting ID of the campaign URL: "{self.url}"')
         params = {"url": self.url}
         response = self.campaigns_api.get_request(settings.Url.Api.CAMPAIGNS_REGISTER_URL_GET, params=params)
         return response['id']
 
     def get_new_banner(self):
-        if self._banners_list is None:
-            self._banners_list = []
+        """Creates a new banner instance"""
         return self.NewBanner(self.get_url_id())
 
     def save_banner(self, banner):
+        """Adds a new banner to the banners list"""
         self._banners_list.append(banner)
 
     def generate_json(self):
+        """Creates data for a request in the form of a dictionary, which is serializable in JSON"""
         sex = []
         if self.targetings.sex_male:
             sex.append('male')
@@ -197,6 +199,14 @@ class NewCampaignJson:
         Min: 12. Max: 75"""
         self.age = list(range(fr, to))
 
+    @allure.step("New campaign saving")
+    def save(self):
+        """Sends a request to save a new campaign"""
+        self.campaigns_api.logger.info(f'New campaign "{self.name}" saving')
+        request_data = self.generate_json()
+        self.campaigns_api.post_request(settings.Url.Api.CAMPAIGNS, json=request_data)
+        self.campaigns_api.logger.info(f'Campaign "{self.name}" saved')
+
 
 class Campaign:
     def __init__(self, data_dict, campaigns_api):
@@ -204,13 +214,16 @@ class Campaign:
         self.id = data_dict["id"]
         self.name = data_dict["name"]
 
+    @allure.step("Campaign deletion")
     def delete(self):
+        """Sends a request to delete a campaign"""
         data = [{
             "id": self.id,
             "status": "deleted"
         }]
         self.campaigns_api.post_request(settings.Url.Api.CAMPAIGNS_MASS_ACTION, json=data, expected_status=204,
                                         jsonify=False)
+        self.campaigns_api.logger.info(f'Campaign "{str(self)}" deleted')
 
     def __eq__(self, other):
         if other.isdigit() or isinstance(other, int):
@@ -230,7 +243,7 @@ class CampaignsApi(ApiClient):
 
     @allure.step('Image "{img_name}" uploading')
     def load_image(self, img_name, repo_root, test_files_dir=settings.Basic.TEST_FILES_DIR):
-        """Uploads an image to the server and returns the image id"""
+        """Uploads an image to the server and returns the image ID"""
         upload_url = settings.Url.Api.STATIC_POST
         image_path = os.path.join(repo_root, test_files_dir, img_name)
 
@@ -242,29 +255,32 @@ class CampaignsApi(ApiClient):
             response = self.post_request(url=upload_url, files=files)
             return response["id"]
 
-    def get_new_campaign_object(self):
-        return NewCampaignJson(self)
-
-    @allure.step("New campaign saving")
-    def save_new_campaign(self, new_campaign):
-        self.logger.info(f'New campaign "{new_campaign.name}" saving')
-        request_data = new_campaign.generate_json()
-        self.post_request(settings.Url.Api.CAMPAIGNS, json=request_data)
-
+    @allure.step("Searching for active campaigns")
     def get_active_campaigns(self):
+        """Returns active campaigns"""
+        self.logger.info("Searching for active campaigns")
         params = {
             "fields": ','.join(['id', 'name', 'status']),
             "sorting": "-id"
         }
-        campaigns_dict = self.get_request(settings.Url.Api.CAMPAIGNS, params=params)['items']
+        campaigns_dicts = self.get_request(settings.Url.Api.CAMPAIGNS, params=params)['items']
         campaigns_objects = []
-        for campaign_dict in campaigns_dict:
+        for campaign_dict in campaigns_dicts:
             if campaign_dict['status'] == 'active':
                 campaign_object = Campaign(campaign_dict, self)
                 campaigns_objects.append(campaign_object)
+
+        self.logger.info(f'{len(campaigns_objects)} active campaigns exists. {len(campaigns_dicts)} campaigns in total')
+        self.logger.debug(f'There are {len(campaigns_objects)} active campaigns: '
+                          f'"{"; ".join([str(c) for c in campaigns_objects])}"')
         return campaigns_objects
 
+    def get_new_campaign_object(self):
+        """Returns new campaign instance"""
+        return NewCampaignJson(self)
+
     def get_campaign_by_name(self, campaign_name):
+        """Returns campaign found by the given name"""
         campaigns = self.get_active_campaigns()
         for campaign in campaigns:
             if campaign.name == campaign_name:

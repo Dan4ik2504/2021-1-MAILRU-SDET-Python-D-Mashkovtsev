@@ -2,21 +2,24 @@ import allure
 import pytest
 
 import settings
-from api_tests.base import ApiBase
+from api_tests.base import ApiTestsBase
 
 
-class TestLogin(ApiBase):
+class TestLogin(ApiTestsBase):
     authorize = False
 
+    @allure.step("GET request to the dashboard page")
     def get_dashboard(self):
         response = self.api_client.get_request(settings.Url.DASHBOARD, jsonify=False)
         assert response.status_code == 200
         return response
 
+    @allure.step("Checking that login is success")
     def verify_login(self):
         response = self.get_dashboard()
         assert response.url == settings.Url.DASHBOARD
 
+    @allure.step("Checking that logout is success")
     def verify_logout(self):
         response = self.get_dashboard()
         assert response.url == settings.Url.BASE
@@ -43,7 +46,8 @@ class TestLogin(ApiBase):
         self.verify_logout()
 
 
-class TestCampaigns(ApiBase):
+class TestCampaigns(ApiTestsBase):
+    @allure.step("Loading banner images")
     def load_images(self, repo_root):
         """Loading banner images"""
         images = ((settings.TestFiles.ICON_FILE, settings.TestFiles.ICON_NAME),
@@ -54,7 +58,8 @@ class TestCampaigns(ApiBase):
             img_id = self.campaigns_api.load_image(img_file, repo_root=repo_root)
             images_loaded[img_name] = img_id
         return images_loaded
-    
+
+    @allure.step("Campaign creation")
     def create_campaign(self, repo_root):
         new_camp = self.campaigns_api.get_new_campaign_object()
         
@@ -91,19 +96,21 @@ class TestCampaigns(ApiBase):
 
         new_camp.save_banner(new_banner)
 
-        self.campaigns_api.save_new_campaign(new_camp)
+        new_camp.save()
         
         return campaign_name
-        
-        
+
+    @allure.step("Checking campaign creation")
     def verify_campaign_creation(self, campaign_name):
         campaigns = self.campaigns_api.get_active_campaigns()
         assert campaign_name in campaigns
 
+    @allure.step("Campaign deletion")
     def delete_campaign(self, campaign_name):
         campaign = self.campaigns_api.get_campaign_by_name(campaign_name)
         campaign.delete()
 
+    @allure.step("Checking campaign deletion")
     def verify_campaign_deletion(self, campaign_name):
         campaigns = self.campaigns_api.get_active_campaigns()
         assert campaign_name not in campaigns
@@ -124,22 +131,26 @@ class TestCampaigns(ApiBase):
         self.verify_campaign_deletion(campaign_name)
 
 
-class TestSegments(ApiBase):
+class TestSegments(ApiTestsBase):
+    @allure.step("Segment creation")
     def create_segment(self):
         segment_name = "Test segment"
         new_segment = self.segments_api.get_new_segment_object()
         new_segment.name = segment_name
         new_segment.save()
         return segment_name
-    
+
+    @allure.step("Checking segment creation")
     def verify_segment_creation(self, segment_name):
         segments = self.segments_api.get_all_segments()
         assert segment_name in segments
 
+    @allure.step("Segment deletion")
     def delete_segment(self, segment_name):
         segment = self.segments_api.get_segment_by_name(segment_name)
         segment.delete()
-        
+
+    @allure.step("Checking segment deletion")
     def verify_segment_deletion(self, segment_name):
         segments = self.segments_api.get_all_segments()
         assert segment_name not in segments
@@ -158,5 +169,3 @@ class TestSegments(ApiBase):
         self.verify_segment_creation(segment_name)
         self.delete_segment(segment_name)
         self.verify_segment_deletion(segment_name)
-        
-        

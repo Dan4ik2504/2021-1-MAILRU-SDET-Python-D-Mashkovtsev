@@ -12,6 +12,7 @@ class NewSegment:
         self.segments_api = segments_api
 
     def generate_json(self):
+        """Creates data for a request in the form of a dictionary, which is serializable in JSON"""
         json = {
             'name': self.name,
             'pass_condition': 1,
@@ -30,9 +31,10 @@ class NewSegment:
 
     @allure.step("Segment saving")
     def save(self):
-        self.segments_api.logger.info(f'Segment saving. Name: "{self.name}"')
+        """Sends a request to save a new campaign"""
         json = self.generate_json()
         self.segments_api.post_request(settings.Url.Api.SEGMENTS, json=json)
+        self.segments_api.logger.info(f'Segment saved. Name: "{self.name}"')
 
 
 class Segment:
@@ -41,9 +43,12 @@ class Segment:
         self.id = data_dict["id"]
         self.name = data_dict["name"]
 
+    @allure.step("Segment deletion")
     def delete(self):
+        """Sends a request to delete a segment"""
         self.segments_api.delete_request(settings.Url.Api.SEGMENT_BY_ID.format(id=self.id), expected_status=204,
                                          jsonify=False)
+        self.segments_api.logger.info(f'Segment "{str(self)}" deleted')
 
     def __eq__(self, other):
         if other.isdigit() or isinstance(other, int):
@@ -61,24 +66,33 @@ class SegmentsApi(ApiClient):
         class SegmentNotExists(Exception):
             pass
 
+    @allure.step("Searching for segments")
     def get_all_segments(self):
+        """Returns all segments"""
+        self.logger.info("Searching for segments")
         params = {
             "fields": ','.join(["id", "name"]),
             "sorting": "-id"
         }
-        response = self.get_request(settings.Url.Api.SEGMENTS, params=params)
+        segments_dicts = self.get_request(settings.Url.Api.SEGMENTS, params=params)["items"]
 
         segments = []
-        for segm_data in response["items"]:
-            segment = Segment(segm_data, self)
+        for segment_dict in segments_dicts:
+            segment = Segment(segment_dict, self)
             segments.append(segment)
+
+        self.logger.info(f'{len(segments_dicts)} segments exists')
+        self.logger.debug(f'There are {len(segments_dicts)} segments: '
+                          f'"{"; ".join([str(c) for c in segments_dicts])}"')
 
         return segments
 
     def get_new_segment_object(self):
+        """Returns new segment"""
         return NewSegment(self)
 
     def get_segment_by_name(self, segment_name):
+        """Returns segment found by the given name"""
         segments = self.get_all_segments()
         for segments in segments:
             if segments.name == segment_name:
