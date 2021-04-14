@@ -122,3 +122,41 @@ class TestCampaigns(ApiBase):
         self.verify_campaign_creation(campaign_name)
         self.delete_campaign(campaign_name)
         self.verify_campaign_deletion(campaign_name)
+
+
+class TestSegments(ApiBase):
+    def create_segment(self):
+        segment_name = "Test segment"
+        new_segment = self.segments_api.get_new_segment_object()
+        new_segment.name = segment_name
+        new_segment.save()
+        return segment_name
+    
+    def verify_segment_creation(self, segment_name):
+        segments = self.segments_api.get_all_segments()
+        assert segment_name in segments
+
+    def delete_segment(self, segment_name):
+        segment = self.segments_api.get_segment_by_name(segment_name)
+        segment.delete()
+        
+    def verify_segment_deletion(self, segment_name):
+        segments = self.segments_api.get_all_segments()
+        assert segment_name not in segments
+
+    @allure.title("Create segment")
+    @pytest.mark.API
+    def test_create_segment(self):
+        segment_name = self.create_segment()
+        self.verify_segment_creation(segment_name)
+        self.delete_segment(segment_name)
+        
+    @allure.title("Delete segment")
+    @pytest.mark.API
+    def test_delete_segment(self):
+        segment_name = self.create_segment()
+        self.verify_segment_creation(segment_name)
+        self.delete_segment(segment_name)
+        self.verify_segment_deletion(segment_name)
+        
+        

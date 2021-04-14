@@ -4,6 +4,7 @@ import requests
 from api.login import LoginApi
 from api.client import ApiClient
 from api.campaigns import CampaignsApi
+from api.segments import SegmentsApi
 
 
 @pytest.fixture(scope='function')
@@ -25,3 +26,7 @@ def login_api(api_session):
 def campaigns_api(api_session):
     return CampaignsApi(api_session)
 
+
+@pytest.fixture(scope='function')
+def segments_api(api_session):
+    return SegmentsApi(api_session)

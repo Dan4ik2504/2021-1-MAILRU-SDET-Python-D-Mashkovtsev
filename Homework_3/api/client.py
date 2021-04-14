@@ -12,6 +12,7 @@ class ApiClient:
     class Methods:
         GET = "GET"
         POST = "POST"
+        DELETE = "DELETE"
 
     class Exceptions:
         class InvalidResponse(Exception):
@@ -106,6 +107,13 @@ class ApiClient:
                      allow_redirects=True, expected_status=200, jsonify=True, json=None):
         """POST request"""
         return self._request(self.Methods.POST, url, params=params, data=data, headers=headers, cookies=cookies,
+                             files=files, allow_redirects=allow_redirects, expected_status=expected_status,
+                             jsonify=jsonify, json=json)
+
+    def delete_request(self, url, params=None, data=None, headers=None, cookies=None, files=None,
+                       allow_redirects=True, expected_status=200, jsonify=True, json=None):
+        """DELETE request"""
+        return self._request(self.Methods.DELETE, url, params=params, data=data, headers=headers, cookies=cookies,
                              files=files, allow_redirects=allow_redirects, expected_status=expected_status,
                              jsonify=jsonify, json=json)
 

@@ -75,6 +75,8 @@ class Url:
         CAMPAIGNS = urljoin(BASE, "campaigns.json")
         CAMPAIGNS_REGISTER_URL_GET = "https://target.my.com/api/v1/urls/"
         CAMPAIGNS_MASS_ACTION = urljoin(BASE, "campaigns/mass_action.json")
+        SEGMENTS = urljoin(BASE, "remarketing/segments.json")
+        SEGMENT_BY_ID = urljoin(BASE, "remarketing/segments/{id}.json")
 
 
 class User:
