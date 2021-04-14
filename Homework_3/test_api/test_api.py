@@ -2,7 +2,8 @@ import allure
 import pytest
 
 import settings
-from api_tests.base import ApiTestsBase
+from base import ApiTestsBase
+from utils.builder import Builder
 
 
 class TestLogin(ApiTestsBase):
@@ -30,11 +31,21 @@ class TestLogin(ApiTestsBase):
         self.login_api.post_login()
         self.verify_login()
 
+    @pytest.mark.parametrize(
+        ("login", "password"),
+        (
+                (pytest.lazy_fixture("random_email"), pytest.lazy_fixture("random_password")),
+                (pytest.lazy_fixture("random_phone_number"), pytest.lazy_fixture("random_password")),
+                (pytest.lazy_fixture("random_email"), settings.User.PASSWORD),
+                (settings.User.LOGIN, pytest.lazy_fixture("random_password")),
+                (pytest.lazy_fixture("random_incorrect_login"), pytest.lazy_fixture("random_password")),
+        )
+    )
     @allure.title("Negative login test")
     @pytest.mark.API
-    def test_negative_login(self):
+    def test_negative_login(self, login, password):
         with pytest.raises(self.login_api.Exceptions.InvalidLogin):
-            self.login_api.post_login("1q2w3e", "1q2w3e")
+            self.login_api.post_login(login, password)
         self.verify_logout()
 
     @allure.title("Logout test")
@@ -62,10 +73,11 @@ class TestCampaigns(ApiTestsBase):
     @allure.step("Campaign creation")
     def create_campaign(self, repo_root):
         new_camp = self.campaigns_api.get_new_campaign_object()
-        
-        campaign_name = "Test name"
-        
-        new_camp.url = "qwerweqfqwefweqwef.com"
+        fake_campaign = Builder.create_campaign_data()
+
+        campaign_name = fake_campaign.name
+
+        new_camp.url = fake_campaign.url
         new_camp.name = campaign_name
         new_camp.objective = new_camp.OBJECTIVES.TRAFFIC
         new_camp.enable_offline_goals = False
@@ -82,11 +94,13 @@ class TestCampaigns(ApiTestsBase):
         interests_soc_dem.income__middle = True
         interests_soc_dem.employment__works = True
 
+        fake_banner = Builder.create_campaign_banner_data()
+
         new_banner = new_camp.get_new_banner()
-        new_banner.name = "Banner name"
-        new_banner.title = "Banner title"
-        new_banner.text = "Banner text"
-        new_banner.about_company = "Banner about company text"
+        new_banner.name = fake_banner.name
+        new_banner.title = fake_banner.title
+        new_banner.text = fake_banner.text
+        new_banner.about_company = fake_banner.about_company
 
         images = self.load_images(repo_root)
 
@@ -97,7 +111,7 @@ class TestCampaigns(ApiTestsBase):
         new_camp.save_banner(new_banner)
 
         new_camp.save()
-        
+
         return campaign_name
 
     @allure.step("Checking campaign creation")
@@ -134,7 +148,8 @@ class TestCampaigns(ApiTestsBase):
 class TestSegments(ApiTestsBase):
     @allure.step("Segment creation")
     def create_segment(self):
-        segment_name = "Test segment"
+        fake_segment = Builder.create_segment_data()
+        segment_name = fake_segment.name
         new_segment = self.segments_api.get_new_segment_object()
         new_segment.name = segment_name
         new_segment.save()
@@ -161,7 +176,7 @@ class TestSegments(ApiTestsBase):
         segment_name = self.create_segment()
         self.verify_segment_creation(segment_name)
         self.delete_segment(segment_name)
-        
+
     @allure.title("Delete segment")
     @pytest.mark.API
     def test_delete_segment(self):
