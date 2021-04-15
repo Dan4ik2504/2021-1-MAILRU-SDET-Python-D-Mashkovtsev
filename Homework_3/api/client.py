@@ -20,13 +20,12 @@ class ApiClient:
         class JsonUnserializable(Exception):
             pass
 
-        class CsrfCookie(Exception):
+        class CsrfTokenNotReceived(Exception):
             pass
 
     def __init__(self, session):
         self.session: requests.Session = session
         self.logger = logging.getLogger(settings.Logging.LOGGER_NAME)
-        self.base_url = settings.Url.BASE
 
     def _set_headers(self, headers):
         """Adds the required headers"""
@@ -35,9 +34,12 @@ class ApiClient:
         if headers.get("Referer", None) is None:
             headers["Referer"] = settings.Url.BASE
 
-        csrftoken = self.get_csrf_token(check=False)
-        if csrftoken is not None:
-            headers["X-CSRFToken"] = csrftoken["value"]
+        if self.is_cookie_exists(settings_api.CookieNames.SESSION):
+            if not self.is_cookie_exists(settings_api.CookieNames.CSRF):
+                csrf_token = self.create_csrf_token()
+            else:
+                csrf_token = self.get_cookie(settings_api.CookieNames.CSRF)['value']
+            headers["X-CSRFToken"] = csrf_token
 
         return headers
 
@@ -134,11 +136,20 @@ class ApiClient:
                 return cookie
         return None
 
-    def get_csrf_token(self, check=True):
-        """Get csrf cookie"""
+    @allure.step("Getting CSRF token")
+    def create_csrf_token(self, check=True):
+        """Get CSRF token from site"""
         self.session.get(settings.Url.CSRF)
         csrf = self.get_cookie(settings_api.CookieNames.CSRF)
         if check:
             if csrf is None:
-                raise self.Exceptions.CsrfCookie("CSRF token not received")
-        return csrf
+                raise self.Exceptions.CsrfTokenNotReceived("CSRF token not received")
+        self.logger.info('Got CSRF token')
+        self.logger.debug(f'Got CSRF token: {csrf["value"]}')
+        return csrf['value']
+
+    def is_cookie_exists(self, name):
+        """Checking the existence of a cookie with a given name"""
+        if self.get_cookie(name) is None:
+            return False
+        return True
