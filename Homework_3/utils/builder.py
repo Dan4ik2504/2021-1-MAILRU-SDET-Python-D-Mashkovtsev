@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-
 import faker
+
+from utils import random_values
 
 fake = faker.Faker()
 
@@ -47,7 +48,7 @@ class Builder:
 
     @staticmethod
     def create_campaign_data():
-        url = fake.url()
+        url = random_values.get_random_letters_and_digits(random_values.random.randint(10, 30)) + ".com"
         name = fake.text(80)[:-1]
         return CampaignData(url=url, name=name)
 
