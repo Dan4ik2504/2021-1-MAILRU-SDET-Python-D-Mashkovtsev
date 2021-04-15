@@ -1,10 +1,16 @@
 import pytest
 import requests
 
+import settings
 from api.login import LoginApi
 from api.client import ApiClient
 from api.campaigns import CampaignsApi
 from api.segments import SegmentsApi
+
+
+@pytest.fixture(scope='function')
+def api_login(login_api):
+    login_api.login(login=settings.User.LOGIN, password=settings.User.PASSWORD)
 
 
 @pytest.fixture(scope='function')
