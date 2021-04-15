@@ -18,6 +18,7 @@ class NewCampaign:
     date_end: datetime.date = datetime.date.today() + datetime.timedelta(days=30)
     budget_limit_day: int = None
     budget_limit: int = None
+    price: str = None
 
     class OBJECTIVES:
         TRAFFIC = 'traffic'
@@ -158,19 +159,19 @@ class NewCampaign:
                 'fulltime': {
                     'flags': ['use_holidays_moving', 'cross_timezone'],
                     'mon': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'tue': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'wed': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'thu': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'fri': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'sat': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23],
+                            18, 19, 20, 21, 22, 23],
                     'sun': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                            18, 19, 20, 21, 23]
+                            18, 19, 20, 21, 22, 23]
                 },
                 'pads': [102634, 102643],
                 'mobile_types': ['tablets', 'smartphones'],
@@ -186,7 +187,7 @@ class NewCampaign:
             'mixing': 'recommended',
             'utm': None,
             'enable_utm': True,
-            'price': '7.38',
+            'price': str(self.price),
             'max_price': '0',
             'package_id': 811,
             'banners': banners
