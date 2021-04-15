@@ -260,15 +260,15 @@ class CampaignsApi(ApiClient):
         """Returns active campaigns"""
         self.logger.info("Searching for active campaigns")
         params = {
-            "fields": ','.join(['id', 'name', 'status']),
-            "sorting": "-id"
+            "fields": ','.join(['id', 'name']),
+            "sorting": "-id",
+            "_status__in": "active",
         }
         campaigns_dicts = self.get_request(settings.Url.Api.CAMPAIGNS, params=params)['items']
         campaigns_objects = []
         for campaign_dict in campaigns_dicts:
-            if campaign_dict['status'] == 'active':
-                campaign_object = Campaign(campaign_dict, self)
-                campaigns_objects.append(campaign_object)
+            campaign_object = Campaign(campaign_dict, self)
+            campaigns_objects.append(campaign_object)
 
         self.logger.info(f'{len(campaigns_objects)} active campaigns exists. {len(campaigns_dicts)} campaigns in total')
         self.logger.debug(f'There are {len(campaigns_objects)} active campaigns: '
