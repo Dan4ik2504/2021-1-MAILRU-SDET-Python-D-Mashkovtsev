@@ -7,7 +7,7 @@ import settings
 from api.client import ApiClient
 
 
-class NewCampaignJson:
+class NewCampaign:
     url: str = None
     name: str = None
     objective: str = None
@@ -277,7 +277,7 @@ class CampaignsApi(ApiClient):
 
     def get_new_campaign_object(self):
         """Returns new campaign instance"""
-        return NewCampaignJson(self)
+        return NewCampaign(self)
 
     def get_campaign_by_name(self, campaign_name):
         """Returns campaign found by the given name"""

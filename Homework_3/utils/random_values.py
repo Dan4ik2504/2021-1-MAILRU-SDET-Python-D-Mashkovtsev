@@ -18,6 +18,10 @@ def get_random_digits(length=DEFAULT_LENGTH):
     return ''.join(random.choices(string.digits, k=length))
 
 
+def get_random_bool():
+    return random.choice([True, False])
+
+
 # Custom methods
 
 def email():

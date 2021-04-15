@@ -80,19 +80,22 @@ class TestCampaigns(ApiTestsBase):
         new_camp.url = fake_campaign.url
         new_camp.name = campaign_name
         new_camp.objective = new_camp.OBJECTIVES.TRAFFIC
-        new_camp.enable_offline_goals = False
-        new_camp.set_age(20, 50)
-        new_camp.budget_limit_day = 12345
-        new_camp.budget_limit = 123456700
-        new_camp.targetings.sex_female = True
+        new_camp.age = fake_campaign.age
+        new_camp.budget_limit_day = fake_campaign.budget_limit_day
+        new_camp.budget_limit = fake_campaign.budget_limit
+        new_camp.targetings.sex_female = fake_campaign.sex_female
+        new_camp.targetings.sex_male = fake_campaign.sex_male
+        new_camp.price = fake_campaign.price
+        new_camp.date_start = fake_campaign.date_start
+        new_camp.date_end = fake_campaign.date_end
 
         interests = new_camp.targetings.interests
-        interests.games__computer_games = True
-        interests.movies__anime = True
+        for interest_name, interest_value in fake_campaign.interests.items():
+            interests.__setattr__(interest_name, interest_value)
 
         interests_soc_dem = new_camp.targetings.interests_soc_dem
-        interests_soc_dem.income__middle = True
-        interests_soc_dem.employment__works = True
+        for interest_name, interest_value in fake_campaign.interests_soc_dem.items():
+            interests_soc_dem.__setattr__(interest_name, interest_value)
 
         fake_banner = Builder.create_campaign_banner_data()
 
