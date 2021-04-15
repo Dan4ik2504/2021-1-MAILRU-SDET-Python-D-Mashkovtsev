@@ -45,8 +45,8 @@ class Segment:
     @allure.step("Segment deletion")
     def delete(self):
         """Sends a request to delete a segment"""
-        self.segments_api.delete_request(settings.Url.Api.SEGMENT_BY_ID.format(id=self.id), expected_status=204,
-                                         jsonify=False)
+        self.segments_api.delete_request(settings.Url.Api.SEGMENT_BY_ID.format(id=self.id),
+                                         expected_status=204, jsonify=False)
         self.segments_api.logger.info(f'Segment "{str(self)}" deleted')
 
     def __eq__(self, other):
@@ -60,7 +60,6 @@ class Segment:
 
 
 class SegmentsApi(ApiClient):
-
     class Exceptions(ApiClient.Exceptions):
         class SegmentNotExists(Exception):
             pass

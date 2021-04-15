@@ -28,7 +28,7 @@ class TestLogin(ApiTestsBase):
     @allure.title("Positive login test")
     @pytest.mark.API
     def test_positive_login(self):
-        self.login_api.post_login()
+        self.login_api.login()
         self.verify_login()
 
     @pytest.mark.parametrize(
@@ -45,13 +45,13 @@ class TestLogin(ApiTestsBase):
     @pytest.mark.API
     def test_negative_login(self, login, password):
         with pytest.raises(self.login_api.Exceptions.InvalidLogin):
-            self.login_api.post_login(login, password)
+            self.login_api.login(login, password)
         self.verify_logout()
 
     @allure.title("Logout test")
     @pytest.mark.API
     def test_logout(self):
-        self.login_api.post_login()
+        self.login_api.login()
         self.verify_login()
         self.login_api.logout()
         self.verify_logout()

@@ -12,4 +12,4 @@ class ApiTestsBase:
         self.segments_api = segments_api
 
         if self.authorize:
-            self.login_api.post_login()
+            self.login_api.login()
