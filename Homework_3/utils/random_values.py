@@ -1,7 +1,22 @@
+import os
 import random
 import string
+import time
 
 DEFAULT_LENGTH = 10
+
+
+def init_random_seed(config):
+    """
+    Creates a random seed in the main process and shares it between worker processes
+    to avoid the error "Different tests were collected..."
+    """
+    if config.is_master_process:
+        seed = time.time()
+        os.environ["mytarget_tests_random_seed"] = str(seed)
+    else:
+        seed = float(os.environ.get("mytarget_tests_random_seed"))
+    random.seed(seed)
 
 
 # Base methods

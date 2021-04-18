@@ -6,6 +6,8 @@ from base import ApiTestsBase
 from utils.builder import Builder
 import exceptions
 
+from utils import random_values
+
 
 class TestLogin(ApiTestsBase):
     authorize = False
@@ -35,11 +37,11 @@ class TestLogin(ApiTestsBase):
     @pytest.mark.parametrize(
         ("login", "password"),
         (
-                (pytest.lazy_fixture("random_email"), pytest.lazy_fixture("random_password")),
-                (pytest.lazy_fixture("random_phone_number"), pytest.lazy_fixture("random_password")),
-                (pytest.lazy_fixture("random_email"), settings.User.PASSWORD),
-                (settings.User.LOGIN, pytest.lazy_fixture("random_password")),
-                (pytest.lazy_fixture("random_incorrect_login"), pytest.lazy_fixture("random_password")),
+                (random_values.email(), random_values.password()),
+                (random_values.phone_number(), random_values.password()),
+                (random_values.email(), settings.User.PASSWORD),
+                (settings.User.LOGIN, random_values.password()),
+                (random_values.incorrect_login(), random_values.password()),
         )
     )
     @allure.title("Negative login test")
