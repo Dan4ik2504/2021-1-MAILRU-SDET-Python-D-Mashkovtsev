@@ -1,11 +1,5 @@
 # Base exceptions
 
-class CacheException(Exception):
-    """
-    Thrown when no cache is created or loaded from a cache file
-    """
-
-
 class TestException(Exception):
     """
     Base test exception
