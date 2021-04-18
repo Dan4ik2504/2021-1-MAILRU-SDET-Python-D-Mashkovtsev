@@ -4,6 +4,7 @@ import pytest
 import settings
 from base import ApiTestsBase
 from utils.builder import Builder
+import exceptions
 
 
 class TestLogin(ApiTestsBase):
@@ -44,7 +45,7 @@ class TestLogin(ApiTestsBase):
     @allure.title("Negative login test")
     @pytest.mark.API
     def test_negative_login(self, login, password):
-        with pytest.raises(self.login_api.Exceptions.InvalidLogin):
+        with pytest.raises(exceptions.LoginError):
             self.login_api.login(login, password)
         self.verify_logout()
 

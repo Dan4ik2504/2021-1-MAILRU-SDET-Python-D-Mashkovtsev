@@ -5,6 +5,7 @@ import allure
 
 import settings
 from api.client import ApiClient
+import exceptions
 
 
 class NewCampaign:
@@ -237,11 +238,6 @@ class Campaign:
 
 
 class CampaignsApi(ApiClient):
-
-    class Exceptions(ApiClient.Exceptions):
-        class CampaignNotExists(Exception):
-            pass
-
     @allure.step('Image "{img_name}" uploading')
     def load_image(self, img_name, repo_root, test_files_dir=settings.Basic.TEST_FILES_DIR):
         """Uploads an image to the server and returns the image ID"""
@@ -286,4 +282,4 @@ class CampaignsApi(ApiClient):
         for campaign in campaigns:
             if campaign.name == campaign_name:
                 return campaign
-        raise self.Exceptions.CampaignNotExists(f'Campaign with name "{campaign_name}" does not exists')
+        raise exceptions.CampaignNotExist(f'Campaign with name "{campaign_name}" does not exists')

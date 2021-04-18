@@ -2,6 +2,7 @@ import allure
 
 import settings
 from api.client import ApiClient
+import exceptions
 
 
 class NewSegment:
@@ -60,10 +61,6 @@ class Segment:
 
 
 class SegmentsApi(ApiClient):
-    class Exceptions(ApiClient.Exceptions):
-        class SegmentNotExists(Exception):
-            pass
-
     @allure.step("Searching for segments")
     def get_all_segments(self):
         """Returns all segments"""
@@ -95,4 +92,4 @@ class SegmentsApi(ApiClient):
         for segments in segments:
             if segments.name == segment_name:
                 return segments
-        raise self.Exceptions.SegmentNotExists(f'Segment with name "{segment_name}" does not exists')
+        raise exceptions.SegmentNotExists(f'Segment with name "{segment_name}" does not exists')

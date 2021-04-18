@@ -5,6 +5,7 @@ import requests
 
 import settings
 from api import settings_api
+import exceptions
 
 
 class ApiClient:
@@ -12,16 +13,6 @@ class ApiClient:
         GET = "GET"
         POST = "POST"
         DELETE = "DELETE"
-
-    class Exceptions:
-        class InvalidResponse(Exception):
-            pass
-
-        class JsonUnserializable(Exception):
-            pass
-
-        class CsrfTokenNotReceived(Exception):
-            pass
 
     def __init__(self, session):
         self.session: requests.Session = session
@@ -90,15 +81,15 @@ class ApiClient:
         log_post(self.logger, response)
 
         if int(response.status_code) != int(expected_status):
-            raise self.Exceptions.InvalidResponse(f'Got {response.status_code} {response.reason} for URL "{url}"! '
-                                                  f'Expected status_code: {expected_status}.')
+            raise exceptions.InvalidResponse(f'Got {response.status_code} {response.reason} for URL "{url}"! '
+                                             f'Expected status_code: {expected_status}.')
 
         if jsonify:
             try:
                 json_response = response.json()
                 return json_response
             except JSONDecodeError:
-                raise self.Exceptions.JsonUnserializable("Unable to decode response in json")
+                raise exceptions.ResponseUnserializableToJSON("Unable to decode response in JSON")
         return response
 
     def get_request(self, url, params=None, data=None, headers=None, cookies=None, files=None,
@@ -143,7 +134,7 @@ class ApiClient:
         csrf = self.get_cookie(settings_api.CookieNames.CSRF)
         if check:
             if csrf is None:
-                raise self.Exceptions.CsrfTokenNotReceived("CSRF token not received")
+                raise exceptions.InvalidResponse("CSRF token not received")
         self.logger.info('Got CSRF token')
         self.logger.debug(f'Got CSRF token: {csrf["value"]}')
         return csrf['value']

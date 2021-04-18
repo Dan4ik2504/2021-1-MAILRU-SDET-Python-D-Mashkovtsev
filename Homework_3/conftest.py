@@ -10,6 +10,7 @@ import os
 
 import settings
 from utils import random_values
+import exceptions
 
 from api.fixtures import *
 
@@ -101,9 +102,6 @@ class RandomValues:
         "incorrect_login": random_values.incorrect_login,
     }
 
-    class NoCacheException(Exception):
-        pass
-
     @dataclasses.dataclass(frozen=True)
     class CacheClass:
         password: str
@@ -118,7 +116,7 @@ class RandomValues:
     def cache(self):
         if self._cache:
             return self._cache
-        raise self.NoCacheException("The cache was not created in the fixture")
+        raise exceptions.CacheException("The cache was not created in the fixture")
 
     @cache.setter
     def cache(self, value: dict):
@@ -139,7 +137,7 @@ class RandomValues:
             self.cache = result
             logging.info("Random values loaded from cache file")
         else:
-            raise self.NoCacheException("Cache file is empty")
+            raise exceptions.CacheException("Cache file is empty")
 
     def random_values_create_cache(self, random_values_cache_file_path):
         for key in self.data.keys():
@@ -157,7 +155,7 @@ class RandomValues:
                 os.makedirs(os.path.dirname(path))
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
-                    raise
+                    raise exc
 
 
 @pytest.fixture(scope='session')
