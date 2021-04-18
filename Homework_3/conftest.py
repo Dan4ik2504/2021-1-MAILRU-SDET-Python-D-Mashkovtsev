@@ -6,7 +6,7 @@ import pytest
 import os
 
 import settings
-from utils import random_values
+from utils.random_values import random_values
 
 from api.fixtures import *
 

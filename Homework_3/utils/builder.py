@@ -4,7 +4,7 @@ import faker
 import random
 
 from api.campaigns import NewCampaign
-from utils import random_values
+from utils.random_values import random_values
 
 fake = faker.Faker()
 
