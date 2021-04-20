@@ -45,3 +45,22 @@ class TestAssistant(BaseCase):
 
             assert card.title == "146 млн."
             assert card.text == "Россия"
+
+    @allure.title("Test calculator")
+    @pytest.mark.AndroidUI
+    @pytest.mark.parametrize(
+        ("expression", "answer"),
+        (
+                ("2 + 2", "4"),
+                ("623 * 32", "19936")
+        )
+    )
+    def test_calculator(self, expression, answer):
+        item_locator = self.assistant_page.locators.DIALOG_ITEM
+        items_number = len(self.assistant_page.find_elements(item_locator))
+        self.assistant_page.send_text_to_assistant(expression)
+        self.assistant_page.custom_wait(self.assistant_page.check.is_new_element_located,
+                                        locator=item_locator, elements_count=items_number)
+        items_list = self.assistant_page.get_visible_dialog_items_text()
+        item = items_list[-1]
+        assert item == answer

@@ -45,7 +45,7 @@ class AssistantPage(BasePage):
                 title = element.find_element(*self.locators.DIALOG_FACT_CARD_TITLE).text
             except NoSuchElementException:
                 title = None
-                
+
             try:
                 text = element.find_element(*self.locators.DIALOG_FACT_CARD_TEXT).text
             except NoSuchElementException:
@@ -58,9 +58,20 @@ class AssistantPage(BasePage):
                           f'{"; ".join(["{}: {}".format(card.title, card.text[:100]) for card in cards_objects])}')
         return cards_objects
     
-    @allure.step("Getting visible suggest text")
-    def get_visible_suggest_text(self):
+    @allure.step("Getting visible suggestions")
+    def get_visible_suggestions_elements(self):
         elements = self.find_elements(self.locators.SUGGEST_TEXT_ITEM)
         self.logger.info(f'Got {len(elements)} suggestions')
         self.logger.debug(f'Suggestions: {"; ".join([str(elem.text) for elem in elements if elem.text is not None])}')
         return elements
+
+    @allure.step("Getting visible dialog items")
+    def get_visible_dialog_items_text(self):
+        elements = self.find_elements(self.locators.DIALOG_ITEM)
+        items_text = []
+        for element in elements:
+            items_text.append(element.text)
+        self.logger.info(f'Got {len(items_text)} items')
+        self.logger.debug(f'Items: {"; ".join(items_text)}')
+        return items_text
+
