@@ -1,6 +1,9 @@
+import re
+
 import allure
 import pytest
 
+import settings
 from test_app.base import BaseCase
 
 
@@ -93,3 +96,18 @@ class TestSettings(BaseCase):
             player_elem = self.assistant_page.find(self.assistant_page.locators.PLAYER_TRACK_NAME)
             assert player_elem.text == "Вести ФМ"
 
+    @allure.title("About app page test")
+    @pytest.mark.AndroidUI
+    def test_about_app(self):
+        with allure.step("Opening about app page"):
+            settings_page = self.assistant_page.go_to_settings_page()
+            about_app_page = settings_page.go_to_about_app_page()
+
+        with allure.step("Comparison of application versions"):
+            app_version_on_page = about_app_page.get_app_version()
+            app_version_in_file_name = re.findall(r"^\w+?_v(?P<version>[\d,\.]+?)\.apk$", settings.App.NAME)[0]
+            assert app_version_on_page == app_version_in_file_name
+
+        with allure.step("Checking for the presence of a trademark"):
+            assert re.match(r"^Mail\.ru Group © \d{4}–\d{4}\. Все права защищены\.$",
+                            about_app_page.get_about_copyright_text())
