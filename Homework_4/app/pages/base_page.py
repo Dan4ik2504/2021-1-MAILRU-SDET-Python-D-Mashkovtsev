@@ -34,38 +34,33 @@ class BasePage:
         LEFT = "left"
         RIGHT = "right"
 
-    class _Coordinates:
-        def __init__(self, driver):
-            self.dimension = driver.get_window_size()
-
-        @property
-        def x_center(self):
-            return int(self.dimension['width'] / 2)
-
-        @property
-        def y_center(self):
-            return int(self.dimension['height'] / 2)
-
-        @property
-        def y_top(self):
-            return int(self.dimension['height'] * 0.2)
-
-        @property
-        def y_bottom(self):
-            return int(self.dimension['height'] * 0.8)
-
-        @property
-        def x_left(self):
-            return int(self.dimension['width'] * 0.2)
-
-        @property
-        def x_right(self):
-            return int(self.dimension['width'] * 0.8)
-
     def __init__(self, driver):
         self.driver: WebDriver = driver
-        self.window_coordinates = self._Coordinates(driver)
+        self.screen_coordinates = self.get_screen_coordinates()
         self.check = self._Check(self)
+
+    def get_screen_coordinates(self, indent: float = settings.Basic.DEFAULT_INDENT_PERCENT):
+        """
+        Returns an instance of the Coordinates class with screen coordinates
+
+        :param indent: Offset from the borders of the screen as a percentage of the width (in the case of X) and
+        height (in the case of Y) of the screen
+        """
+
+        dimension = self.driver.get_window_size()
+
+        x_center = int(dimension['width'] / 2)
+        y_center = int(dimension['height'] / 2)
+        y_top = int(dimension['height'] * indent)
+        y_bottom = int(dimension['height'] * (1 - indent))
+        x_left = int(dimension['width'] * indent)
+        x_right = int(dimension['width'] * (1 - indent))
+
+        coordinates = Coordinates(x_center=x_center, y_center=y_center, y_top=y_top, y_bottom=y_bottom, x_left=x_left,
+                                  x_right=x_right)
+        self.logger.debug(f'Screen coordinates: {str(dataclasses.asdict(coordinates))}')
+
+        return coordinates
 
     def wait(self, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """WebDriverWait"""
@@ -119,15 +114,23 @@ class BasePage:
 
     @allure.step('Fill field "{locator}" by text "{text}"')
     def fill_field(self, locator, text):
+        """Filling a field with text"""
         self.logger.info(f'Fill field "{locator[1]}" (type: {locator[0]}) by "{text}"')
         element = self.wait().until(EC.visibility_of_element_located(locator))
         self.custom_wait(self.check.is_visible, locator)
         element.clear()
         element.send_keys(text)
 
-    def swipe(self, x_start, y_start, x_end, y_end, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
-              swipe_length=1):
-        """Swipe to the given coordinates"""
+    def swipe(self, x_start, y_start, x_end, y_end, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+        """
+        Swipe to the given coordinates
+
+        :param x_start: Swipe start coordinate
+        :param y_start: Swipe start coordinate
+        :param x_end: Swipe end coordinate
+        :param y_end: Swipe end coordinate
+        :param swipetime: Swipe time
+        """
         self.touch_action. \
             press(x=x_start, y=y_start). \
             wait(ms=swipetime). \
@@ -141,13 +144,19 @@ class BasePage:
         """
         Swipe to the top at the specified coordinates.
         By default, uses window coordinates
+
+        :param y_bottom: Bottom coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param y_top: Top coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param x_center: X-axis coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
         """
         self.logger.info("Swipe top")
-        x = x_center if x_center else self.window_coordinates.x_center
-        y_start = y_bottom if y_bottom else self.window_coordinates.y_bottom
-        y_end = y_top if y_top else self.window_coordinates.y_top
+        x = x_center if x_center else self.screen_coordinates.x_center
+        y_start = y_bottom if y_bottom else self.screen_coordinates.y_bottom
+        y_end = y_top if y_top else self.screen_coordinates.y_top
         y_end = int(y_start - ((y_start - y_end) * swipe_length))
-        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime, swipe_length=swipe_length)
+        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime)
 
     @allure.step("Swipe bottom")
     def swipe_bottom(self, x_center=None, y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
@@ -155,13 +164,19 @@ class BasePage:
         """
         Swipe to the bottom at the specified coordinates.
         By default, uses window coordinates
+
+        :param y_bottom: Bottom coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param y_top: Top coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param x_center: X-axis coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
         """
         self.logger.info("Swipe bottom")
-        x = x_center if x_center else self.window_coordinates.x_center
-        y_start = y_top if y_top else self.window_coordinates.y_top
-        y_end = y_bottom if y_bottom else self.window_coordinates.y_bottom
+        x = x_center if x_center else self.screen_coordinates.x_center
+        y_start = y_top if y_top else self.screen_coordinates.y_top
+        y_end = y_bottom if y_bottom else self.screen_coordinates.y_bottom
         y_end = int(y_start + ((y_end - y_start) * swipe_length))
-        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime, swipe_length=swipe_length)
+        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime)
 
     @allure.step("Swipe left")
     def swipe_left(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
@@ -169,13 +184,19 @@ class BasePage:
         """
         Swipe to the left at the specified coordinates.
         By default, uses window coordinates
+
+        :param y_center: Y-axis coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_right: Right coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_left: Left coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
         """
         self.logger.info("Swipe left")
-        y = y_center if y_center else self.window_coordinates.y_center
-        x_start = x_right if x_right else self.window_coordinates.x_right
-        x_end = x_left if x_left else self.window_coordinates.x_left
+        y = y_center if y_center else self.screen_coordinates.y_center
+        x_start = x_right if x_right else self.screen_coordinates.x_right
+        x_end = x_left if x_left else self.screen_coordinates.x_left
         x_end = int(x_start - ((x_start - x_end) * swipe_length))
-        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime, swipe_length=swipe_length)
+        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime)
 
     @allure.step("Swipe right")
     def swipe_right(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
@@ -183,18 +204,36 @@ class BasePage:
         """
         Swipe to the right at the specified coordinates.
         By default, uses window coordinates
+
+        :param y_center: Y-axis coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_right: Right coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_left: Left coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
         """
         self.logger.info("Swipe right")
-        y = y_center if y_center else self.window_coordinates.y_center
-        x_start = x_left if x_left else self.window_coordinates.x_left
-        x_end = x_right if x_right else self.window_coordinates.x_right
+        y = y_center if y_center else self.screen_coordinates.y_center
+        x_start = x_left if x_left else self.screen_coordinates.x_left
+        x_end = x_right if x_right else self.screen_coordinates.x_right
         x_end = int(x_start + ((x_end - x_start) * swipe_length))
-        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime, swipe_length=swipe_length)
+        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime)
 
     @allure.step("Swipe {direction}")
     def swipe_in_direction(self, direction: str, x_left=None, x_right=None, y_center=None, x_center=None,
                            y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS, swipe_length=1):
-        """Swipe to the specified direction"""
+        """
+        Swipe to the specified direction
+
+        :param y_bottom: Bottom coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param y_top: Top coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param x_center: X-axis coordinate of the swipe. Specified if swipe direction is 'top' or 'bottom'
+        :param y_center: Y-axis coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_right: Right coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param x_left: Left coordinate of the swipe. Specified if swipe direction is 'left' or 'right'
+        :param direction: left, right, top, bottom
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
+        """
         self.logger.info(f"Swipe {direction}")
         if direction == self.SwipeTo.LEFT:
             self.swipe_left(y_center=y_center, x_left=x_left, x_right=x_right, swipetime=swipetime,
@@ -215,7 +254,9 @@ class BasePage:
     def swipe_to_element(self, locator, direction=SwipeTo.TOP, max_swipes=settings.Basic.MAX_SWIPES,
                          swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS, swipe_over_element_locator=None,
                          swipe_length=1):
-        """Swiping until element is visible.
+        """
+        Swiping until element is visible.
+
         :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
         :param swipetime: Swipe time
         :param max_swipes: Max number of swipes
@@ -279,12 +320,7 @@ class BasePage:
                         log_msg = f'Searching of the element'
                         with allure.step(log_msg):
                             self.logger.info(log_msg)
-                            self.find(locator, timeout=timeout)
-
-                        log_msg = f'Waiting for element to be clickable'
-                        with allure.step(log_msg):
-                            self.logger.info(log_msg)
-                            elem = self.wait(timeout).until(EC.element_to_be_clickable(locator))
+                            elem = self.find(locator, timeout=timeout)
 
                         log_msg = f'Clicking on element'
                         with allure.step(log_msg):

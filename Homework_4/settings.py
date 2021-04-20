@@ -16,6 +16,7 @@ class Basic:
     CLICK_RETRY = 3
     MAX_SWIPES = 5
     DEFAULT_SWIPE_TIME_MS = 200
+    DEFAULT_INDENT_PERCENT = 0.2
     TEST_FILES_DIR = 'files'
     TEMPORARY_FILES_DIR = 'temporary_files'
     APP_PATH = os.path.abspath(os.path.join(TEST_FILES_DIR, "Marussia_v1.39.1.apk"))

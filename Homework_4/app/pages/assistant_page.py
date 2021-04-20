@@ -19,7 +19,7 @@ class AssistantPage(BasePage):
     locators = AssistantPageLocators
     
     def is_opened(self):
-        return self.custom_wait(self.check.is_visible, locator=self.locators.TOOLBAR)
+        return self.check.is_visible(self.locators.TOOLBAR, raise_exception=False)
 
     @allure.step("Opening the keyboard")
     def open_keyboard(self):
@@ -48,16 +48,12 @@ class AssistantPage(BasePage):
         for element in elements:
             try:
                 title = element.find_element(*self.locators.DIALOG_FACT_CARD_TITLE).text
-            except NoSuchElementException:
-                title = None
-
-            try:
                 text = element.find_element(*self.locators.DIALOG_FACT_CARD_TEXT).text
             except NoSuchElementException:
-                text = None
-
-            card_obj = DialogFactCard(title=title, text=text)
-            cards_objects.append(card_obj)
+                continue
+            else:
+                card_obj = DialogFactCard(title=title, text=text)
+                cards_objects.append(card_obj)
         self.logger.info(f'Got {len(cards_objects)} fact cards')
         self.logger.debug(f'Fact cards: '
                           f'{"; ".join(["{}: {}".format(card.title, card.text[:100]) for card in cards_objects])}')
@@ -82,12 +78,13 @@ class AssistantPage(BasePage):
 
     @allure.step("Settings page opening")
     def go_to_settings_page(self):
+        """Opens settings page and returns settings page object"""
         buttons_locators = (self.locators.OPEN_SETTINGS_BUTTON, self.locators.OPEN_ASSISTANT_MENU_BUTTON)
         element = None
         for locator in buttons_locators:
             try:
                 element = self.fast_find(locator)
-            except exceptions.ElementNotFound as exc:
+            except exceptions.ElementNotFound:
                 pass
         if element is not None:
             element.click()
@@ -99,4 +96,16 @@ class AssistantPage(BasePage):
         settings_page.custom_wait(settings_page.is_opened)
         self.logger.info("Settings page is open")
         return settings_page
+
+    @allure.step('Clicking on suggest with text "{suggest_text}"')
+    def click_on_suggest(self, suggest_text):
+        """Clicking on suggest with given text. If necessary, a swipe will be made to element to be clicked"""
+        suggest_locator = self.locators.SUGGEST_TEXT_ITEM_WITH_TEXT__BASE
+        suggest_locator = (suggest_locator[0], suggest_locator[1].format(text=suggest_text))
+        self.logger.info(f'Swiping and clicking on suggest found by locator "{suggest_locator[1]}" (type: {suggest_locator[0]})')
+        suggest_elem = self.swipe_to_element(
+            locator=suggest_locator, direction=self.SwipeTo.LEFT,
+            swipe_over_element_locator=self.locators.SUGGEST_LIST, swipe_length=0.3)
+        suggest_elem.click()
+        self.logger.info(f'The element with text "{suggest_text}" has been clicked')
 

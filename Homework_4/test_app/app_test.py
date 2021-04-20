@@ -28,13 +28,7 @@ class TestAssistant(BaseCase):
 
         with allure.step("Clicking on suggest"):
             suggest_text = "численность населения россии"
-            suggest_locator = self.assistant_page.locators.SUGGEST_TEXT_ITEM_WITH_TEXT__BASE
-            suggest_locator = (suggest_locator[0], suggest_locator[1].format(text=suggest_text))
-            suggest_elem = self.assistant_page.swipe_to_element(
-                locator=suggest_locator, direction=self.assistant_page.SwipeTo.LEFT,
-                swipe_over_element_locator=self.assistant_page.locators.SUGGEST_LIST, swipe_length=0.3)
-            assert suggest_elem.text == suggest_text
-            suggest_elem.click()
+            self.assistant_page.click_on_suggest(suggest_text)
 
             self.assistant_page.custom_wait(self.assistant_page.check.is_new_element_located,
                                             locator=self.assistant_page.locators.DIALOG_FACT_CARD,
@@ -42,7 +36,7 @@ class TestAssistant(BaseCase):
 
         with allure.step("Checking that the card exists"):
             cards = self.assistant_page.get_visible_fact_cards()
-            assert len(cards) == 2
+            assert len(cards) > 0
 
             card = cards[-1]
 
@@ -80,16 +74,13 @@ class TestSettings(BaseCase):
 
         with allure.step("Selecting a news source"):
             news_sources.select_source(news_sources.SOURCES.VESTI_FM)
-
-            assert news_sources.check.is_visible(news_sources.locators.CHECKED_SOURCE_NAME)
-            checked_source = news_sources.find(news_sources.locators.CHECKED_SOURCE_NAME)
-            assert checked_source.text == "Вести FM"
+            checked_source = news_sources.get_checked_source()
+            assert checked_source == "Вести FM"
 
         with allure.step("Opening assistant page"):
             self.driver.back()
             self.driver.back()
             self.assistant_page.custom_wait(self.assistant_page.is_opened)
-            assert self.assistant_page.is_opened()
 
         with allure.step("Checking news source"):
             self.assistant_page.send_text_to_assistant("News")
@@ -105,7 +96,7 @@ class TestSettings(BaseCase):
 
         with allure.step("Comparison of application versions"):
             app_version_on_page = about_app_page.get_app_version()
-            app_version_in_file_name = re.findall(r"^\w+?_v(?P<version>[\d,\.]+?)\.apk$", settings.App.NAME)[0]
+            app_version_in_file_name = re.findall(r"^\w+?_v(?P<version>[\d\.]+?)\.apk$", settings.App.NAME)[0]
             assert app_version_on_page == app_version_in_file_name
 
         with allure.step("Checking for the presence of a trademark"):

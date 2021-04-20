@@ -38,3 +38,17 @@ class CheckException(TestException):
     """
     Checking exception
     """
+
+
+# News sources setup page exceptions
+
+class NewsSourcesPageException(TestException):
+    """
+    News sources setup page exceptions
+    """
+
+
+class CheckedSourceNotFound(NewsSourcesPageException):
+    """
+    Thrown when checked source is not found
+    """

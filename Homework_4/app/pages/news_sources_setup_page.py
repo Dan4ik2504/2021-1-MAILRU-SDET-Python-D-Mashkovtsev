@@ -1,5 +1,6 @@
 import allure
 
+import exceptions
 from app.pages.base_page import BasePage
 from app.locators.news_sources_setup_page import NewsSourcesSetupPageLocators
 
@@ -27,4 +28,14 @@ class NewsSourcesSetupPage(BasePage):
         self.custom_wait(self.check.is_visible, locator=checked_source_locator)
         self.logger.info('Source selected')
 
-
+    @allure.step('Finding a checked source')
+    def get_checked_source(self):
+        """Returns the name of the checked source"""
+        source_locator = self.locators.CHECKED_SOURCE_NAME
+        if self.check.is_visible(source_locator):
+            source_name = self.find(source_locator).text
+            self.logger.info(f'Checked source found: "{source_name}"')
+            return source_name
+        else:
+            raise exceptions.CheckedSourceNotFound(f'Checked source not found by locator '
+                                                   f'"{source_locator[1]}" (type: {source_locator[0]})')
