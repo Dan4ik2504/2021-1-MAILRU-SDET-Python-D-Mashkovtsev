@@ -80,14 +80,14 @@ class BasePage:
         """Hiding the system keyboard"""
         self.driver.hide_keyboard()
 
-    def find(self, locator, timeout=None):
+    def find(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Finding element by locator"""
         log_msg = f'Searching of the element by locator: "{locator[1]}" (type: {locator[0]})'
         with allure.step(log_msg):
             self.logger.info(log_msg)
             try:
                 element = self.wait(timeout).until(EC.presence_of_element_located(locator))
-                self.logger.info(f'Element have been found: "{element.tag_name}"')
+                self.logger.info(f'Element have been found')
                 return element
             except TimeoutException:
                 raise exceptions.ElementNotFound(f'Element not found by locator: "{locator[1]}" (type: {locator[0]})')
@@ -99,30 +99,22 @@ class BasePage:
             self.logger.info(log_msg)
             try:
                 element = self.driver.find_element(*locator)
-                self.logger.info(f'Element have been found: "{element.tag_name}"')
+                self.logger.info(f'Element have been found')
                 return element
             except (NoSuchElementException, StaleElementReferenceException):
                 raise exceptions.ElementNotFound(f'Element not found by locator: "{locator[1]}" (type: {locator[0]})')
 
     def find_elements(self, locator):
-        """Finding an items by locator"""
+        """Finding an elements by locator"""
         log_msg = f'Searching elements by locator: "{locator[1]}" (type: {locator[0]})'
         with allure.step(log_msg):
             self.logger.info(log_msg)
             elements = self.driver.find_elements(*locator)
 
-            elements_names = []
-            for e in elements:
-                try:
-                    elements_names.append(e.tag_name)
-                except StaleElementReferenceException:
-                    pass
-
             if len(elements) > 0:
                 self.logger.info(f'{len(elements)} element(s) have been found')
-                self.logger.debug(f'Element(s) have been found: "{", ".join(elements_names)}"')
             else:
-                self.logger.info(f'No items found')
+                self.logger.info(f'No elements found')
             return elements
 
     @allure.step('Fill field "{locator}" by text "{text}"')
@@ -130,9 +122,11 @@ class BasePage:
         self.logger.info(f'Fill field "{locator[1]}" (type: {locator[0]}) by "{text}"')
         element = self.wait().until(EC.visibility_of_element_located(locator))
         self.custom_wait(self.check.is_visible, locator)
+        element.clear()
         element.send_keys(text)
 
-    def swipe(self, x_start, y_start, x_end, y_end, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe(self, x_start, y_start, x_end, y_end, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+              swipe_length=1):
         """Swipe to the given coordinates"""
         self.touch_action. \
             press(x=x_start, y=y_start). \
@@ -142,7 +136,8 @@ class BasePage:
             perform()
 
     @allure.step("Swipe top")
-    def swipe_top(self, x_center=None, y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe_top(self, x_center=None, y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+                  swipe_length=1):
         """
         Swipe to the top at the specified coordinates.
         By default, uses window coordinates
@@ -151,10 +146,12 @@ class BasePage:
         x = x_center if x_center else self.window_coordinates.x_center
         y_start = y_bottom if y_bottom else self.window_coordinates.y_bottom
         y_end = y_top if y_top else self.window_coordinates.y_top
-        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime)
+        y_end = int(y_start - ((y_start - y_end) * swipe_length))
+        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime, swipe_length=swipe_length)
 
     @allure.step("Swipe bottom")
-    def swipe_bottom(self, x_center=None, y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe_bottom(self, x_center=None, y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+                     swipe_length=1):
         """
         Swipe to the bottom at the specified coordinates.
         By default, uses window coordinates
@@ -163,10 +160,12 @@ class BasePage:
         x = x_center if x_center else self.window_coordinates.x_center
         y_start = y_top if y_top else self.window_coordinates.y_top
         y_end = y_bottom if y_bottom else self.window_coordinates.y_bottom
-        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime)
+        y_end = int(y_start + ((y_end - y_start) * swipe_length))
+        self.swipe(x_start=x, x_end=x, y_start=y_start, y_end=y_end, swipetime=swipetime, swipe_length=swipe_length)
 
     @allure.step("Swipe left")
-    def swipe_left(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe_left(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+                   swipe_length=1):
         """
         Swipe to the left at the specified coordinates.
         By default, uses window coordinates
@@ -175,10 +174,12 @@ class BasePage:
         y = y_center if y_center else self.window_coordinates.y_center
         x_start = x_right if x_right else self.window_coordinates.x_right
         x_end = x_left if x_left else self.window_coordinates.x_left
-        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime)
+        x_end = int(x_start - ((x_start - x_end) * swipe_length))
+        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime, swipe_length=swipe_length)
 
     @allure.step("Swipe right")
-    def swipe_right(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe_right(self, y_center=None, x_left=None, x_right=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+                    swipe_length=1):
         """
         Swipe to the right at the specified coordinates.
         By default, uses window coordinates
@@ -187,56 +188,84 @@ class BasePage:
         y = y_center if y_center else self.window_coordinates.y_center
         x_start = x_left if x_left else self.window_coordinates.x_left
         x_end = x_right if x_right else self.window_coordinates.x_right
-        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime)
+        x_end = int(x_start + ((x_end - x_start) * swipe_length))
+        self.swipe(x_start=x_start, x_end=x_end, y_start=y, y_end=y, swipetime=swipetime, swipe_length=swipe_length)
 
     @allure.step("Swipe {direction}")
     def swipe_in_direction(self, direction: str, x_left=None, x_right=None, y_center=None, x_center=None,
-                           y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+                           y_top=None, y_bottom=None, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS, swipe_length=1):
         """Swipe to the specified direction"""
         self.logger.info(f"Swipe {direction}")
         if direction == self.SwipeTo.LEFT:
-            self.swipe_left(y_center=y_center, x_left=x_left, x_right=x_right, swipetime=swipetime)
+            self.swipe_left(y_center=y_center, x_left=x_left, x_right=x_right, swipetime=swipetime,
+                            swipe_length=swipe_length)
         elif direction == self.SwipeTo.RIGHT:
-            self.swipe_right(y_center=y_center, x_left=x_left, x_right=x_right, swipetime=swipetime)
+            self.swipe_right(y_center=y_center, x_left=x_left, x_right=x_right, swipetime=swipetime,
+                             swipe_length=swipe_length)
         elif direction == self.SwipeTo.TOP:
-            self.swipe_top(x_center=x_center, y_top=y_top, y_bottom=y_bottom, swipetime=swipetime)
+            self.swipe_top(x_center=x_center, y_top=y_top, y_bottom=y_bottom, swipetime=swipetime,
+                           swipe_length=swipe_length)
         elif direction == self.SwipeTo.BOTTOM:
-            self.swipe_bottom(x_center=x_center, y_top=y_top, y_bottom=y_bottom, swipetime=swipetime)
+            self.swipe_bottom(x_center=x_center, y_top=y_top, y_bottom=y_bottom, swipetime=swipetime,
+                              swipe_length=swipe_length)
         else:
             raise exceptions.IncorrectSwipeDirection(f'Incorrect swipe direction: {direction}')
 
     @allure.step("Swipe {direction} to {locator}")
     def swipe_to_element(self, locator, direction=SwipeTo.TOP, max_swipes=settings.Basic.MAX_SWIPES,
-                         swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
-        """Swiping until element is visible"""
+                         swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS, swipe_over_element_locator=None,
+                         swipe_length=1):
+        """Swiping until element is visible.
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
+        :param max_swipes: Max number of swipes
+        :param direction: Scrolling direction
+        :param locator: Locator of the element
+        :param swipe_over_element_locator: If specified, swiping occurs on the element found by the given locator
+        """
         self.logger.info(f'Swipe {direction} to "{locator[1]}" (type: {locator[0]})')
         already_swiped = 0
-        while len(self.driver.find_elements(*locator)) == 0:
+        elements = self.driver.find_elements(*locator)
+        while len(elements) == 0:
             if already_swiped > max_swipes:
                 raise TimeoutException(f"Error with {locator}, please check function")
-            self.swipe_in_direction(direction, swipetime=swipetime)
+            if swipe_over_element_locator:
+                self.swipe_over_element(swipe_over_element_locator, direction=direction, swipetime=swipetime,
+                                        swipe_length=swipe_length)
+            else:
+                self.swipe_in_direction(direction, swipetime=swipetime, swipe_length=swipe_length)
             already_swiped += 1
+            elements = self.driver.find_elements(*locator)
+        return elements[0]
 
     @staticmethod
     def get_element_coords(element):
         """Returns the coordinates of the element"""
-        x_left = element.location['x']
-        x_right = x_left + element.rect['width']
+        x_left = int(element.location['x'])
+        x_right = int(x_left + element.rect['width'])
         x_center = (x_left + x_right) // 2
-        y_top = element.location['y']
-        y_bottom = y_top + element.rect['height']
+        x_indent = element.rect['width'] // 10
+        x_left += x_indent
+        x_right -= x_indent
+
+        y_top = int(element.location['y'])
+        y_bottom = int(y_top + element.rect['height'])
         y_center = (y_top + y_bottom) // 2
+        y_indent = element.rect['height'] // 10
+        y_top += y_indent
+        y_bottom -= y_indent
         coordinates = Coordinates(x_left=x_left, x_right=x_right, x_center=x_center,
                                   y_top=y_top, y_bottom=y_bottom, y_center=y_center)
         return coordinates
 
     @allure.step("Swipe {direction} over {locator}")
-    def swipe_over_element(self, locator, direction=SwipeTo.TOP, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
+    def swipe_over_element(self, locator, direction=SwipeTo.TOP, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
+                           swipe_length=1):
         """Swipe over element"""
         self.logger.info(f'Swipe {direction} over "{locator[1]}" (type: {locator[0]})')
         element = self.find(locator)
         coords = self.get_element_coords(element)
-        self.swipe_in_direction(direction, **dataclasses.asdict(coords), swipetime=swipetime)
+        self.swipe_in_direction(direction, **dataclasses.asdict(coords), swipetime=swipetime, swipe_length=swipe_length)
 
     def click(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Click on an element found by locator"""
@@ -257,7 +286,7 @@ class BasePage:
                             self.logger.info(log_msg)
                             elem = self.wait(timeout).until(EC.element_to_be_clickable(locator))
 
-                        log_msg = f'Clicking on "{elem.tag_name}"'
+                        log_msg = f'Clicking on element'
                         with allure.step(log_msg):
                             self.logger.info(log_msg)
                             elem.click()
@@ -323,17 +352,17 @@ class BasePage:
             """Checking that an element is visible"""
             if self._is_element_visible(element):
                 return True
-            raise self._raise_exception_wrapper(exc_msg=f'Element is not visible', raise_exception=raise_exception)
+            return self._raise_exception_wrapper(exc_msg=f'Element is not visible', raise_exception=raise_exception)
 
         def is_visible(self, locator, raise_exception=True):
             """Checking that an element found by locator is visible"""
             try:
                 element = self.page.fast_find(locator)
-                if self.is_element_visible(element):
+                if self.is_element_visible(element, raise_exception=raise_exception):
                     return True
             except exceptions.ElementNotFound:
                 pass
-            raise self._raise_exception_wrapper(
+            return self._raise_exception_wrapper(
                 exc_msg=f'Element "{locator[0]}" (type: {locator[1]}) is not visible',
                 raise_exception=raise_exception)
 
@@ -341,7 +370,7 @@ class BasePage:
             """Checking that an element is not visible"""
             if not self._is_element_visible(element):
                 return True
-            raise self._raise_exception_wrapper(exc_msg=f'Element is visible', raise_exception=raise_exception)
+            return self._raise_exception_wrapper(exc_msg=f'Element is visible', raise_exception=raise_exception)
 
         def is_not_visible(self, locator, raise_exception=True):
             """Checking that an element found by locator is not visible"""
@@ -349,8 +378,18 @@ class BasePage:
                 element = self.page.fast_find(locator)
             except exceptions.ElementNotFound:
                 return True
-            if self.is_element_not_visible(element):
+            if self.is_element_not_visible(element, raise_exception=raise_exception):
                 return True
-            raise self._raise_exception_wrapper(
+            return self._raise_exception_wrapper(
                 exc_msg=f'Element "{locator[0]}" (type: {locator[1]}) is visible',
+                raise_exception=raise_exception)
+
+        def is_new_element_located(self, locator, elements_count, raise_exception=True):
+            """Checking that the number of existing elements is greater than the given one"""
+            elements = self.page.find_elements(locator)
+            if len(elements) > elements_count:
+                return True
+            return self._raise_exception_wrapper(
+                exc_msg=f'New elements "{locator[0]}" (type: {locator[1]}) is not located. '
+                        f'{len(elements)} elements exists',
                 raise_exception=raise_exception)

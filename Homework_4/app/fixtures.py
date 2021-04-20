@@ -5,11 +5,17 @@ import pytest
 import allure
 import settings
 from app.pages.base_page import BasePage
+from app.pages.assistant_page import AssistantPage
 
 
 @pytest.fixture(scope='function')
 def base_page(driver):
     return BasePage(driver)
+
+
+@pytest.fixture(scope='function')
+def assistant_page(driver):
+    return AssistantPage(driver)
 
 
 @allure.step('Creating driver. Remote URL: {appium_url}')
