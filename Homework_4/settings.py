@@ -11,6 +11,11 @@ def different_os_path(path: str):
 
 
 class Basic:
+    DEFAULT_TIMEOUT = 10
+    DEFAULT_CHECKING_INTERVAL = 0.1
+    CLICK_RETRY = 3
+    MAX_SWIPES = 5
+    DEFAULT_SWIPE_TIME_MS = 200
     TEST_FILES_DIR = 'files'
     TEMPORARY_FILES_DIR = 'temporary_files'
     APP_PATH = os.path.abspath(os.path.join(TEST_FILES_DIR, "Marussia_v1.39.1.apk"))
@@ -33,7 +38,8 @@ class Appium:
         "appPackage": "ru.mail.search.electroscope",
         "appActivity": "ru.mail.search.electroscope.ui.activity.AssistantActivity",
         "app": os.path.abspath(os.path.join(paths.repo_root, Basic.TEST_FILES_DIR, App.NAME)),
-        "orientation": "PORTRAIT"
+        "orientation": "PORTRAIT",
+        "autoGrantPermissions": True
     }
     VERSION = '1.20'
 

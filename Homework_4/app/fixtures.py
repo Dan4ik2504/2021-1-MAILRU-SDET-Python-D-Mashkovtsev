@@ -4,6 +4,12 @@ from appium import webdriver
 import pytest
 import allure
 import settings
+from app.pages.base_page import BasePage
+
+
+@pytest.fixture(scope='function')
+def base_page(driver):
+    return BasePage(driver)
 
 
 @allure.step('Creating driver. Remote URL: {appium_url}')
