@@ -25,7 +25,7 @@ class TestAssistant(BaseCase):
 
         with allure.step("Clicking on suggest"):
             suggest_text = "численность населения россии"
-            suggest_locator = self.assistant_page.locators.SUGGEST_TEXT_ITEM_WITH_TEXT_BASE
+            suggest_locator = self.assistant_page.locators.SUGGEST_TEXT_ITEM_WITH_TEXT__BASE
             suggest_locator = (suggest_locator[0], suggest_locator[1].format(text=suggest_text))
             suggest_elem = self.assistant_page.swipe_to_element(
                 locator=suggest_locator, direction=self.assistant_page.SwipeTo.LEFT,
@@ -64,3 +64,32 @@ class TestAssistant(BaseCase):
         items_list = self.assistant_page.get_visible_dialog_items_text()
         item = items_list[-1]
         assert item == answer
+
+
+class TestSettings(BaseCase):
+    @allure.title("News source change test")
+    @pytest.mark.AndroidUI
+    def test_check_source(self):
+        with allure.step("Opening news sources page"):
+            settings_page = self.assistant_page.go_to_settings_page()
+
+            news_sources = settings_page.go_to_news_sources_setup_page()
+
+        with allure.step("Selecting a news source"):
+            news_sources.select_source(news_sources.SOURCES.VESTI_FM)
+
+            assert news_sources.check.is_visible(news_sources.locators.CHECKED_SOURCE_NAME)
+            checked_source = news_sources.find(news_sources.locators.CHECKED_SOURCE_NAME)
+            assert checked_source.text == "Вести FM"
+
+        with allure.step("Opening assistant page"):
+            self.driver.back()
+            self.driver.back()
+            self.assistant_page.custom_wait(self.assistant_page.is_opened)
+            assert self.assistant_page.is_opened()
+
+        with allure.step("Checking news source"):
+            self.assistant_page.send_text_to_assistant("News")
+            player_elem = self.assistant_page.find(self.assistant_page.locators.PLAYER_TRACK_NAME)
+            assert player_elem.text == "Вести ФМ"
+

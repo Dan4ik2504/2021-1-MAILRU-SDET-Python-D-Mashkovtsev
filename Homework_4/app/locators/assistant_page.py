@@ -3,6 +3,7 @@ from appium.webdriver.common.mobileby import MobileBy as By
 
 
 class AssistantPageLocators(BasePageLocators):
+    TOOLBAR = (By.ID, "ru.mail.search.electroscope:id/dialog_toolbar")
     OPEN_KEYBOARD_BUTTON = (By.ID, "ru.mail.search.electroscope:id/keyboard")
     OPEN_ASSISTANT_MENU_BUTTON = (By.ID, "ru.mail.search.electroscope:id/assistant_menu_bottom")
     INPUT_TEXT_FIELD = (By.ID, "ru.mail.search.electroscope:id/input_text")
@@ -13,5 +14,9 @@ class AssistantPageLocators(BasePageLocators):
     DIALOG_FACT_CARD_TEXT = (By.ID, "ru.mail.search.electroscope:id/item_dialog_fact_card_content_text")
     SUGGEST_LIST = (By.ID, "ru.mail.search.electroscope:id/suggests_list")
     SUGGEST_TEXT_ITEM = (By.ID, "ru.mail.search.electroscope:id/item_suggest_text")
-    SUGGEST_TEXT_ITEM_WITH_TEXT_BASE = \
+    SUGGEST_TEXT_ITEM_WITH_TEXT__BASE = \
         (By.XPATH, "//*[@resource-id='ru.mail.search.electroscope:id/item_suggest_text' and @text='{text}']")
+    OPEN_SETTINGS_BUTTON = (By.ID, "ru.mail.search.electroscope:id/assistant_menu_top")
+    PLAYER_TRACK_NAME = (By.ID, "ru.mail.search.electroscope:id/player_track_name")
+    PLAYER_TRACK_NAME__BASE = \
+        (By.XPATH, "//*[@resource-id='ru.mail.search.electroscope:id/player_track_name' and @text='{}']")

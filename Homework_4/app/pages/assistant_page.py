@@ -3,7 +3,9 @@ import dataclasses
 import allure
 from selenium.common.exceptions import NoSuchElementException
 
+import exceptions
 from app.pages.base_page import BasePage
+from app.pages.settings_page import SettingsPage
 from app.locators.assistant_page import AssistantPageLocators
 
 
@@ -15,6 +17,9 @@ class DialogFactCard:
 
 class AssistantPage(BasePage):
     locators = AssistantPageLocators
+    
+    def is_opened(self):
+        return self.custom_wait(self.check.is_visible, locator=self.locators.TOOLBAR)
 
     @allure.step("Opening the keyboard")
     def open_keyboard(self):
@@ -74,4 +79,24 @@ class AssistantPage(BasePage):
         self.logger.info(f'Got {len(items_text)} items')
         self.logger.debug(f'Items: {"; ".join(items_text)}')
         return items_text
+
+    @allure.step("Settings page opening")
+    def go_to_settings_page(self):
+        buttons_locators = (self.locators.OPEN_SETTINGS_BUTTON, self.locators.OPEN_ASSISTANT_MENU_BUTTON)
+        element = None
+        for locator in buttons_locators:
+            try:
+                element = self.fast_find(locator)
+            except exceptions.ElementNotFound as exc:
+                pass
+        if element is not None:
+            element.click()
+        else:
+            raise exceptions.ElementNotFound(
+                f'Neither "{buttons_locators[0][1]}" (type: {buttons_locators[0][0]}) '
+                f'nor "{buttons_locators[1][1]}" (type: {buttons_locators[1][0]}) elements were found')
+        settings_page = SettingsPage(self.driver)
+        settings_page.custom_wait(settings_page.is_opened)
+        self.logger.info("Settings page is open")
+        return settings_page
 
