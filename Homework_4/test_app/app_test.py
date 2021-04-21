@@ -18,9 +18,10 @@ class TestAssistant(BaseCase):
                                             locator=self.assistant_page.locators.DIALOG_FACT_CARD)
 
         with allure.step("Checking that the card exists"):
-            cards = self.assistant_page.get_visible_fact_cards()
-            assert len(cards) == 1
-            card = cards[0]
+            dialog_objects = self.assistant_page.get_visible_dialog_objects()
+            assert len(dialog_objects) > 2
+
+            card = dialog_objects[-2]
 
             assert card.title == "Россия"
             assert card.text.startswith("Росси́я, другое официальное название - Росси́йская Федера́ция, - "
@@ -35,10 +36,10 @@ class TestAssistant(BaseCase):
                                             elements_count=1)
 
         with allure.step("Checking that the card exists"):
-            cards = self.assistant_page.get_visible_fact_cards()
-            assert len(cards) > 0
+            dialog_objects = self.assistant_page.get_visible_dialog_objects()
+            assert len(dialog_objects) > 2
 
-            card = cards[-1]
+            card = dialog_objects[-2]
 
             assert card.title == "146 млн."
             assert card.text == "Россия"
@@ -53,14 +54,15 @@ class TestAssistant(BaseCase):
         )
     )
     def test_calculator(self, expression, answer):
-        item_locator = self.assistant_page.locators.DIALOG_ITEM
-        items_number = len(self.assistant_page.find_elements(item_locator))
+        items_number = self.assistant_page.get_visible_dialog_elements_count()
         self.assistant_page.send_text_to_assistant(expression)
         self.assistant_page.custom_wait(self.assistant_page.check.is_new_element_located,
-                                        locator=item_locator, elements_count=items_number)
-        items_list = self.assistant_page.get_visible_dialog_items_text()
-        item = items_list[-1]
-        assert item == answer
+                                        locator=self.assistant_page.locators.DIALOG_ITEM, elements_count=items_number)
+        items_list = self.assistant_page.get_visible_dialog_objects()
+        request_obj = items_list[-2]
+        response_obj = items_list[-1]
+        assert request_obj.text == expression
+        assert response_obj.text == answer
 
 
 class TestSettings(BaseCase):

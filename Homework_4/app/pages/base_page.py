@@ -121,6 +121,14 @@ class BasePage:
         element.clear()
         element.send_keys(text)
 
+    @staticmethod
+    def get_element_text_or_none(element):
+        try:
+            text = element.text
+            return text if text and len(text) > 0 else None
+        except StaleElementReferenceException:
+            return None
+
     def swipe(self, x_start, y_start, x_end, y_end, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS):
         """
         Swipe to the given coordinates

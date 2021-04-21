@@ -20,3 +20,13 @@ class AssistantPageLocators(BasePageLocators):
     PLAYER_TRACK_NAME = (By.ID, "ru.mail.search.electroscope:id/player_track_name")
     PLAYER_TRACK_NAME__BASE = \
         (By.XPATH, "//*[@resource-id='ru.mail.search.electroscope:id/player_track_name' and @text='{}']")
+    PLAYER_PLAY_BUTTON = (By.ID, "ru.mail.search.electroscope:id/play_button")
+    DIALOG_CONTAINER = (By.ID, "ru.mail.search.electroscope:id/assistantDialog")
+    DIALOG_ITEMS = (By.XPATH, "//*[@resource-id='ru.mail.search.electroscope:id/assistantDialog']/*")
+    ELEMENT_CHILDREN = (By.XPATH, ".//*")
+    ELEMENT_FIRST_CHILD = (By.XPATH, "/*[1]/*")
+    DIALOG_ITEM_TEXT_VIEW_CLASS_BASE = "android.widget.TextView"
+    DIALOG_ITEM_LINEAR_LAYOUT_CLASS_BASE = "android.widget.LinearLayout"
+    DIALOG_ITEM_FRAME_LAYOUT_CLASS_BASE = "android.widget.FrameLayout"
+    DIALOG_ITEM_VIEW_GROUP_CLASS_BASE = "android.view.ViewGroup"
+    
