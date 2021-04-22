@@ -4,6 +4,7 @@ from app.pages.base_page import BasePage
 from app.pages.assistant_page import AssistantPage
 from appium.webdriver.webdriver import WebDriver
 
+
 class BaseCase:
 
     @pytest.fixture(scope='function', autouse=True)

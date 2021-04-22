@@ -57,7 +57,8 @@ class TestAssistant(BaseCase):
         items_number = self.assistant_page.get_visible_dialog_elements_count()
         self.assistant_page.send_text_to_assistant(expression)
         self.assistant_page.custom_wait(self.assistant_page.check.is_new_element_located,
-                                        locator=self.assistant_page.locators.DIALOG_ITEM, elements_count=items_number)
+                                        locator=self.assistant_page.locators.DIALOG_ITEM,
+                                        elements_count=items_number)
         items_list = self.assistant_page.get_visible_dialog_objects()
         request_obj = items_list[-2]
         response_obj = items_list[-1]
@@ -77,7 +78,7 @@ class TestSettings(BaseCase):
         with allure.step("Selecting a news source"):
             news_sources.select_source(news_sources.SOURCES.VESTI_FM)
             checked_source = news_sources.get_checked_source()
-            assert checked_source == "Вести FM"
+            assert checked_source == news_sources.SOURCES.VESTI_FM
 
         with allure.step("Opening assistant page"):
             self.driver.back()

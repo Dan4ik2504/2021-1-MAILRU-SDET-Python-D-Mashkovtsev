@@ -71,10 +71,6 @@ class BasePage:
         """TouchAction"""
         return TouchAction(self.driver)
 
-    def hide_keyboard(self):
-        """Hiding the system keyboard"""
-        self.driver.hide_keyboard()
-
     def find(self, locator, timeout=settings.Basic.DEFAULT_TIMEOUT):
         """Finding element by locator"""
         log_msg = f'Searching of the element by locator: "{locator[1]}" (type: {locator[0]})'
@@ -310,7 +306,14 @@ class BasePage:
     @allure.step("Swipe {direction} over {locator}")
     def swipe_over_element(self, locator, direction=SwipeTo.TOP, swipetime=settings.Basic.DEFAULT_SWIPE_TIME_MS,
                            swipe_length=1):
-        """Swipe over element"""
+        """
+        Swipe over element.
+
+        :param swipe_length: Swipe length as a percentage of the original swipe length (max = 1)
+        :param swipetime: Swipe time
+        :param direction: Scrolling direction
+        :param locator: Locator of the element
+        """
         self.logger.info(f'Swipe {direction} over "{locator[1]}" (type: {locator[0]})')
         element = self.find(locator)
         coords = self.get_element_coords(element)
@@ -343,7 +346,17 @@ class BasePage:
     @allure.step("Waiting")
     def custom_wait(self, method, *args, error=exceptions.CheckException, timeout=settings.Basic.DEFAULT_TIMEOUT,
                     interval=settings.Basic.DEFAULT_CHECKING_INTERVAL, check=True, **kwargs):
-        """A custom function to wait for the passed function to succeed"""
+        """
+        A custom function to wait for the passed function to succeed
+
+        :param method: Function being checked
+        :param args: The positional arguments of the given function
+        :param kwargs: The named arguments of the given function
+        :param error: The error expected from the given function
+        :param timeout: Wait timeout
+        :param interval: Check interval
+        :param check: If False, function response will not be checked. Default: True
+        """
         log_msg = f'Waiting for successfully method "{method.__name__}" execution'
         with allure.step(log_msg):
             self.logger.info(log_msg)
@@ -429,11 +442,17 @@ class BasePage:
                 raise_exception=raise_exception)
 
         def is_new_element_located(self, locator, elements_count, raise_exception=True):
-            """Checking that the number of existing elements is greater than the given one"""
+            """
+            Checking that the number of existing elements is greater than the given one
+
+            :param locator: Checked elements locator
+            :param elements_count: Number of elements before action
+            :param raise_exception: Will an exception be thrown. Default: True
+            """
             elements = self.page.find_elements(locator)
             if len(elements) > elements_count:
                 return True
             return self._raise_exception_wrapper(
                 exc_msg=f'New elements "{locator[0]}" (type: {locator[1]}) is not located. '
-                        f'{len(elements)} elements exists',
+                        f'{len(elements)} elements exists, but expected greater than {elements_count} elements',
                 raise_exception=raise_exception)

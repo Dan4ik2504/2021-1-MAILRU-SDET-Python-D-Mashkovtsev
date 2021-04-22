@@ -15,6 +15,7 @@ class AssistantPage(BasePage):
     class MESSAGE_SENDER:
         USER = "User"
         ASSISTANT = "Assistant"
+        UNKNOWN = "Unknown"
 
     class DialogItems:
         @dataclasses.dataclass
@@ -36,24 +37,19 @@ class AssistantPage(BasePage):
     def is_opened(self):
         return self.check.is_visible(self.locators.TOOLBAR, raise_exception=False)
 
-    @allure.step("Opening the keyboard")
-    def open_keyboard(self):
+    @allure.step("Opening the input field")
+    def open_input_field(self):
         self.click(self.locators.OPEN_KEYBOARD_BUTTON)
-        self.logger.info("Keyboard is open")
-
-    @allure.step("Opening the assistant menu")
-    def open_assistant_menu(self):
-        self.click(self.locators.OPEN_ASSISTANT_MENU_BUTTON)
-        self.logger.info("Assistant menu is open")
+        self.logger.info("Input field is open")
 
     @allure.step("Sending text to an assistant")
     def send_text_to_assistant(self, text):
         if self.check.is_not_visible(self.locators.INPUT_TEXT_FIELD, raise_exception=False):
-            self.open_keyboard()
+            self.open_input_field()
 
         self.fill_field(self.locators.INPUT_TEXT_FIELD, text)
         self.click(self.locators.SEND_TEXT_BUTTON)
-        self.hide_keyboard()
+        self.driver.hide_keyboard()
         self.logger.info("Text sent to assistant")
 
     @allure.step("Getting visible suggestions")
@@ -84,7 +80,7 @@ class AssistantPage(BasePage):
             except NoSuchElementException:
                 continue
             else:
-                card_obj = self.DialogItems.DialogFactCard(title=title, text=text)
+                card_obj = self.DialogItems.DialogFactCard(title=title, text=text, sender=self.MESSAGE_SENDER.UNKNOWN)
                 cards_objects.append(card_obj)
         self.logger.info(f'Got {len(cards_objects)} fact cards')
         self.logger.debug(f'Fact cards: '
@@ -93,7 +89,39 @@ class AssistantPage(BasePage):
 
     def get_visible_dialog_elements(self):
         """Returns list of visible dialog elements"""
-        return self.find_elements(self.locators.DIALOG_ITEMS)
+        items = self.find_elements(self.locators.DIALOG_ITEMS)
+        return items
+
+    def create_text_dialog_item_object(self, element, sender):
+        elem_text = self.get_element_text_or_none(element)
+        message_obj = self.DialogItems.DialogMessage(text=elem_text, sender=sender)
+        self.logger.debug(f'Dialog text item object created. '
+                          f'Text: "{elem_text}". Sender: "{sender}"')
+        return message_obj
+
+    def create_card_dialog_item_object(self, element):
+        title = self.get_element_text_or_none(
+            element.find_element(*self.locators.DIALOG_FACT_CARD_TITLE))
+        text = self.get_element_text_or_none(
+            element.find_element(*self.locators.DIALOG_FACT_CARD_TEXT))
+
+        fact_obj = self.DialogItems.DialogFactCard(title=title, text=text,
+                                                   sender=self.MESSAGE_SENDER.ASSISTANT)
+        self.logger.debug(f'Dialog fact item object created. '
+                          f'Title: "{title}". Text: "{text}". '
+                          f'Sender: "{self.MESSAGE_SENDER.ASSISTANT}"')
+        return fact_obj
+
+    def create_player_dialog_item_object(self, element):
+        player_track_name = self.get_element_text_or_none(
+            element.find_element(*self.locators.PLAYER_TRACK_NAME))
+
+        player_obj = self.DialogItems.DialogPlayer(track_name=player_track_name,
+                                                   sender=self.MESSAGE_SENDER.ASSISTANT)
+        self.logger.debug(f'Dialog player item object created. '
+                          f'Track name: "{player_track_name}". '
+                          f'Sender: "{self.MESSAGE_SENDER.ASSISTANT}"')
+        return player_obj
 
     @allure.step("Getting visible dialog items objects")
     def get_visible_dialog_objects(self):
@@ -118,11 +146,8 @@ class AssistantPage(BasePage):
 
                 # If the element is a simple text element sent by the assistant
                 if elem_class == text_element_class and element.get_attribute('resource-id') == text_element_id:
-                    elem_text = self.get_element_text_or_none(element)
-                    message_obj = self.DialogItems.DialogMessage(text=elem_text, sender=self.MESSAGE_SENDER.ASSISTANT)
-                    dialog_objects.append(message_obj)
-                    self.logger.debug(f'Dialog text item object created. '
-                                      f'Text: "{elem_text}". Sender: "{self.MESSAGE_SENDER.ASSISTANT}"')
+                    new_dialog_obj = self.create_text_dialog_item_object(element, self.MESSAGE_SENDER.ASSISTANT)
+                    dialog_objects.append(new_dialog_obj)
 
                 elif elem_class == frame_layout_element_class:
                     elem_child = element.find_element(*self.locators.ELEMENT_FIRST_CHILD)
@@ -131,43 +156,27 @@ class AssistantPage(BasePage):
                     # If the element is a simple text element sent by the user
                     if elem_child_class == text_element_class \
                             and elem_child.get_attribute('resource-id') == text_element_id:
-                        elem_text = self.get_element_text_or_none(elem_child)
-                        message_obj = self.DialogItems.DialogMessage(text=elem_text, sender=self.MESSAGE_SENDER.USER)
-                        dialog_objects.append(message_obj)
-                        self.logger.debug(f'Dialog text item object created. '
-                                          f'Text: "{elem_text}". Sender: "{self.MESSAGE_SENDER.USER}"')
+                        new_dialog_obj = self.create_text_dialog_item_object(elem_child, self.MESSAGE_SENDER.USER)
+                        dialog_objects.append(new_dialog_obj)
 
                     # If the element is a fact element sent by assistant
                     elif elem_child_class == fact_element_class \
                             and elem_child.get_attribute('resource-id') == fact_element_id:
-                        title = self.get_element_text_or_none(
-                            elem_child.find_element(*self.locators.DIALOG_FACT_CARD_TITLE))
-                        text = self.get_element_text_or_none(
-                            elem_child.find_element(*self.locators.DIALOG_FACT_CARD_TEXT))
-
-                        fact_obj = self.DialogItems.DialogFactCard(title=title, text=text,
-                                                                   sender=self.MESSAGE_SENDER.ASSISTANT)
-                        dialog_objects.append(fact_obj)
-                        self.logger.debug(f'Dialog fact item object created. '
-                                          f'Title: "{title}". Text: "{text}". '
-                                          f'Sender: "{self.MESSAGE_SENDER.ASSISTANT}"')
+                        new_dialog_obj = self.create_card_dialog_item_object(elem_child)
+                        dialog_objects.append(new_dialog_obj)
 
                     # If the element is a player element sent by the assistant
                     elif elem_child_class == view_group_element_class:
-                        player_track_name = self.get_element_text_or_none(
-                            elem_child.find_element(*self.locators.PLAYER_TRACK_NAME))
-
-                        player_obj = self.DialogItems.DialogPlayer(track_name=player_track_name,
-                                                                   sender=self.MESSAGE_SENDER.ASSISTANT)
-                        dialog_objects.append(player_obj)
-                        self.logger.debug(f'Dialog player item object created. '
-                                          f'Track name: "{player_track_name}". '
-                                          f'Sender: "{self.MESSAGE_SENDER.ASSISTANT}"')
+                        new_dialog_obj = self.create_player_dialog_item_object(elem_child)
+                        dialog_objects.append(new_dialog_obj)
 
             except (StaleElementReferenceException, NoSuchElementException):
                 continue
 
         self.logger.info(f'Created {len(dialog_objects)} dialog item objects')
+        dialog_objects_str = "\n".join([str(obj) for obj in dialog_objects])
+        self.logger.debug(f'Dialog item objects:\n'
+                          f'{dialog_objects_str}')
 
         return dialog_objects
 
@@ -191,6 +200,7 @@ class AssistantPage(BasePage):
             raise exceptions.ElementNotFound(
                 f'Neither "{buttons_locators[0][1]}" (type: {buttons_locators[0][0]}) '
                 f'nor "{buttons_locators[1][1]}" (type: {buttons_locators[1][0]}) elements were found')
+
         settings_page = SettingsPage(self.driver)
         settings_page.custom_wait(settings_page.is_opened)
         self.logger.info("Settings page is open")
