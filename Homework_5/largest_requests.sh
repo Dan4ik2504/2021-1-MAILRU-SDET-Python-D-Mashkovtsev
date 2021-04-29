@@ -1,0 +1,2 @@
+echo 'Largest requests' > temporary_files/largest_requests_answer_sh.txt;
+awk 'match($9, /^4[0-9]*$/) {print $7, "-", $9, "-", $10, "-", $1}' access.log | sort -nk5 -r | head -5 >> temporary_files/largest_requests_answer_sh.txt;
