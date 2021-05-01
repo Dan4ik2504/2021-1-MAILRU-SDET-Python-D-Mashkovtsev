@@ -1,11 +1,13 @@
 import shutil
 import logging
+import sys
 
 import allure
 import pytest
 import os
 
 import settings
+from utils.paths import paths
 from app.fixtures import *
 
 logger = logging.getLogger(settings.Logging.LOGGER_NAME)
@@ -30,8 +32,7 @@ def config(request):
     return {'debug_log': debug_log, "appium_url": appium_url}
 
 
-def create_test_dir():
-    base_test_dir = settings.Logging.BASE_TEST_DIR
+def create_test_dir(base_test_dir):
     if os.path.exists(base_test_dir):
         shutil.rmtree(base_test_dir)
     os.makedirs(base_test_dir)
@@ -39,15 +40,18 @@ def create_test_dir():
 
 def pytest_configure(config):
     is_master = is_master_process(config)
-    if is_master:
-        create_test_dir()
-    config.base_test_dir = settings.Logging.BASE_TEST_DIR
     config.is_master_process = is_master
+
+    base_test_dir = settings.Logging.BASE_TEST_DIR_WINDOWS if sys.platform.startswith('win') \
+        else settings.Logging.BASE_TEST_DIR_LINUX
+    if is_master:
+        create_test_dir(base_test_dir)
+    config.base_test_dir = base_test_dir
 
 
 @pytest.fixture(scope='function')
 def test_dir(request):
-    test_name = request._pyfuncitem.nodeid.replace('/', '_').replace(':', '_')
+    test_name = paths.different_os_path(request._pyfuncitem.nodeid)
     test_dir = os.path.join(request.config.base_test_dir, test_name)
     os.makedirs(test_dir)
     return test_dir
