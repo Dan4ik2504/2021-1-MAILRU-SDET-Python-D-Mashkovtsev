@@ -1,4 +1,2 @@
 echo "Number of requests by type" > temporary_files/number_of_requests_by_type_answer_sh.txt;
-awk '{gsub(/"/, "", $6); if (length($6) < 10) print $6}' access.log | sort | uniq -c | awk '{print $2,"-",$1}' | column -t >> temporary_files/number_of_requests_by_type_answer_sh.txt
-#awk '{gsub(/"/, "", $6); if (length($6) < 10) print $6}' access.log | sort | uniq | while read -r type; do echo -en "$type - $(awk -v type="$type" '{gsub(/"/, "", $6); if ($6 == type) print $6}' access.log | wc -l)\n" >> temporary_files/number_of_requests_by_type_answer.txt; done;
-#awk '{gsub(/"/, "", $6); if (length($6) < 10) print $6}' access.log | sort | uniq | while read -r type; do echo -en "$type - $(grep -c "$type" access.log)\n" >> temporary_files/number_of_requests_by_type_answer.txt; done;
+awk '{gsub(/"/, "", $6); if (length($6) < 10) print $6}' access.log | sort | uniq -c | sort -nrk1 -s | awk '{print $2,"-",$1}' | column -t >> temporary_files/number_of_requests_by_type_answer_sh.txt
