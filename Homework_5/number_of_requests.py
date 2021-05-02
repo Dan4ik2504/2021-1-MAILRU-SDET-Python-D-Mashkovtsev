@@ -3,6 +3,11 @@ import settings
 
 
 def number_of_requests(log_file_path=settings.LOG_FILE_NAME):
+    """
+    Total number of requests
+
+    :param log_file_path: Log file path
+    """
     with open(log_file_path) as file:
         answer = {
             "title": "Total number of requests",

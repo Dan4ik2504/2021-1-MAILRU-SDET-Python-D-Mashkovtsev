@@ -3,6 +3,13 @@ import settings
 
 
 def largest_requests(log_file_path=settings.LOG_FILE_NAME, limit=5, remove_repeats=True):
+    """
+    Returns a list of requests sorted by size
+
+    :param log_file_path: Log file path
+    :param limit: Maximum number of objects to return
+    :param remove_repeats: If true, repeats will be removed
+    """
     all_items_list = utils.get_log_file_data_parsed(log_file_path)
 
     items_list_sorted = list(
@@ -19,18 +26,17 @@ def largest_requests(log_file_path=settings.LOG_FILE_NAME, limit=5, remove_repea
         )
     )
 
-    # items_list = [[i.url, i.status_code, i.size, i.ip] for i in items_list_sorted]
     if remove_repeats:
         items_list = []
         for i in items_list_sorted:
-            dct = {
+            item_data_dict = {
                 "url": i.url,
                 "status_code": i.status_code,
                 "size": i.size,
                 "ip": i.ip
             }
-            if dct not in items_list:
-                items_list.append(dct)
+            if item_data_dict not in items_list:
+                items_list.append(item_data_dict)
             if len(items_list) >= limit:
                 break
     else:

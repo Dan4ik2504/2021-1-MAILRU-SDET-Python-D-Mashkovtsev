@@ -10,21 +10,6 @@ from collections.abc import Iterable
 import settings
 
 
-class hashable_dict(dict):
-    def __hash__(self):
-        return hash(tuple(sorted(self.items())))
-
-
-class ColumnNames:
-    IP = "ip"
-    DATE_TIME = "date_time"
-    METHOD = "method"
-    URL = 'url'
-    HTTP_VERSION = "http_version"
-    STATUS_CODE = "status_code"
-    SIZE = "size"
-
-
 def create_path_to_file(path):
     """
     Creates directories to file if it doesn't exist
@@ -37,7 +22,14 @@ def create_path_to_file(path):
                 raise
 
 
-def dict_to_list(data, align_columns=True):
+def data_to_str(data, align_columns=True):
+    """
+    Converts data dict to string
+
+    :param data: Data dict with keys 'title' and 'data'
+    :param align_columns: If true, the columns will be aligned. Looks bad if the lines are long. Default: True
+    :return: A string ready to be written to a file
+    """
     if isinstance(data['data'], dict):
         if align_columns:
             max_key_length = max([len(k) for k in data['data']])
@@ -45,9 +37,7 @@ def dict_to_list(data, align_columns=True):
             max_key_length = 0
         processed_data = []
         for key, value in data['data'].items():
-            item = "\n{0: <{k_len}} - {1}".format(key, value, k_len=max_key_length)
-            processed_data.append(item)
-        return [data['title'], *processed_data]
+            processed_data.append("{0: <{k_len}} - {1}".format(key, value, k_len=max_key_length))
     elif isinstance(data['data'], list):
 
         if isinstance(data['data'][0], dict):
@@ -63,12 +53,12 @@ def dict_to_list(data, align_columns=True):
 
         processed_data = []
         for item in data_list:
-            processed_data.append("\n" + ' - '.join(
-                ["{0: <{1}}".format(item, column_lengths.get(index, 0)) for index, item in enumerate(item)]))
-        return [data['title'], *processed_data]
-
+            processed_data.append(' - '.join(
+                ["{0: <{1}}".format(item, column_lengths.get(index, 0)) for index, item in enumerate(item)]
+            ))
     else:
-        return [data['title'], '\n' + str(data["data"])]
+        return '\n'.join([data['title'], str(data["data"])])
+    return '\n'.join([data['title'], *processed_data])
 
 
 def write_in_file(data: dict, file_name, in_json=False, align_columns=True):
@@ -91,9 +81,9 @@ def write_in_file(data: dict, file_name, in_json=False, align_columns=True):
         file_path = os.path.join(settings.OUTPUT_LOCATION, file_name)
         create_path_to_file(file_path)
         with open(file_path, 'w') as file:
-            if isinstance(data, dict):
-                data = dict_to_list(data, align_columns=align_columns)
-            file.writelines(data)
+            if not isinstance(data, str):
+                data = data_to_str(data, align_columns=align_columns)
+            file.write(data)
             
 
 def get_cl_args():
@@ -125,6 +115,11 @@ def write_response_in_file(func, *args, align_columns=True, **kwargs):
     
 
 def write_response_in_file_decorator(in_json=False):
+    """
+    A decorator that loads the response of a function into a file.
+
+    :param in_json: If True, response will be uploaded in JSON file, otherwise in TXT.
+    """
 
     def func_wrapper(func):
 
@@ -156,6 +151,11 @@ class IncorrectLogItem:
 
 
 def is_valid_log_entry(entry_dict):
+    """
+    Validates log entry
+
+    :param entry_dict: Dict with data
+    """
     booleans = [
         len(entry_dict["method"]) <= 7,
         len(entry_dict["status_code"]) == 3,
@@ -166,6 +166,12 @@ def is_valid_log_entry(entry_dict):
 
 
 def process_log_entry(entry: str):
+    """
+    Takes a string, processes it and returns a dictionary with the data contained in the string
+
+    :param entry: String with data
+    :return:
+    """
     entry_list = entry.split(" ")
     entry_dict = {
         "ip": entry_list[0],
@@ -180,22 +186,19 @@ def process_log_entry(entry: str):
     return entry_dict
 
 
-def get_log_file_data_parsed(log_file_path: str, ignore_incorrect_log_data=True) -> list[Union[LogItem, IncorrectLogItem]]:
+def get_log_file_data_parsed(log_file_path: str, ignore_incorrect_log_data=True) \
+        -> list[Union[LogItem, IncorrectLogItem]]:
+    """
+    Opens the log file, parses it and returns an objects of the each line.
+
+    :param log_file_path: Log file path
+    :param ignore_incorrect_log_data: If False, invalid lines will be written to the list as objects
+    of class IncorrectLogItem. Default: True
+    :return: List of objects of classes LogItem and IncorrectLogItem
+    """
     items = []
     with open(log_file_path) as file:
         for line in file:
-            # line_split = line.split(" ")
-            # request_size = int(line_split[9]) if len(line_split[9]) > 0 and not line_split[9] == "-" else 0
-            # request_method = line_split[5].lstrip('"')
-            # request_status_code = line_split[8]
-            # if len(request_method) < 8 and request_status_code.isdigit() and len(request_status_code) == 3:
-            #     item = LogItem(
-            #         ip=line_split[0],
-            #         type=request_method,
-            #         url=line_split[6],
-            #         status_code=int(request_status_code),
-            #         size=request_size
-            #     )
             entry_dict = process_log_entry(line)
             if is_valid_log_entry(entry_dict):
                 item = LogItem(
@@ -216,6 +219,14 @@ def get_log_file_data_parsed(log_file_path: str, ignore_incorrect_log_data=True)
 
 
 def get_log_file_data_columns_by_name(log_file_path: str, column_name: str, validate=True):
+    """
+    Opens the log file, parses it and returns an list of strings with the values of the given column
+
+    :param log_file_path: Log file path
+    :param column_name: Name of the column
+    :param validate: If True, the item will be checked before being added to the list
+    :return: List of strings with the values of the given column
+    """
     items = []
     with open(log_file_path) as file:
         for line in file:
@@ -226,3 +237,48 @@ def get_log_file_data_columns_by_name(log_file_path: str, column_name: str, vali
             else:
                 items.append(item_dict[column_name])
     return items
+
+
+def count_items_objects_by_field(items_list: Iterable[LogItem], field_name: str):
+    """
+    Extracts a field_name from each item and counts the number of duplicate values.
+
+    :param items_list: List of LogItem objects
+    :param field_name: The name of the field whose values will be extracted and counted
+    :return: List of dictionaries with fields 'count' and 'field_name'
+    """
+    items_list_str = [getattr(i, field_name) for i in items_list]
+    items_count_dicts_list = count_items_str_by_field(items_list_str, field_name)
+    return items_count_dicts_list
+
+
+def count_items_str_by_field(items_list: Iterable[str], field_name: str):
+    """
+    Counts the number of duplicate values
+
+    :param items_list: List of strings
+    :param field_name: The name of the field. Used as the name of the entry in the dictionary
+    :return: List of dictionaries with fields 'count' and 'field_name'
+    """
+    items_list = list(items_list)
+    unique_items_list = list(dict.fromkeys(items_list))
+    items_count_dicts_list = []
+    for item in unique_items_list:
+        items_count_dict = {
+            field_name: item,
+            "count": items_list.count(item)
+        }
+        items_count_dicts_list.append(items_count_dict)
+
+    items_count_dicts_list = list(
+        sorted(
+            sorted(
+                items_count_dicts_list,
+                key=lambda i: i[field_name]
+            ),
+            key=lambda i: int(i[settings.COLUMN_NAMES.COUNT]),
+            reverse=True
+        )
+    )
+
+    return items_count_dicts_list
