@@ -2,7 +2,7 @@ import dataclasses
 from typing import Union
 from collections.abc import Iterable
 
-from log_analyzer import settings
+from log_analyzer import log_analyzer_settings
 
 
 @dataclasses.dataclass
@@ -147,7 +147,7 @@ def count_items_str_by_field(items_list: Iterable[str], field_name: str):
                 items_count_dicts_list,
                 key=lambda i: i[field_name]
             ),
-            key=lambda i: int(i[settings.COLUMN_NAMES.COUNT]),
+            key=lambda i: int(i[log_analyzer_settings.COLUMN_NAMES.COUNT]),
             reverse=True
         )
     )

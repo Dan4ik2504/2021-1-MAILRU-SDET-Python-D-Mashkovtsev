@@ -15,5 +15,14 @@ class COLUMN_NAMES:
     DATA = "data"
 
 
+TABLE_NAMES = [
+    'number_of_requests',
+    'number_of_requests_by_type',
+    'most_frequent_requests',
+    'largest_requests',
+    'users_by_number_of_requests',
+]
+
+
 LOG_FILE_NAME = 'access.log'
 LOG_FILE_PATH = os.path.join(path.repo_root, LOG_FILE_NAME)

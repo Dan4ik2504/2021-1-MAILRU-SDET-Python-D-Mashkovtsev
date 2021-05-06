@@ -1,56 +1,47 @@
-import log_analyzer_utils
-import settings
+from log_analyzer import log_analyzer_utils
+from log_analyzer import log_analyzer_settings
 
 
-def number_of_requests(log_file_path=settings.LOG_FILE_PATH):
+def number_of_requests(log_file_path=log_analyzer_settings.LOG_FILE_PATH):
     """
     Total number of requests
 
     :param log_file_path: Log file path
     """
     with open(log_file_path) as file:
-        answer = {
-            "title": "Total number of requests",
-            "data": len(file.readlines())
-        }
-        return answer
+        return len(file.readlines())
 
 
-def number_of_requests_by_type(log_file_path=settings.LOG_FILE_PATH):
+def number_of_requests_by_type(log_file_path=log_analyzer_settings.LOG_FILE_PATH):
     """
     Number of requests by type
 
     :param log_file_path: Log file path
     """
-    items_list = log_analyzer_utils.get_log_file_data_columns_by_name(log_file_path, settings.COLUMN_NAMES.METHOD)
-    items_count_dicts_list = log_analyzer_utils.count_items_str_by_field(items_list, settings.COLUMN_NAMES.METHOD)
+    items_list = log_analyzer_utils.get_log_file_data_columns_by_name(
+        log_file_path, log_analyzer_settings.COLUMN_NAMES.METHOD)
+    items_count_dicts_list = log_analyzer_utils.count_items_str_by_field(
+        items_list, log_analyzer_settings.COLUMN_NAMES.METHOD)
 
-    answer = {
-        "title": "Number of requests by type",
-        "data": items_count_dicts_list
-    }
-    return answer
+    return items_count_dicts_list
 
 
-def most_frequent_requests(log_file_path=settings.LOG_FILE_PATH, limit=10):
+def most_frequent_requests(log_file_path=log_analyzer_settings.LOG_FILE_PATH, limit=10):
     """
     Returns a list of URLs sorted by the number of requests
 
     :param log_file_path: Log file path
     :param limit: Maximum number of objects to return
     """
-    items_list = log_analyzer_utils.get_log_file_data_columns_by_name(log_file_path, settings.COLUMN_NAMES.URL,
-                                                                      validate=False)
-    items_count_dicts_list = log_analyzer_utils.count_items_str_by_field(items_list, settings.COLUMN_NAMES.URL)
+    items_list = log_analyzer_utils.get_log_file_data_columns_by_name(
+        log_file_path, log_analyzer_settings.COLUMN_NAMES.URL, validate=False)
+    items_count_dicts_list = log_analyzer_utils.count_items_str_by_field(
+        items_list, log_analyzer_settings.COLUMN_NAMES.URL)[:limit]
 
-    answer = {
-        "title": "Most frequent requests",
-        "data": items_count_dicts_list[:limit]
-    }
-    return answer
+    return items_count_dicts_list
 
 
-def largest_requests(log_file_path=settings.LOG_FILE_PATH, limit=5, remove_repeats=True):
+def largest_requests(log_file_path=log_analyzer_settings.LOG_FILE_PATH, limit=5, remove_repeats=True):
     """
     Returns a list of requests sorted by size
 
@@ -79,7 +70,7 @@ def largest_requests(log_file_path=settings.LOG_FILE_PATH, limit=5, remove_repea
         for i in items_list_sorted:
             item_data_dict = {
                 "url": i.url,
-                "status_code": i.status_code,
+                "status_code": int(i.status_code),
                 "size": i.size,
                 "ip": i.ip
             }
@@ -91,20 +82,16 @@ def largest_requests(log_file_path=settings.LOG_FILE_PATH, limit=5, remove_repea
         items_list = [
             {
                 "url": i.url,
-                "status_code": i.status_code,
+                "status_code": int(i.status_code),
                 "size": i.size,
                 "ip": i.ip
             } for i in items_list_sorted[:limit]
         ]
 
-    answer = {
-        "title": "Largest requests",
-        "data": items_list
-    }
-    return answer
+    return items_list
 
 
-def users_by_number_of_requests(log_file_path=settings.LOG_FILE_PATH, limit=5):
+def users_by_number_of_requests(log_file_path=log_analyzer_settings.LOG_FILE_PATH, limit=5):
     """
     Returns a list of IPs sorted by the number of requests
 
@@ -114,10 +101,7 @@ def users_by_number_of_requests(log_file_path=settings.LOG_FILE_PATH, limit=5):
     items_list = log_analyzer_utils.get_log_file_data_parsed(log_file_path)
 
     items_list = filter(lambda i: i.status_code.startswith("5"), items_list)
-    items_count_dicts_list = log_analyzer_utils.count_items_objects_by_field(items_list, settings.COLUMN_NAMES.IP)
+    items_count_dicts_list = log_analyzer_utils.count_items_objects_by_field(
+        items_list, log_analyzer_settings.COLUMN_NAMES.IP)[:limit]
 
-    answer = {
-        "title": "Users by the number of requests",
-        "data": items_count_dicts_list[:limit]
-    }
-    return answer
+    return items_count_dicts_list
