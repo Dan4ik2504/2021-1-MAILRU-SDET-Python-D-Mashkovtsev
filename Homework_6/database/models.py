@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy_utils import URLType
+from sqlalchemy_utils import URLType, IPAddressType
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -35,12 +35,12 @@ class LargestRequests(Base):
     url = Column(URLType, nullable=False)
     status_code = Column(Integer, nullable=False)
     size = Column(Integer, nullable=False)
-    ip = Column(String(15), nullable=False)
+    ip = Column(IPAddressType, nullable=False)
 
 
 class UsersByNumberOfRequests(Base):
     __tablename__ = 'users_by_number_of_requests'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ip = Column(String(15), nullable=False)
+    ip = Column(IPAddressType, nullable=False)
     count = Column(Integer, nullable=False)
