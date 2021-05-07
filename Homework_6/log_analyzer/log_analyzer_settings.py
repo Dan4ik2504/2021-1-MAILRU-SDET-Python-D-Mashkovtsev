@@ -1,5 +1,5 @@
 import os
-from utils.paths import path
+from utils.paths import paths
 
 
 class COLUMN_NAMES:
@@ -25,4 +25,4 @@ TABLE_NAMES = [
 
 
 LOG_FILE_NAME = 'access.log'
-LOG_FILE_PATH = os.path.join(path.repo_root, LOG_FILE_NAME)
+LOG_FILE_PATH = os.path.join(paths.repo_root, LOG_FILE_NAME)
