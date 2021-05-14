@@ -40,7 +40,10 @@ def start_app(config):
     env['MOCK_HOST'] = settings.MOCK_SETTINGS.HOST
     env['MOCK_PORT'] = settings.MOCK_SETTINGS.PORT
 
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], stdout=app_out, stderr=app_err, env=env)
+    env['PYTHONPATH'] = paths.repo_root
+
+    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], stdout=app_out, stderr=app_err, env=env,
+                            cwd=paths.repo_root)
 
     config.app_proc = proc
     config.app_out = app_out
@@ -63,7 +66,10 @@ def start_stub(config):
     env['STUB_HOST'] = settings.STUB_SETTINGS.HOST
     env['STUB_PORT'] = settings.STUB_SETTINGS.PORT
 
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], stdout=stub_out, stderr=stub_err, env=env)
+    env['PYTHONPATH'] = paths.repo_root
+
+    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], stdout=stub_out, stderr=stub_err, env=env,
+                            cwd=paths.repo_root)
 
     config.stub_proc = proc
     config.stub_out = stub_out
