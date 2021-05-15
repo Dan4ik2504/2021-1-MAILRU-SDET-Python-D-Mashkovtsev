@@ -3,36 +3,43 @@ import logging
 import os
 import requests
 from flask import Flask, request, jsonify
+from flask.logging import default_handler
 
 import exceptions
 import settings
 from database.db_client import DBTable
+from utils.json_utils import json_response_data, json_response_error
+from utils.logging_utils import set_up_logger
+
 
 app = Flask(__name__)
+
 table_users = DBTable('first_name')
 
-logger = logging.getLogger(settings.LOGGING.LOGGER_NAME)
+app_logger = logging.getLogger('werkzeug')
+set_up_logger(app_logger, settings.APP_SETTINGS.FLASK_LOG_FILE_PATH, log_format=settings.FLASK_SETTINGS.LOG_FORMAT)
+set_up_logger(app.logger, settings.APP_SETTINGS.LOG_FILE_PATH)
 
 
-@app.route('/add_user', methods=['POST'])
+@app.route('/user', methods=['POST'])
 def create_user():
-    first_name = json.loads(request.data).get('first_name')
+    try:
+        first_name = json.loads(request.data).get('first_name')
+    except json.JSONDecodeError:
+        return json_response_error('Invalid request',
+                                   'Client sent a request that this server could not understand'), 400
+
     if first_name is None:
-        return jsonify({
-            "error": 'first name is missing',
-            "message": f'User first name is missing'
-        }), 400
+        return json_response_error('Invalid request', 'Request data is missing. Expected "first_name"'), 400
+
     if len(table_users.select(first_name=first_name)) == 0:
         user = table_users.insert(first_name=first_name)
-        return jsonify({"data": user}), 201
+        return json_response_data(user), 201
     else:
-        return jsonify({
-            "error": 'user exists',
-            "message": f'User with first name "{first_name}" already exists.'
-        }), 400
+        return json_response_error('User exists', f'User with first name "{first_name}" already exists.'), 409
 
 
-@app.route('/get_user/<first_name>', methods=['GET'])
+@app.route('/user/<first_name>', methods=['GET'])
 def get_user_by_name(first_name):
     if user := table_users.select(first_name=first_name):
         user = user[0]
@@ -42,13 +49,13 @@ def get_user_by_name(first_name):
         age = None
         if stub_host and stub_port:
             try:
-                resp = requests.get(f'http://{stub_host}:{stub_port}/get_age/{first_name}')
+                resp = requests.get(f'http://{stub_host}:{stub_port}/age/{first_name}')
                 if resp.status_code == 200:
                     age = resp.json()["data"]
             except requests.exceptions.ConnectionError as e:
-                logger.warning(f'Unable to get age from external system:\n{e}')
+                app.logger.warning(f'Unable to get age from external system:\n{e}')
         else:
-            logger.warning(f'Unable to get age from external system. STUB_HOST: {stub_host}. STUB_PORT: {stub_port}')
+            app.logger.warning(f'Unable to get age from external system. STUB_HOST: {stub_host}. STUB_PORT: {stub_port}')
 
         user['age'] = age
 
@@ -58,23 +65,21 @@ def get_user_by_name(first_name):
         last_name = None
         if mock_host and mock_port:
             try:
-                resp = requests.get(f'http://{mock_host}:{mock_port}/get_last_name/{first_name}')
+                resp = requests.get(f'http://{mock_host}:{mock_port}/last_name/{first_name}')
                 if resp.status_code == 200:
                     last_name = resp.json()["data"]['last_name']
 
             except requests.exceptions.ConnectionError as e:
-                logger.warning(f'Unable to get surname from external system:\n{e}')
+                app.logger.warning(f'Unable to get surname from external system:\n{e}')
         else:
-            logger.warning(f'Unable to get surname from external system. MOCK_HOST: {mock_host}. MOCK_PORT: {mock_port}')
+            app.logger.warning(
+                f'Unable to get surname from external system. MOCK_HOST: {mock_host}. MOCK_PORT: {mock_port}')
 
         user['last_name'] = last_name
 
-        return jsonify({"data": user}), 200
+        return json_response_data(user), 200
     else:
-        return jsonify({
-                    "error": 'user not found',
-                    "message": f'User with first name "{first_name}" not found'
-                }), 404
+        return json_response_error('User not found', f'User with first name "{first_name}" not found'), 404
 
 
 if __name__ == '__main__':

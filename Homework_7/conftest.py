@@ -16,6 +16,7 @@ from mocks import app_mock
 import settings
 from utils.paths import paths
 from utils.wait import wait
+from utils.logging_utils import set_up_logger
 
 
 def is_master_process(config):
@@ -26,9 +27,6 @@ def is_master_process(config):
 
 def start_app(config):
     app_path = os.path.join(paths.repo_root, 'app', 'app.py')
-
-    app_out = open(settings.APP_SETTINGS.LOG_STDOUT, 'w')
-    app_err = open(settings.APP_SETTINGS.LOG_STDERR, 'w')
 
     env = copy(os.environ)
     env['APP_HOST'] = settings.APP_SETTINGS.HOST
@@ -42,12 +40,12 @@ def start_app(config):
 
     env['PYTHONPATH'] = paths.repo_root
 
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], stdout=app_out, stderr=app_err, env=env,
+    env['WERKZEUG_RUN_MAIN'] = 'true'
+
+    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
 
     config.app_proc = proc
-    config.app_out = app_out
-    config.app_err = app_err
 
     timeout = 5
     try:
@@ -59,21 +57,18 @@ def start_app(config):
 def start_stub(config):
     stub_path = os.path.join(paths.repo_root, 'mocks', 'app_stub.py')
 
-    stub_out = open(settings.STUB_SETTINGS.LOG_STDOUT, 'w')
-    stub_err = open(settings.STUB_SETTINGS.LOG_STDERR, 'w')
-
     env = copy(os.environ)
     env['STUB_HOST'] = settings.STUB_SETTINGS.HOST
     env['STUB_PORT'] = settings.STUB_SETTINGS.PORT
 
     env['PYTHONPATH'] = paths.repo_root
 
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], stdout=stub_out, stderr=stub_err, env=env,
+    env['WERKZEUG_RUN_MAIN'] = 'true'
+
+    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
 
     config.stub_proc = proc
-    config.stub_out = stub_out
-    config.stub_err = stub_err
 
     timeout = 5
     try:
@@ -110,9 +105,6 @@ def stop_app(config):
         config.app_proc.send_signal(signal.SIGINT)
         exit_code = config.app_proc.wait()
 
-        config.app_out.close()
-        config.app_err.close()
-
         assert exit_code == 0
 
 
@@ -120,9 +112,6 @@ def stop_stub(config):
     if hasattr(config, 'stub_proc'):
         config.stub_proc.send_signal(signal.SIGINT)
         config.stub_proc.wait()
-
-        config.stub_out.close()
-        config.stub_err.close()
 
 
 def stop_mock():
@@ -163,39 +152,31 @@ def test_dir(request):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def logger(test_dir, config):
-    log_formatter = logging.Formatter('%(asctime)s - %(filename)-20s - %(levelname)-6s - %(message)s')
-    log_file = os.path.join(test_dir, settings.LOGGING.TEST_LOG_FILE_NAME)
-
+def loggers_init(test_dir, config):
     log_level = logging.DEBUG if config['debug_log'] else logging.INFO
 
-    file_handler = logging.FileHandler(log_file, 'w')
-    file_handler.setFormatter(log_formatter)
-    file_handler.setLevel(log_level)
+    loggers_list = []
+    log_files = []
 
-    log = logging.getLogger(settings.LOGGING.LOGGER_NAME)
-    log.propagate = False
-    log.setLevel(log_level)
-    log.handlers.clear()
-    log.addHandler(file_handler)
+    for logger_name, log_file_name in settings.LOGGERS_LIST:
+        log_file_path = os.path.join(test_dir, log_file_name)
+        log_files.append(log_file_path)
+        logger_obj = logging.getLogger(logger_name)
+        set_up_logger(logger_obj, log_file_path, log_level=log_level)
 
-    yield log
+    yield
 
-    for handler in log.handlers:
-        handler.close()
-
-    log_files = (
-        log_file,
-        settings.APP_SETTINGS.LOG_STDOUT,
-        settings.APP_SETTINGS.LOG_STDERR,
-        settings.MOCK_SETTINGS.LOG_STDOUT,
-        settings.MOCK_SETTINGS.LOG_STDERR,
-        settings.STUB_SETTINGS.LOG_STDOUT,
-        settings.STUB_SETTINGS.LOG_STDERR
-    )
+    for log in loggers_list:
+        for handler in log.handlers:
+            handler.close()
 
     for log_file_name in log_files:
         file_path = Path(log_file_name)
         if file_path.is_file():
             with open(log_file_name, 'r') as f:
                 allure.attach(f.read(), log_file_name, attachment_type=allure.attachment_type.TEXT)
+
+
+@pytest.fixture(scope='function')
+def logger(test_dir, config):
+    return logging.getLogger(settings.LOGGING.LOGGER_NAME)
