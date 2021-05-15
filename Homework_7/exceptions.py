@@ -51,6 +51,16 @@ class ClientConnectionBrokenException(NetworkClientException):
     """Connection broken"""
 
 
+# Response parser exceptions
+
+class ResponseParserException(Exception):
+    """HTTP response parser exception"""
+
+
+class InvalidResponseError(ResponseParserException):
+    """Thrown when the HTTP response is invalid"""
+
+
 # Other exceptions
 
 class WaitTimeoutException(Exception):
