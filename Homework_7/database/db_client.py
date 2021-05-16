@@ -44,3 +44,7 @@ class DBTable:
 
     def delete(self, entry_id):
         self._db = [e for e in self._db if e['entry_id'] != entry_id]
+
+    def truncate(self):
+        self._db = []
+        self._last_id = 1
