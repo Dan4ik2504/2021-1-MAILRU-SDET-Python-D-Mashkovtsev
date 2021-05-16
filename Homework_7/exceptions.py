@@ -65,3 +65,7 @@ class InvalidResponseError(ResponseParserException):
 
 class WaitTimeoutException(Exception):
     """Wait timeout"""
+
+
+class InvalidJSONException(Exception):
+    """Invalid JSON exception"""

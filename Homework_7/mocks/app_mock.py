@@ -5,11 +5,12 @@ import threading
 
 from flask import Flask, jsonify, request
 
+import exceptions
 import settings
 
 from database.db_client import DBTable
 from utils.logging_utils import set_up_logger
-from utils.json_utils import json_response_error, json_response_data
+from utils.json_utils import json_response_error, json_response_data, validate_json
 
 app = Flask(__name__)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
@@ -28,17 +29,15 @@ def get_user_last_name(first_name):
 @app.route('/last_name', methods=['POST'])
 def set_user_last_name():
     try:
-        data = json.loads(request.data)
-    except json.JSONDecodeError:
-        return json_response_error('Invalid request',
-                                   'Client sent a request that this server could not understand'), 400
+        data = validate_json(request.data, required_fields=['first_name', 'last_name'])
+    except exceptions.InvalidJSONException as exc:
+        return json_response_error('Invalid JSON', str(exc)), 400
 
-    first_name = data.get('first_name')
-    last_name = data.get('last_name')
+    first_name = data['first_name']
+    last_name = data['last_name']
 
-    if not first_name or not last_name:
-        return json_response_error(
-            'Invalid request', 'Request data is missing. Expected "first_name" and "last_name"'), 400
+    if len(first_name) == 0 or len(last_name) == 0:
+        return json_response_error('Invalid JSON', 'First name and last name are required'), 400
 
     if len(table_last_names.select(first_name=first_name, last_name=last_name)) == 0:
         user = table_last_names.insert(first_name=first_name, last_name=last_name)
@@ -51,15 +50,14 @@ def set_user_last_name():
 @app.route('/last_name/<first_name>', methods=['PUT'])
 def update_user_last_name(first_name):
     try:
-        data = json.loads(request.data)
-    except json.JSONDecodeError:
-        return json_response_error('Invalid request',
-                                   'Client sent a request that this server could not understand'), 400
-    last_name = data.get('last_name')
+        data = validate_json(request.data, required_fields=['last_name'])
+    except exceptions.InvalidJSONException as exc:
+        return json_response_error('Invalid JSON', str(exc)), 400
 
-    if not last_name:
-        return json_response_error(
-            'Invalid request', 'Request data is missing. Expected "last_name"'), 400
+    last_name = data['last_name']
+
+    if len(last_name) == 0:
+        return json_response_error('Invalid JSON', 'Last name is required'), 400
 
     users = table_last_names.select(first_name=first_name)
     if len(users) == 0:
@@ -67,8 +65,8 @@ def update_user_last_name(first_name):
             f'User not found', f'Last name for user with first name "{first_name}" not found'), 404
 
     user = users[0]
-    table_last_names.update(first_name=first_name, last_name=last_name, entry_id=user['id'])
-    user = table_last_names.select(entry_id=user['id'])
+    table_last_names.update(first_name=first_name, last_name=last_name, entry_id=user['entry_id'])
+    user = table_last_names.select(entry_id=user['entry_id'])
 
     return json_response_data(user), 201
 
