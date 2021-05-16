@@ -4,11 +4,11 @@ import exceptions
 
 
 class DBTable:
-    _last_id = 0
 
     def __init__(self, *columns):
         self._db = []
-        self._columns = ('id', *columns)
+        self._columns = ('entry_id', *columns)
+        self._last_id = 1
 
     def validate_columns(self, columns_list):
         if not all([k in self._columns for k in columns_list]):
@@ -25,12 +25,22 @@ class DBTable:
 
     def insert(self, **kwargs):
         self.validate_columns(kwargs.keys())
-        self._last_id += 1
-        if 'id' in kwargs:
-            if kwargs['id'] <= self._last_id:
-                if len(self.select(id=kwargs['id'])) > 0:
-                    raise exceptions.EntryExists(f'Entry with id "{kwargs["id"]}" already exists')
+        if 'entry_id' in kwargs:
+            if kwargs['entry_id'] <= self._last_id:
+                if len(self.select(id=kwargs['entry_id'])) > 0:
+                    raise exceptions.EntryExists(f'Entry with id "{kwargs["entry_id"]}" already exists')
         else:
-            kwargs['id'] = self._last_id
+            kwargs['entry_id'] = self._last_id
         self._db.append(copy.deepcopy(kwargs))
+        self._last_id += 1
         return kwargs
+
+    def update(self, entry_id, **kwargs):
+        self.validate_columns(kwargs.keys())
+        for entry in self._db:
+            if entry['entry_id'] == entry_id:
+                for k, v in kwargs.items():
+                    entry[k] = v
+
+    def delete(self, entry_id):
+        self._db = [e for e in self._db if e['entry_id'] != entry_id]
