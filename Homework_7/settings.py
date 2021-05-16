@@ -35,6 +35,8 @@ class MOCK_SETTINGS:
     HOST = '127.0.0.1'
     PORT = '8083'
     URL = f'http://{HOST}:{PORT}'
+    USER_ACTIONS_URL = URL + '/last_name'
+    USER_ACTIONS_URL_BASE = USER_ACTIONS_URL + "/{}"
     FLASK_LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'mock_flask.log')
     LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'mock.log')
 
