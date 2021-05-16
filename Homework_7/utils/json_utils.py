@@ -37,13 +37,12 @@ def validate_json(json_str, required_fields: list = None, allowed_fields: list =
     else:
         required_fields_errors = None
 
-    if allowed_fields:
-        allowed_fields_errors = []
-        for json_field in json_fields:
-            if json_field not in allowed_fields:
-                allowed_fields_errors.append(json_field)
-    else:
-        allowed_fields_errors = None
+    if not allowed_fields:
+        allowed_fields = []
+    allowed_fields_errors = []
+    for json_field in json_fields:
+        if json_field not in allowed_fields:
+            allowed_fields_errors.append(json_field)
 
     if required_fields_errors or allowed_fields_errors:
         error_msg = ""
