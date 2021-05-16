@@ -18,13 +18,11 @@ class RequestBuilder:
         self.protocol = protocol
 
     def prepare(self):
-        if self.method == self.METHODS.POST:
-            if self.json:
-                self.headers['Content-Type'] = 'application/json'
-                self.data = jsn.dumps(self.json)
-
+        if self.json:
+            self.headers['Content-Type'] = 'application/json'
+            self.data = jsn.dumps(self.json)
             self.headers['Content-Length'] = len(self.data)
-            self.headers['Connection'] = 'close'
+        self.headers['Connection'] = 'close'
 
     def get_string(self):
         self.prepare()
