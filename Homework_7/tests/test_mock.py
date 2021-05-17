@@ -142,7 +142,7 @@ class TestRequestMethods(BaseMockTestCase):
         ("method", "path"),
         list(itertools.product(methods,
                                ('', 'first_name', 'test_nonexistent_path',
-                                'last_name/test_last_name/test_nonexistent_path' '123')))
+                                'last_name/test_last_name/test_nonexistent_path', '123')))
     )
     def test_request_nonexistent_path(self, method, path):
         url = self.mock_url + '/' + path if path else self.mock_url
