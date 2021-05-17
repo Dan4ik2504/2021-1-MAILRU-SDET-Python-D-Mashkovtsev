@@ -51,5 +51,5 @@ class HttpClient:
                 data_log_str = f'Response JSON data: "{response_obj.json}"'
             else:
                 data_log_str = f'Data: "{response_obj.data}"'
-            logger.debug(f'Headers: "{response_obj.headers}"\n{data_log_str}')
+            logger.debug(f'Headers: "{response_obj.headers}". {data_log_str}')
         return response_obj

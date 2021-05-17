@@ -8,9 +8,8 @@ from flask.logging import default_handler
 import exceptions
 import settings
 from database.db_client import DBTable
-from utils.flask_utils import json_response_data, json_response_error
+from utils.flask_utils import process_request_response_data, get_or_http_404
 from utils.logging_utils import set_up_logger
-
 
 app = Flask(__name__)
 
@@ -22,64 +21,58 @@ set_up_logger(app.logger, settings.APP_SETTINGS.LOG_FILE_PATH)
 
 
 @app.route('/user', methods=['POST'])
+@process_request_response_data(validate_json=True, required_fields=['first_name'])
 def create_user():
-    try:
-        first_name = json.loads(request.data).get('first_name')
-    except json.JSONDecodeError:
-        return json_response_error('Invalid request',
-                                   'Client sent a request that this server could not understand'), 400
+    first_name = request.json['first_name']
 
-    if first_name is None:
-        return json_response_error('Invalid request', 'Request data is missing. Expected "first_name"'), 400
-
-    if len(table_users.select(first_name=first_name)) == 0:
+    if not table_users.exists(first_name=first_name):
         user = table_users.insert(first_name=first_name)
-        return json_response_data(user), 201
+        return user, 201
     else:
-        return json_response_error('User exists', f'User with first name "{first_name}" already exists.'), 409
+        raise exceptions.HTTPConflictError(
+            'User exists', f'User with first name "{first_name}" already exists.')
 
 
 @app.route('/user/<first_name>', methods=['GET'])
+@process_request_response_data()
 def get_user_by_name(first_name):
-    if user := table_users.select(first_name=first_name):
-        user = user[0]
-        stub_host = os.environ.get('STUB_HOST')
-        stub_port = os.environ.get('STUB_PORT')
+    user = get_or_http_404(table_users, first_name=first_name,
+                           exc_name='User not found',
+                           exc_msg=f'User with first name "{first_name}" not found')
+    stub_host = os.environ.get('STUB_HOST')
+    stub_port = os.environ.get('STUB_PORT')
 
-        age = None
-        if stub_host and stub_port:
-            try:
-                resp = requests.get(f'http://{stub_host}:{stub_port}/age/{first_name}')
-                if resp.status_code == 200:
-                    age = resp.json()["data"]
-            except requests.exceptions.ConnectionError as e:
-                app.logger.warning(f'Unable to get age from external system:\n{e}')
-        else:
-            app.logger.warning(f'Unable to get age from external system. STUB_HOST: {stub_host}. STUB_PORT: {stub_port}')
-
-        user['age'] = age
-
-        mock_host = os.environ.get('MOCK_HOST')
-        mock_port = os.environ.get('MOCK_PORT')
-
-        last_name = None
-        if mock_host and mock_port:
-            try:
-                resp = requests.get(f'http://{mock_host}:{mock_port}/last_name/{first_name}')
-                if resp.status_code == 200:
-                    last_name = resp.json()["data"]['last_name']
-
-            except requests.exceptions.ConnectionError as e:
-                app.logger.warning(f'Unable to get surname from external system:\n{e}')
-        else:
-            app.logger.warning(
-                f'Unable to get surname from external system. MOCK_HOST: {mock_host}. MOCK_PORT: {mock_port}')
-
-        user['last_name'] = last_name
-
-        return json_response_data(user), 200
+    age = None
+    if stub_host and stub_port:
+        try:
+            resp = requests.get(f'http://{stub_host}:{stub_port}/age/{first_name}')
+            if resp.status_code == 200:
+                age = resp.json()["data"]
+        except requests.exceptions.ConnectionError as e:
+            app.logger.warning(f'Unable to get age from external system:\n{e}')
     else:
-        return json_response_error('User not found', f'User with first name "{first_name}" not found'), 404
+        app.logger.warning(f'Unable to get age from external system: URL not specified')
+
+    user['age'] = age
+
+    mock_host = os.environ.get('MOCK_HOST')
+    mock_port = os.environ.get('MOCK_PORT')
+
+    last_name = None
+    if mock_host and mock_port:
+        try:
+            resp = requests.get(f'http://{mock_host}:{mock_port}/last_name/{first_name}')
+            if resp.status_code == 200:
+                last_name = resp.json()["data"]['last_name']
+
+        except requests.exceptions.ConnectionError as e:
+            app.logger.warning(f'Unable to get last name from external system:\n{e}')
+    else:
+        app.logger.warning(f'Unable to last name age from external system: URL not specified')
+
+    user['last_name'] = last_name
+
+    return user, 200
 
 
 if __name__ == '__main__':

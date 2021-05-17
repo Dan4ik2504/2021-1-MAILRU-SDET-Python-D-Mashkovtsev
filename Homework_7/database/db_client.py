@@ -48,3 +48,6 @@ class DBTable:
     def truncate(self):
         self._db = []
         self._last_id = 1
+
+    def exists(self, **kwargs):
+        return len(self.select(**kwargs)) > 0

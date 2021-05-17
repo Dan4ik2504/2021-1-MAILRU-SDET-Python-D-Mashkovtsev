@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import threading
@@ -10,7 +9,7 @@ import settings
 
 from database.db_client import DBTable
 from utils.logging_utils import set_up_logger
-from utils.flask_utils import process_request_response_data
+from utils.flask_utils import process_request_response_data, get_or_http_404
 
 app = Flask(__name__)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
@@ -20,11 +19,10 @@ table_last_names = DBTable('first_name', 'last_name')
 @app.route('/last_name/<first_name>', methods=['GET'])
 @process_request_response_data()
 def get_user_last_name(first_name):
-    if last_name := table_last_names.select(first_name=first_name):
-        return last_name[0], 200
-    else:
-        raise exceptions.HTTPNotFoundError('Entry does not exists',
-                                           f'Last name for user with first name "{first_name}" not found')
+    last_name = get_or_http_404(table_last_names, first_name=first_name,
+                                exc_name='Entry does not exists',
+                                exc_msg=f'Last name for user with first name "{first_name}" not found')
+    return last_name, 200
 
 
 @app.route('/last_name', methods=['POST'])
@@ -33,10 +31,7 @@ def set_user_last_name():
     first_name = request.json['first_name']
     last_name = request.json['last_name']
 
-    if len(first_name) == 0 or len(last_name) == 0:
-        raise exceptions.HTTPBadRequestError('Invalid JSON', 'First name and last name are required')
-
-    if len(table_last_names.select(first_name=first_name, last_name=last_name)) == 0:
+    if not table_last_names.exists(first_name=first_name, last_name=last_name):
         user = table_last_names.insert(first_name=first_name, last_name=last_name)
         return user, 201
     else:
@@ -49,15 +44,10 @@ def set_user_last_name():
 def update_user_last_name(first_name):
     last_name = request.json['last_name']
 
-    if len(last_name) == 0:
-        raise exceptions.HTTPBadRequestError('Invalid JSON', 'Last name is required')
+    user = get_or_http_404(table_last_names, first_name=first_name,
+                           exc_name='User not found',
+                           exc_msg=f'Last name for user with first name "{first_name}" not found')
 
-    users = table_last_names.select(first_name=first_name)
-    if len(users) == 0:
-        raise exceptions.HTTPNotFoundError(
-            f'User not found', f'Last name for user with first name "{first_name}" not found')
-
-    user = users[0]
     table_last_names.update(first_name=first_name, last_name=last_name, entry_id=user['entry_id'])
     user = table_last_names.select(entry_id=user['entry_id'])
 
@@ -67,12 +57,9 @@ def update_user_last_name(first_name):
 @app.route('/last_name/<first_name>', methods=['DELETE'])
 @process_request_response_data()
 def delete_user_last_name(first_name):
-    users = table_last_names.select(first_name=first_name)
-    if len(users) == 0:
-        raise exceptions.HTTPNotFoundError(
-            f'User not found', f'Last name for user with first name "{first_name}" not found')
-
-    user = users[0]
+    user = get_or_http_404(table_last_names, first_name=first_name,
+                           exc_name='User not found',
+                           exc_msg=f'Last name for user with first name "{first_name}" not found')
 
     table_last_names.delete(entry_id=user['entry_id'])
     return 'OK', 200

@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 
 import settings
 from utils.logging_utils import set_up_logger
-from utils.flask_utils import json_response_error, json_response_data
+from utils.flask_utils import process_request_response_data
 
 app = Flask(__name__)
 
@@ -16,8 +16,9 @@ set_up_logger(app.logger, settings.STUB_SETTINGS.LOG_FILE_PATH)
 
 
 @app.route('/age/<name>', methods=['GET'])
+@process_request_response_data()
 def get_user_age_by_name(name):
-    return json_response_data(random.randint(0, 100)), 200
+    return random.randint(0, 100), 200
 
 
 if __name__ == '__main__':
