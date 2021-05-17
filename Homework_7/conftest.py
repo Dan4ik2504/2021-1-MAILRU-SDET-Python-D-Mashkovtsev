@@ -19,6 +19,26 @@ from utils.wait import wait
 from utils.logging_utils import set_up_logger
 
 
+def set_default_env_vars(env, app_vars=False, mock_vars=False, stub_vars=False, pythonpath=True, del_init_msg=True):
+    if app_vars:
+        env['APP_HOST'] = settings.APP_SETTINGS.HOST
+        env['APP_PORT'] = settings.APP_SETTINGS.PORT
+
+    if stub_vars:
+        env['STUB_HOST'] = settings.STUB_SETTINGS.HOST
+        env['STUB_PORT'] = settings.STUB_SETTINGS.PORT
+
+    if mock_vars:
+        env['MOCK_HOST'] = settings.MOCK_SETTINGS.HOST
+        env['MOCK_PORT'] = settings.MOCK_SETTINGS.PORT
+
+    if pythonpath:
+        env['PYTHONPATH'] = paths.repo_root
+
+    if del_init_msg:
+        env['WERKZEUG_RUN_MAIN'] = 'true'
+
+
 def is_master_process(config):
     if hasattr(config, 'workerinput'):
         return False
@@ -27,21 +47,10 @@ def is_master_process(config):
 
 @pytest.fixture(scope='session')
 def start_app(config):
-    app_path = os.path.join(paths.repo_root, 'app', 'app.py')
+    app_path = settings.APP_SETTINGS.FILE_PATH
 
     env = copy(os.environ)
-    env['APP_HOST'] = settings.APP_SETTINGS.HOST
-    env['APP_PORT'] = settings.APP_SETTINGS.PORT
-
-    env['STUB_HOST'] = settings.STUB_SETTINGS.HOST
-    env['STUB_PORT'] = settings.STUB_SETTINGS.PORT
-
-    env['MOCK_HOST'] = settings.MOCK_SETTINGS.HOST
-    env['MOCK_PORT'] = settings.MOCK_SETTINGS.PORT
-
-    env['PYTHONPATH'] = paths.repo_root
-
-    env['WERKZEUG_RUN_MAIN'] = 'true'
+    set_default_env_vars(env, app_vars=True, mock_vars=True, stub_vars=True)
 
     proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
@@ -62,15 +71,10 @@ def start_app(config):
 
 @pytest.fixture(scope='session')
 def start_stub(config):
-    stub_path = os.path.join(paths.repo_root, 'mocks', 'app_stub.py')
+    stub_path = settings.STUB_SETTINGS.FILE_PATH
 
     env = copy(os.environ)
-    env['STUB_HOST'] = settings.STUB_SETTINGS.HOST
-    env['STUB_PORT'] = settings.STUB_SETTINGS.PORT
-
-    env['PYTHONPATH'] = paths.repo_root
-
-    env['WERKZEUG_RUN_MAIN'] = 'true'
+    set_default_env_vars(env, stub_vars=True)
 
     proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
@@ -150,6 +154,7 @@ def loggers_init(test_dir, config):
         log_files.append((log_file_name, log_file_path))
         logger_obj = logging.getLogger(logger_name)
         set_up_logger(logger_obj, log_file_path, log_level=log_level)
+        loggers_list.append(logger_obj)
 
     yield
 

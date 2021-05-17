@@ -19,6 +19,7 @@ class APP_SETTINGS:
     HOST = '127.0.0.1'
     PORT = '8081'
     URL = f'http://{HOST}:{PORT}'
+    FILE_PATH = os.path.join(paths.repo_root, 'app', 'app.py')
     FLASK_LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'app_flask.log')
     LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'app.log')
 
@@ -27,6 +28,7 @@ class STUB_SETTINGS:
     HOST = '127.0.0.1'
     PORT = '8082'
     URL = f'http://{HOST}:{PORT}'
+    FILE_PATH = os.path.join(paths.repo_root, 'mocks', 'app_stub.py')
     FLASK_LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'stub_flask.log')
     LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'stub.log')
 
