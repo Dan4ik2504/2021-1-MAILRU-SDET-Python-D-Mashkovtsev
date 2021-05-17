@@ -46,64 +46,67 @@ def is_master_process(config):
 
 
 @pytest.fixture(scope='session')
-def start_app(config):
-    app_path = settings.APP_SETTINGS.FILE_PATH
+def start_app(config, request):  # Без указания "config" процесс не завершается
+    if request.config.is_master_process:
+        app_path = settings.APP_SETTINGS.FILE_PATH
 
-    env = copy(os.environ)
-    set_default_env_vars(env, app_vars=True, mock_vars=True, stub_vars=True)
+        env = copy(os.environ)
+        set_default_env_vars(env, app_vars=True, mock_vars=True, stub_vars=True)
 
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], env=env, stdout=subprocess.DEVNULL,
-                            cwd=paths.repo_root)
+        proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], env=env, stdout=subprocess.DEVNULL,
+                                cwd=paths.repo_root)
 
-    timeout = 5
-    try:
-        wait(requests.get, url=settings.APP_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
-    except exceptions.WaitTimeoutException:
-        raise exceptions.FlaskServerConnectionError(f"Connection error. App did not started in {timeout} seconds")
+        timeout = 5
+        try:
+            wait(requests.get, url=settings.APP_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
+        except exceptions.WaitTimeoutException:
+            raise exceptions.FlaskServerConnectionError(f"Connection error. App did not started in {timeout} seconds")
 
-    yield
+        yield
 
-    proc.send_signal(signal.SIGINT)
-    exit_code = proc.wait()
+        proc.send_signal(signal.SIGINT)
+        exit_code = proc.wait()
 
-    assert exit_code == 0
-
-
-@pytest.fixture(scope='session')
-def start_stub(config):
-    stub_path = settings.STUB_SETTINGS.FILE_PATH
-
-    env = copy(os.environ)
-    set_default_env_vars(env, stub_vars=True)
-
-    proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], env=env, stdout=subprocess.DEVNULL,
-                            cwd=paths.repo_root)
-
-    timeout = 5
-    try:
-        wait(requests.get, url=settings.STUB_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
-    except exceptions.WaitTimeoutException:
-        raise exceptions.FlaskServerConnectionError(f"Connection error. Stub did not started in {timeout} seconds")
-
-    yield
-
-    proc.send_signal(signal.SIGINT)
-    proc.wait()
+        assert exit_code == 0
 
 
 @pytest.fixture(scope='session')
-def start_mock():
-    app_mock.run_mock()
+def start_stub(config, request):
+    if request.config.is_master_process:
+        stub_path = settings.STUB_SETTINGS.FILE_PATH
 
-    timeout = 5
-    try:
-        wait(requests.get, url=settings.MOCK_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
-    except exceptions.WaitTimeoutException:
-        raise exceptions.FlaskServerConnectionError(f"Connection error. Mock did not started in {timeout} seconds")
+        env = copy(os.environ)
+        set_default_env_vars(env, stub_vars=True)
 
-    yield
+        proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], env=env, stdout=subprocess.DEVNULL,
+                                cwd=paths.repo_root)
 
-    requests.get(f'{settings.MOCK_SETTINGS.URL}/shutdown')
+        timeout = 5
+        try:
+            wait(requests.get, url=settings.STUB_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
+        except exceptions.WaitTimeoutException:
+            raise exceptions.FlaskServerConnectionError(f"Connection error. Stub did not started in {timeout} seconds")
+
+        yield
+
+        proc.send_signal(signal.SIGINT)
+        proc.wait()
+
+
+@pytest.fixture(scope='session')
+def start_mock(request):
+    if request.config.is_master_process:
+        app_mock.run_mock()
+
+        timeout = 5
+        try:
+            wait(requests.get, url=settings.MOCK_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
+        except exceptions.WaitTimeoutException:
+            raise exceptions.FlaskServerConnectionError(f"Connection error. Mock did not started in {timeout} seconds")
+
+        yield
+
+        requests.get(f'{settings.MOCK_SETTINGS.URL}/shutdown')
 
 
 def pytest_configure(config):
