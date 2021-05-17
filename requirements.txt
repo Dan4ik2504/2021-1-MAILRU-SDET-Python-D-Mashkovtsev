@@ -12,3 +12,4 @@ sqlalchemy~=1.4.13
 sqlalchemy-utils~=0.37.2
 Flask~=2.0.0
 furl~=2.1.2
+validators~=0.18.2

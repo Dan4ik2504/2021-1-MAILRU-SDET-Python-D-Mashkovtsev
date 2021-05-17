@@ -59,7 +59,7 @@ def start_app(config):
     try:
         wait(requests.get, url=settings.APP_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
     except exceptions.WaitTimeoutException:
-        raise exceptions.AppConnectionError(f"Connection error. App did not started in {timeout} seconds")
+        raise exceptions.FlaskServerConnectionError(f"Connection error. App did not started in {timeout} seconds")
 
     yield
 
@@ -83,7 +83,7 @@ def start_stub(config):
     try:
         wait(requests.get, url=settings.STUB_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
     except exceptions.WaitTimeoutException:
-        raise exceptions.StubConnectionError(f"Connection error. Stub did not started in {timeout} seconds")
+        raise exceptions.FlaskServerConnectionError(f"Connection error. Stub did not started in {timeout} seconds")
 
     yield
 
@@ -99,7 +99,7 @@ def start_mock():
     try:
         wait(requests.get, url=settings.MOCK_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
     except exceptions.WaitTimeoutException:
-        raise exceptions.MockConnectionError(f"Connection error. Mock did not started in {timeout} seconds")
+        raise exceptions.FlaskServerConnectionError(f"Connection error. Mock did not started in {timeout} seconds")
 
     yield
 

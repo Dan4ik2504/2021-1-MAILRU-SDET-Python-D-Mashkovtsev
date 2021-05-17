@@ -1,7 +1,9 @@
 import json
+from functools import wraps
 
-from flask import jsonify
+from flask import jsonify, request
 import exceptions
+import validators
 
 
 def json_response_data(data):
@@ -17,12 +19,7 @@ def json_response_error(error_name, error_msg):
         })
 
 
-def validate_json(json_str, required_fields: list = None, allowed_fields: list = None):
-    try:
-        json_data = json.loads(json_str)
-    except json.JSONDecodeError:
-        raise exceptions.InvalidJSONException('Invalid JSON data')
-
+def json_validator(json_data, required_fields: list = None, allowed_fields: list = None):
     if not isinstance(json_data, dict):
         raise exceptions.InvalidJSONException('JSON must be dict')
 
@@ -53,3 +50,32 @@ def validate_json(json_str, required_fields: list = None, allowed_fields: list =
         raise exceptions.InvalidJSONException(error_msg)
     else:
         return json_data
+
+
+def process_request_response_data(validate_json=False, **validate_json_kwargs):
+
+    def inner_func(func):
+
+        @wraps(func)
+        def wrapper(**func_kwargs):
+            for k, v in func_kwargs.items():
+                if not validators.slug(v):
+                    return json_response_error('Incorrect URL', f'"{k}" required'), 400
+
+            if validate_json:
+                try:
+                    json_validator(request.json, **validate_json_kwargs)
+                except exceptions.InvalidJSONException as exc:
+                    return json_response_error('Invalid JSON', str(exc)), 400
+
+            try:
+                response = list(func(**func_kwargs))
+            except (exceptions.HTTPClientError, exceptions.InvalidJSONException) as exc:
+                return json_response_error(exc.err_name, exc.err_msg), exc.status_code
+            else:
+                response[0] = json_response_data(response[0])
+                return tuple(response)
+
+        return wrapper
+
+    return inner_func

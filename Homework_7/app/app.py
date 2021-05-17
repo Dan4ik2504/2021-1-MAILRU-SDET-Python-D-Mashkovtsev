@@ -8,7 +8,7 @@ from flask.logging import default_handler
 import exceptions
 import settings
 from database.db_client import DBTable
-from utils.json_utils import json_response_data, json_response_error
+from utils.flask_utils import json_response_data, json_response_error
 from utils.logging_utils import set_up_logger
 
 

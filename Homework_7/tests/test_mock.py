@@ -1,13 +1,12 @@
 import pytest
 import itertools
 
-import json
-
 from tests.base import BaseMockTestCase
-from utils.builder import Builder, fake
-import exceptions
+from utils.builder import Builder
+from faker import Faker
 
 builder = Builder()
+fake = Faker()
 
 
 class TestMockGet(BaseMockTestCase):
@@ -21,8 +20,8 @@ class TestMockGet(BaseMockTestCase):
                 ('test_first_name', 'test_last_name'),
                 ('name', 'name'),
                 ('123', '456'),
-                ("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~""",
-                 """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"""),
+                ("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_""",
+                 """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"""),
                 *builder.get_users_list_of_tuples(5)
         )
     )
@@ -41,8 +40,8 @@ class TestMockPost(BaseMockTestCase):
                 ('test_first_name', 'test_last_name'),
                 ('name', 'name'),
                 ('123', '456'),
-                ("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~""",
-                 """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"""),
+                ("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_""",
+                 """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"""),
                 *builder.get_users_list_of_tuples(5)
         )
     )
@@ -131,7 +130,7 @@ class TestMockDelete(BaseMockTestCase):
         self.mock_db.insert(first_name=first_name, last_name=last_name)
 
         response = self.mock_client.delete_user_last_name(first_name)
-        assert response.status_code == 201
+        assert response.status_code == 200
 
         assert len(self.mock_db.select(first_name=first_name, last_name=last_name)) == 0
 

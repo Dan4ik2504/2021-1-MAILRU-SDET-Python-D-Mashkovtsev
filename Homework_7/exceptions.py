@@ -12,33 +12,40 @@ class EntryExists(DatabaseBaseException):
     """Entry with specified id already exists"""
 
 
-# Application exceptions
+# Flask server exceptions
 
-class AppBaseException(Exception):
-    """Application exception"""
-
-class AppConnectionError(AppBaseException):
-    """App connection error"""
+class FlaskServerException(Exception):
+    """Flask server exception"""
 
 
-# Stub exceptions
-
-class StubBaseException(Exception):
-    """Stub base exception"""
+class FlaskServerConnectionError(FlaskServerException):
+    """Flask server connection error"""
 
 
-class StubConnectionError(StubBaseException):
-    """Stub connection error"""
+# HTTP client errors (4**)
+
+class HTTPClientError(Exception):
+    """Base HTTP client error"""
+    status_code = None
+
+    def __init__(self, err_name=None, err_msg=None):
+        self.err_name = err_name
+        self.err_msg = err_msg
 
 
-# Mock exceptions
+class HTTPBadRequestError(HTTPClientError):
+    """Bad request (400) error"""
+    status_code = 400
 
-class MockBaseException(Exception):
-    """Mock base exception"""
+
+class HTTPNotFoundError(HTTPClientError):
+    """Not found (404) error"""
+    status_code = 404
 
 
-class MockConnectionError(MockBaseException):
-    """Mock connection error"""
+class HTTPConflictError(HTTPClientError):
+    """Conflict (409) error"""
+    status_code = 409
 
 
 # Network client exceptions
@@ -69,3 +76,8 @@ class WaitTimeoutException(Exception):
 
 class InvalidJSONException(Exception):
     """Invalid JSON exception"""
+    err_name = 'Invalid JSON'
+    status_code = 400
+
+    def __init__(self, err_msg=None):
+        self.err_msg = err_msg

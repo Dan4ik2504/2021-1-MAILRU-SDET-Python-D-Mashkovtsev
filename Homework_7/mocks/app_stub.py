@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 
 import settings
 from utils.logging_utils import set_up_logger
-from utils.json_utils import json_response_error, json_response_data
+from utils.flask_utils import json_response_error, json_response_data
 
 app = Flask(__name__)
 

@@ -3,14 +3,14 @@ import logging
 import os
 import threading
 
-from flask import Flask, jsonify, request
+from flask import Flask, request
 
 import exceptions
 import settings
 
 from database.db_client import DBTable
 from utils.logging_utils import set_up_logger
-from utils.json_utils import json_response_error, json_response_data, validate_json
+from utils.flask_utils import process_request_response_data
 
 app = Flask(__name__)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
@@ -18,70 +18,64 @@ table_last_names = DBTable('first_name', 'last_name')
 
 
 @app.route('/last_name/<first_name>', methods=['GET'])
+@process_request_response_data()
 def get_user_last_name(first_name):
     if last_name := table_last_names.select(first_name=first_name):
-        return json_response_data(last_name[0]), 200
+        return last_name[0], 200
     else:
-        return json_response_error('Entry does not exists',
-                                   f'Last name for user with first name "{first_name}" not found'), 404
+        raise exceptions.HTTPNotFoundError('Entry does not exists',
+                                           f'Last name for user with first name "{first_name}" not found')
 
 
 @app.route('/last_name', methods=['POST'])
+@process_request_response_data(validate_json=True, required_fields=['first_name', 'last_name'])
 def set_user_last_name():
-    try:
-        data = validate_json(request.data, required_fields=['first_name', 'last_name'])
-    except exceptions.InvalidJSONException as exc:
-        return json_response_error('Invalid JSON', str(exc)), 400
-
-    first_name = data['first_name']
-    last_name = data['last_name']
+    first_name = request.json['first_name']
+    last_name = request.json['last_name']
 
     if len(first_name) == 0 or len(last_name) == 0:
-        return json_response_error('Invalid JSON', 'First name and last name are required'), 400
+        raise exceptions.HTTPBadRequestError('Invalid JSON', 'First name and last name are required')
 
     if len(table_last_names.select(first_name=first_name, last_name=last_name)) == 0:
         user = table_last_names.insert(first_name=first_name, last_name=last_name)
-        return json_response_data(user), 201
+        return user, 201
     else:
-        return json_response_error(
-            'User exists', f'User with first name "{first_name}" and last name "{last_name}" already exists.'), 409
+        raise exceptions.HTTPConflictError(
+            'User exists', f'User with first name "{first_name}" and last name "{last_name}" already exists.')
 
 
 @app.route('/last_name/<first_name>', methods=['PUT'])
+@process_request_response_data(validate_json=True, required_fields=['last_name'])
 def update_user_last_name(first_name):
-    try:
-        data = validate_json(request.data, required_fields=['last_name'])
-    except exceptions.InvalidJSONException as exc:
-        return json_response_error('Invalid JSON', str(exc)), 400
-
-    last_name = data['last_name']
+    last_name = request.json['last_name']
 
     if len(last_name) == 0:
-        return json_response_error('Invalid JSON', 'Last name is required'), 400
+        raise exceptions.HTTPBadRequestError('Invalid JSON', 'Last name is required')
 
     users = table_last_names.select(first_name=first_name)
     if len(users) == 0:
-        return json_response_error(
-            f'User not found', f'Last name for user with first name "{first_name}" not found'), 404
+        raise exceptions.HTTPNotFoundError(
+            f'User not found', f'Last name for user with first name "{first_name}" not found')
 
     user = users[0]
     table_last_names.update(first_name=first_name, last_name=last_name, entry_id=user['entry_id'])
     user = table_last_names.select(entry_id=user['entry_id'])
 
-    return json_response_data(user), 201
+    return user, 201
 
 
 @app.route('/last_name/<first_name>', methods=['DELETE'])
+@process_request_response_data()
 def delete_user_last_name(first_name):
     users = table_last_names.select(first_name=first_name)
     if len(users) == 0:
-        return json_response_error(
-            f'User not found', f'Last name for user with first name "{first_name}" not found'), 404
+        raise exceptions.HTTPNotFoundError(
+            f'User not found', f'Last name for user with first name "{first_name}" not found')
 
     user = users[0]
 
     table_last_names.delete(entry_id=user['entry_id'])
-    return json_response_data('OK'), 201
+    return 'OK', 200
 
 
 def run_mock():
@@ -116,4 +110,4 @@ def shutdown_mock():
 @app.route('/shutdown')
 def shutdown():
     shutdown_mock()
-    return json_response_data(f'OK, exiting'), 200
+    return f'OK, exiting', 200
