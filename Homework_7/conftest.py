@@ -25,6 +25,7 @@ def is_master_process(config):
     return True
 
 
+@pytest.fixture(scope='session')
 def start_app(config):
     app_path = os.path.join(paths.repo_root, 'app', 'app.py')
 
@@ -45,15 +46,21 @@ def start_app(config):
     proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, app_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
 
-    config.app_proc = proc
-
     timeout = 5
     try:
         wait(requests.get, url=settings.APP_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
     except exceptions.WaitTimeoutException:
         raise exceptions.AppConnectionError(f"Connection error. App did not started in {timeout} seconds")
 
+    yield
 
+    proc.send_signal(signal.SIGINT)
+    exit_code = proc.wait()
+
+    assert exit_code == 0
+
+
+@pytest.fixture(scope='session')
 def start_stub(config):
     stub_path = os.path.join(paths.repo_root, 'mocks', 'app_stub.py')
 
@@ -68,15 +75,19 @@ def start_stub(config):
     proc = subprocess.Popen([settings.PYTHON_SHELL_COMMAND, stub_path], env=env, stdout=subprocess.DEVNULL,
                             cwd=paths.repo_root)
 
-    config.stub_proc = proc
-
     timeout = 5
     try:
         wait(requests.get, url=settings.STUB_SETTINGS.URL, timeout=timeout, interval=0.1, error=ConnectionError)
     except exceptions.WaitTimeoutException:
         raise exceptions.StubConnectionError(f"Connection error. Stub did not started in {timeout} seconds")
 
+    yield
 
+    proc.send_signal(signal.SIGINT)
+    proc.wait()
+
+
+@pytest.fixture(scope='session')
 def start_mock():
     app_mock.run_mock()
 
@@ -86,43 +97,19 @@ def start_mock():
     except exceptions.WaitTimeoutException:
         raise exceptions.MockConnectionError(f"Connection error. Mock did not started in {timeout} seconds")
 
+    yield
+
+    requests.get(f'{settings.MOCK_SETTINGS.URL}/shutdown')
+
 
 def pytest_configure(config):
     is_master = is_master_process(config)
 
     if is_master:
         create_test_dir()
-        start_mock()
-        start_stub(config)
-        start_app(config)
 
     config.base_test_dir = settings.LOGGING.BASE_TEST_DIR
     config.is_master_process = is_master
-
-
-def stop_app(config):
-    if hasattr(config, 'app_proc'):
-        config.app_proc.send_signal(signal.SIGINT)
-        exit_code = config.app_proc.wait()
-
-        assert exit_code == 0
-
-
-def stop_stub(config):
-    if hasattr(config, 'stub_proc'):
-        config.stub_proc.send_signal(signal.SIGINT)
-        config.stub_proc.wait()
-
-
-def stop_mock():
-    requests.get(f'{settings.MOCK_SETTINGS.URL}/shutdown')
-
-
-def pytest_unconfigure(config):
-    if is_master_process(config):
-        stop_app(config)
-        stop_stub(config)
-        stop_mock()
 
 
 def pytest_addoption(parser):
@@ -160,7 +147,7 @@ def loggers_init(test_dir, config):
 
     for logger_name, log_file_name in settings.LOGGERS_LIST:
         log_file_path = os.path.join(test_dir, log_file_name)
-        log_files.append(log_file_path)
+        log_files.append((log_file_name, log_file_path))
         logger_obj = logging.getLogger(logger_name)
         set_up_logger(logger_obj, log_file_path, log_level=log_level)
 
@@ -170,10 +157,10 @@ def loggers_init(test_dir, config):
         for handler in log.handlers:
             handler.close()
 
-    for log_file_name in log_files:
-        file_path = Path(log_file_name)
+    for log_file_name, log_file_path in log_files:
+        file_path = Path(log_file_path)
         if file_path.is_file():
-            with open(log_file_name, 'r') as f:
+            with open(log_file_path, 'r') as f:
                 allure.attach(f.read(), log_file_name, attachment_type=allure.attachment_type.TEXT)
 
 
