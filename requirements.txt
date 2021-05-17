@@ -7,3 +7,7 @@ pytest-lazy-fixture~=0.6.3
 requests~=2.25.1
 Faker~=8.1.0
 Appium-Python-Client~=1.1.0
+pymysql~=1.0.2
+sqlalchemy~=1.4.13
+sqlalchemy-utils~=0.37.2
+
