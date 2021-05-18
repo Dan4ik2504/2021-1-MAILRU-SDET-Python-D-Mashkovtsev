@@ -1,6 +1,10 @@
 import json as jsn
+import re
 
 import exceptions
+
+first_line_regexp = r'^(?P<protocol>HTTP\/\d.\d) (?P<status_code>\d{3}) (?P<reason_phrase>.*?)$'
+headers_regexp = r'^(?P<header_name>.*?): ?(?P<header_text>.*?)$'
 
 
 class Response:
@@ -13,33 +17,31 @@ class Response:
         self.json = json
 
 
-def response_header_parser(head_str):
-    head_list = head_str.split('\r\n')
-    head_list = [s.strip() for s in head_list]
-    protocol, status_code, *reason_phrase = head_list.pop(0).split(' ')
-    protocol = protocol.strip()
-    status_code = status_code.strip()
-    reason_phrase = ' '.join(reason_phrase).strip()
-
-    if status_code.isdigit():
-        status_code = int(status_code)
+def response_status_line_parser(status_line):
+    result = re.search(first_line_regexp, status_line)
+    if result:
+        data = {
+            'protocol': result['protocol'],
+            'status_code': int(result['status_code']),
+            'reason_phrase': result['reason_phrase']
+        }
+        return data
     else:
-        raise exceptions.InvalidResponseError(f"Invalid response status_code:\n{status_code}")
+        raise exceptions.InvalidResponseError(f"Invalid response status line:\n{status_line}")
+
+
+def response_headers_parser(headers_list):
+    headers_list = [s.strip() for s in headers_list]
 
     headers = {}
-    for header_str in head_list:
-        h_key, *h_value = header_str.split(':')
-        h_key = h_key.strip()
-        h_value = ':'.join(h_value).strip()
-        headers[h_key] = h_value
+    for header_str in headers_list:
+        result = re.search(headers_regexp, header_str)
+        if result:
+            headers[result['header_name']] = result['header_text']
+        else:
+            raise exceptions.InvalidResponseError(f"Invalid response header:\n{header_str}")
 
-    data = {
-        'protocol': protocol,
-        'status_code': status_code,
-        'reason_phrase': reason_phrase,
-        'headers': headers
-    }
-    return data
+    return headers
 
 
 def response_body_parser(body_str, content_type):
@@ -58,18 +60,26 @@ def response_parser(response_str):
     if len(response_str) == 0:
         raise exceptions.InvalidResponseError(f"Invalid response:\n{response_str}")
 
-    head, *body = response_str.split('\r\n\r\n')
-    body = '\r\n'.join(body)
+    delimiter = '\r\n\r\n'
+    head, *body = response_str.split(delimiter)
+    if len(body) > 1:
+        raise exceptions.InvalidResponseError(f"Invalid response body:\n{delimiter.join(body)}")
+
     if len(head) == 0:
-        raise exceptions.InvalidResponseError(f"Invalid response headers:\n{head}")
+        raise exceptions.InvalidResponseError(f"Invalid response head:\n{head}")
 
-    data_dict = response_header_parser(head)
-    if len(body) > 0 and 'Content-Type' in data_dict['headers']:
-        response_data = response_body_parser(body, data_dict['headers']['Content-Type'])
-        if data_dict['headers']['Content-Type'] == "application/json":
-            data_dict['json'] = response_data
+    status_line, *headers = head.split('\r\n')
+
+    data = response_status_line_parser(status_line)
+
+    data['headers'] = response_headers_parser(headers)
+
+    if len(body) > 0 and 'Content-Type' in data['headers']:
+        response_data = response_body_parser(body[0], data['headers']['Content-Type'])
+        if data['headers']['Content-Type'] == "application/json":
+            data['json'] = response_data
         else:
-            data_dict['data'] = response_data
+            data['data'] = response_data
 
-    response = Response(**data_dict)
+    response = Response(**data)
     return response
