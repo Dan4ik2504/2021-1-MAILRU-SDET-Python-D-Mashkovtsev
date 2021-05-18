@@ -13,7 +13,7 @@ from utils.flask_utils import process_request_response_data, get_or_http_404
 
 app = Flask(__name__)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
-table_last_names = DBTable('first_name', 'last_name')
+table_last_names = DBTable('mock_last_names', 'first_name', 'last_name')
 
 
 @app.route('/last_name/<first_name>', methods=['GET'])
