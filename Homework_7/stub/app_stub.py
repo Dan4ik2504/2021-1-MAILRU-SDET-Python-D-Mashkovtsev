@@ -6,9 +6,10 @@ from flask import Flask
 
 import settings
 from utils.logging_utils import set_up_logger
-from utils.flask_utils import process_request_response_data
+from utils.flask_utils import process_request_response_data, add_rest_api_error_handlers
 
 app = Flask(__name__)
+add_rest_api_error_handlers(app)
 
 app_logger = logging.getLogger('werkzeug')
 set_up_logger(app_logger, settings.STUB_SETTINGS.FLASK_LOG_FILE_PATH, log_format=settings.FLASK_SETTINGS.LOG_FORMAT)

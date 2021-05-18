@@ -6,10 +6,11 @@ from flask import Flask, request
 import exceptions
 import settings
 from database.db_client import DBTable
-from utils.flask_utils import process_request_response_data, get_or_http_404
+from utils.flask_utils import process_request_response_data, get_or_http_404, add_rest_api_error_handlers
 from utils.logging_utils import set_up_logger
 
 app = Flask(__name__)
+add_rest_api_error_handlers(app)
 
 table_users = DBTable('app_users', ['first_name'])
 

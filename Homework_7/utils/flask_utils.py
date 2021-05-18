@@ -97,3 +97,16 @@ def get_or_http_404(db_table: DBTable, exc_name='Not found', exc_msg='Entry not 
         return resp[0]
     else:
         raise exceptions.HTTPNotFoundError(exc_name, exc_msg)
+
+
+def page_not_found_handler(exc):
+    return json_response_error('Not found', 'No data found for this URL'), 404
+
+
+def internal_server_error_handler(exc):
+    return json_response_error('Internal server error', 'An error occurred on the server'), 500
+
+
+def add_rest_api_error_handlers(app):
+    app.register_error_handler(404, page_not_found_handler)
+    app.register_error_handler(500, internal_server_error_handler)

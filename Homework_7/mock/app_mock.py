@@ -9,9 +9,10 @@ import settings
 
 from database.db_client import DBTable
 from utils.logging_utils import set_up_logger
-from utils.flask_utils import process_request_response_data, get_or_http_404
+from utils.flask_utils import process_request_response_data, get_or_http_404, add_rest_api_error_handlers
 
 app = Flask(__name__)
+add_rest_api_error_handlers(app)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 table_last_names = DBTable('mock_last_names', ['first_name', 'last_name'])
 
