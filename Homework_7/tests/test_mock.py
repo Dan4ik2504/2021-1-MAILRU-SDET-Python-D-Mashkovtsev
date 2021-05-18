@@ -49,7 +49,7 @@ class TestMockPost(BaseMockTestCase):
         response = self.mock_client.set_user_last_name(first_name=first_name, last_name=last_name)
         assert response.status_code == 201
 
-        assert len(self.mock_db.select(first_name=first_name, last_name=last_name)) == 1
+        assert self.mock_db.exists(first_name=first_name, last_name=last_name)
 
     @pytest.mark.parametrize(
         ("first_name", "last_name"),
@@ -63,7 +63,7 @@ class TestMockPost(BaseMockTestCase):
         response = self.mock_client.set_user_last_name(first_name=first_name, last_name=last_name)
         assert response.status_code == 400
 
-        assert len(self.mock_db.select(first_name=first_name, last_name=last_name)) == 0
+        assert not self.mock_db.exists(first_name=first_name, last_name=last_name)
 
     @pytest.mark.parametrize(
         ("first_name", "last_name"),
@@ -92,8 +92,8 @@ class TestMockPut(BaseMockTestCase):
         response = self.mock_client.update_user_last_name(first_name=first_name, last_name=next_last_name)
         assert response.status_code == 201
 
-        assert len(self.mock_db.select(first_name=first_name, last_name=prev_last_name)) == 0
-        assert len(self.mock_db.select(first_name=first_name, last_name=next_last_name)) == 1
+        assert not self.mock_db.exists(first_name=first_name, last_name=prev_last_name)
+        assert self.mock_db.exists(first_name=first_name, last_name=next_last_name)
 
     @pytest.mark.parametrize(
         ("first_name", "prev_last_name", "next_last_name"),
@@ -107,8 +107,8 @@ class TestMockPut(BaseMockTestCase):
         response = self.mock_client.update_user_last_name(first_name=first_name, last_name=next_last_name)
         assert response.status_code == 400
 
-        assert len(self.mock_db.select(first_name=first_name, last_name=prev_last_name)) == 1
-        assert len(self.mock_db.select(first_name=first_name, last_name=next_last_name)) == 0
+        assert self.mock_db.exists(first_name=first_name, last_name=prev_last_name)
+        assert not self.mock_db.exists(first_name=first_name, last_name=next_last_name)
 
     def test_update_nonexistent_entry(self):
         response = self.mock_client.update_user_last_name(first_name='test_first_name', last_name='test_last_name')
@@ -132,7 +132,7 @@ class TestMockDelete(BaseMockTestCase):
         response = self.mock_client.delete_user_last_name(first_name)
         assert response.status_code == 200
 
-        assert len(self.mock_db.select(first_name=first_name, last_name=last_name)) == 0
+        assert not self.mock_db.exists(first_name=first_name, last_name=last_name)
 
 
 class TestRequestMethods(BaseMockTestCase):

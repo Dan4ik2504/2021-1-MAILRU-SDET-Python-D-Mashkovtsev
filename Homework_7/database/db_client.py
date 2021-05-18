@@ -37,15 +37,17 @@ class DBTable:
 
         logger.info(f'Table created: "{self.table_name}". Columns: {", ".join(self._columns)}')
 
+    def _select(self, **kwargs):
+        resp = copy.deepcopy(self._db)
+        for k, v in kwargs.items():
+            resp = filter(lambda entry: entry.get(k) == v, resp)
+        return list(resp)
+
     @validate_columns
     def select(self, **kwargs):
         logger.info(f'Table: {self.table_name}. Select query with args: {kwargs_to_str(kwargs)}')
 
-        resp = copy.deepcopy(self._db)
-        for k, v in kwargs.items():
-            resp = filter(lambda entry: entry.get(k) == v, resp)
-
-        return list(resp)
+        return self._select(**kwargs)
 
     @validate_columns
     def insert(self, **kwargs):
@@ -82,4 +84,4 @@ class DBTable:
     @validate_columns
     def exists(self, **kwargs):
         logger.info(f'Table: {self.table_name}. Exists query with args: {kwargs_to_str(kwargs)}')
-        return len(self.select(**kwargs)) > 0
+        return len(self._select(**kwargs)) > 0
