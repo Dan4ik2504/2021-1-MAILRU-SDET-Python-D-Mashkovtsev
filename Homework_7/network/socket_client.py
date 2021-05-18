@@ -1,5 +1,4 @@
 import socket
-from furl import furl
 
 import exceptions
 

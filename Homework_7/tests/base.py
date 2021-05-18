@@ -1,7 +1,7 @@
 import pytest
 from network.http_client import HttpClient
 from network.mock_http_client import MockHTTPClient
-from mocks.app_mock import table_last_names as mock_db_table
+from mock.app_mock import table_last_names as mock_db_table
 import settings
 
 

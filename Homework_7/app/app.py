@@ -1,9 +1,7 @@
-import json
 import logging
 import os
 import requests
-from flask import Flask, request, jsonify
-from flask.logging import default_handler
+from flask import Flask, request
 
 import exceptions
 import settings
@@ -13,7 +11,7 @@ from utils.logging_utils import set_up_logger
 
 app = Flask(__name__)
 
-table_users = DBTable('app_users', 'first_name')
+table_users = DBTable('app_users', ['first_name'])
 
 app_logger = logging.getLogger('werkzeug')
 set_up_logger(app_logger, settings.APP_SETTINGS.FLASK_LOG_FILE_PATH, log_format=settings.FLASK_SETTINGS.LOG_FORMAT)

@@ -1,8 +1,7 @@
 import pytest
-import requests
 
 import settings
-from mocks import app_mock
+from mock import app_mock
 from network.http_client import HttpClient
 
 app_url = settings.APP_SETTINGS.URL

@@ -1,5 +1,6 @@
 import copy
 import logging
+from functools import wraps
 
 import exceptions
 import settings
@@ -15,6 +16,7 @@ def kwargs_to_str(kwargs):
 
 
 def validate_columns(func):
+    @wraps(func)
     def wrapper(self, **kwargs):
         columns_list = kwargs.keys()
         if not all([k in self._columns for k in columns_list]):
@@ -27,7 +29,7 @@ def validate_columns(func):
 
 class DBTable:
 
-    def __init__(self, table_name, *columns):
+    def __init__(self, table_name, columns):
         self.table_name = table_name
         self._db = []
         self._columns = ('entry_id', *columns)

@@ -12,7 +12,7 @@ import requests
 from requests.exceptions import ConnectionError
 
 import exceptions
-from mocks import app_mock
+from mock import app_mock
 import settings
 from utils.paths import paths
 from utils.wait import wait

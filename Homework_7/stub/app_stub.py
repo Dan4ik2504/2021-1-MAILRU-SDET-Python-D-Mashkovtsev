@@ -2,7 +2,7 @@ import logging
 import os
 import random
 
-from flask import Flask, jsonify
+from flask import Flask
 
 import settings
 from utils.logging_utils import set_up_logger

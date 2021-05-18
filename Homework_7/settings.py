@@ -28,7 +28,7 @@ class STUB_SETTINGS:
     HOST = '127.0.0.1'
     PORT = '8082'
     URL = f'http://{HOST}:{PORT}'
-    FILE_PATH = os.path.join(paths.repo_root, 'mocks', 'app_stub.py')
+    FILE_PATH = os.path.join(paths.repo_root, 'stub', 'app_stub.py')
     FLASK_LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'stub_flask.log')
     LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, 'stub.log')
 
@@ -46,13 +46,11 @@ class MOCK_SETTINGS:
 class HTTP_CLIENT_SETTINGS:
     LOGGER_NAME = 'http_client_logger'
     LOG_FILE_NAME = 'http_client.log'
-    LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, LOG_FILE_NAME)
 
 
 class DATABASE_SETTINGS:
     LOGGER_NAME = 'database_logger'
     LOG_FILE_NAME = 'database.log'
-    LOG_FILE_PATH = os.path.join(LOGGING.BASE_TEST_DIR, LOG_FILE_NAME)
 
 
 LOGGERS_LIST = [
