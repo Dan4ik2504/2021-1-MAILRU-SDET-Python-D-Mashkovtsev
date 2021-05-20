@@ -15,6 +15,20 @@ services:
       timeout: 1s
       retries: 30
 
+  vk_api:
+    build: ./mock/
+    volumes:
+      - ./settings.py:/settings/settings.py
+      - /tmp/myapp_tests_logs:/tmp
+      - ./mock/flask_app:/app
+    working_dir: /app
+    entrypoint: ["python", "views.py"]
+    ports:
+      - "8008:8008"
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+
   myapp:
     image: "myapp:latest"
     entrypoint: /app/myapp --config=/config/config.txt
@@ -25,3 +39,5 @@ services:
     depends_on:
       myapp_db:
         condition: service_healthy
+      vk_api:
+        condition: service_started

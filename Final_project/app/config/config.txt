@@ -3,4 +3,4 @@ APP_PORT = 8080
 MYSQL_HOST = myapp_db
 MYSQL_PORT = 3306
 MYSQL_DB = myapp_db
-VK_URL = 127.0.0.1:8008
+VK_URL = vk_api:8008
