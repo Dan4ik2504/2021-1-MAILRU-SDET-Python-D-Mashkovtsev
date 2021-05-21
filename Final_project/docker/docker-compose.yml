@@ -18,7 +18,8 @@ services:
   vk_api:
     build: ./mock/
     volumes:
-      - ./settings.py:/settings/settings.py
+      - ../settings.py:/settings/settings.py
+      - ../utils/paths.py:/settings/utils/paths.py
       - /tmp/myapp_tests_logs:/tmp
       - ./mock/flask_app:/app
     working_dir: /app

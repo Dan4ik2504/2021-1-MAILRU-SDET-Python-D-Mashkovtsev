@@ -7,9 +7,9 @@ import settings
 
 class MysqlClient:
 
-    def __init__(self, user=settings.MOCK_SETTINGS.DB.USER, password=settings.MOCK_SETTINGS.DB.PASSWORD,
-                 db_name=settings.MOCK_SETTINGS.DB.DB_NAME,
-                 host=settings.MOCK_SETTINGS.DB.HOST, port=settings.MOCK_SETTINGS.DB.PORT):
+    def __init__(self, user=settings.DATABASE_SETTINGS.USER, password=settings.DATABASE_SETTINGS.PASSWORD,
+                 db_name=settings.MOCK_SETTINGS.DB_NAME,
+                 host=settings.DATABASE_SETTINGS.HOST, port=settings.DATABASE_SETTINGS.PORT):
         self.user = user
         self.password = password
         self.db_name = db_name
