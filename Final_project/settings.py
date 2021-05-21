@@ -18,6 +18,7 @@ class MOCK_SETTINGS:
     PORT = '8008'
     URL = f'{BASE_URL}:{PORT}'
     DB_NAME = 'vk_api_db'
+    TABLE_VK_ID_NAME = 'vk_id_table'
 
     class LOGGING:
         LOG_FILE_PATH = paths.different_os_path('/tmp/mock_logs.log')
@@ -29,6 +30,7 @@ class APP_SETTINGS:
     PORT = '8070'
     URL = f'{BASE_URL}:{PORT}'
     DB_NAME = 'myapp_db'
+    TABLE_USERS_NAME = 'test_users'
 
 
 # Tests settings
