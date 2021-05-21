@@ -1,5 +1,5 @@
 APP_HOST = '0.0.0.0'
-APP_PORT = 8080
+APP_PORT = 8070
 MYSQL_HOST = myapp_db
 MYSQL_PORT = 3306
 MYSQL_DB = myapp_db

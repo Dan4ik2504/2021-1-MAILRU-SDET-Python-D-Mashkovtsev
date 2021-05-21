@@ -36,7 +36,7 @@ services:
     volumes:
       - ./app/config:/config
     ports:
-      - "8080:8080"
+      - "8070:8070"
     depends_on:
       myapp_db:
         condition: service_healthy

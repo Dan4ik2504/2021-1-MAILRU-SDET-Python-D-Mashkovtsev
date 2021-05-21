@@ -26,7 +26,7 @@ class MOCK_SETTINGS:
 
 class APP_SETTINGS:
     HOST = '0.0.0.0'
-    PORT = '8080'
+    PORT = '8070'
     URL = f'{BASE_URL}:{PORT}'
 
 
@@ -62,8 +62,9 @@ class GLOBAL_LOGGING:
 class SELENOID:
     URL = "http://127.0.0.1:4444/wd/hub"
     CHROME_LATEST = 'latest'
-    CHROME_DEFAULT_VERSION = '89.0'
-    CHROME_DEFAULT_VERSION_VNC = '89.0_vnc'
+    CHROME_DEFAULT_VERSION = '90.0'
+    CHROME_DEFAULT_VERSION_VNC = '90.0_vnc'
+
 
 LOGGERS_LIST = (
     (TESTS.LOGGER_NAME, TESTS.LOG_FILE_NAME),
