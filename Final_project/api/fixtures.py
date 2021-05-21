@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-from Final_project.api.client import ApiClient
+from api.client import ApiClient
 
 
 @pytest.fixture(scope='function')

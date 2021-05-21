@@ -28,6 +28,7 @@ class APP_SETTINGS:
     HOST = '0.0.0.0'
     PORT = '8070'
     URL = f'{BASE_URL}:{PORT}'
+    DB_NAME = 'myapp_db'
 
 
 # Tests settings

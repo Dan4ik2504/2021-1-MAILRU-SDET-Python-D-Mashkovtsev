@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from Final_project.utils.javascript_code import JsCode
+from utils.javascript_code import JsCode
 import settings
 import exceptions
 

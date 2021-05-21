@@ -17,7 +17,8 @@ def configure_logger(logger):
 
 
 app = Flask(__name__)
-db_client = MysqlClient()
+db_client = MysqlClient(db_name=settings.MOCK_SETTINGS.DB_NAME)
+
 
 app_logger = logging.getLogger('werkzeug')
 configure_logger(app_logger)
