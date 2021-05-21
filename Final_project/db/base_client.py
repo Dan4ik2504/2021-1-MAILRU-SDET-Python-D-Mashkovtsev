@@ -5,6 +5,7 @@ import settings
 
 
 class MysqlClient:
+    autoconnect = True
 
     def __init__(self, user=settings.DATABASE_SETTINGS.USER, password=settings.DATABASE_SETTINGS.PASSWORD,
                  db_name=settings.APP_SETTINGS.DB_NAME,
@@ -19,6 +20,9 @@ class MysqlClient:
         self.engine = None
         self.connection = None
         self.session = None
+
+        if self.autoconnect:
+            self.connect()
 
     def connect(self, db_created=True):
         db = self.db_name if db_created else ''
