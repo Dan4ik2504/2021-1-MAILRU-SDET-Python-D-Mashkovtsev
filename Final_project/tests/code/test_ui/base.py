@@ -1,6 +1,8 @@
 import pytest
 from _pytest.fixtures import FixtureRequest
 
+from db.vk_api_client import VkApiDBClient
+from db.myapp_client import MyappDBClient
 from ui.pages.login_page import LoginPage
 
 
@@ -12,6 +14,8 @@ class BaseCase:
         self.driver = driver
         self.config = config
         self.logger = logger
+        self.vkapi_db = VkApiDBClient()
+        self.myapp_db = MyappDBClient()
 
         self.login_page: LoginPage = request.getfixturevalue("login_page")
 

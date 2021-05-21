@@ -1,0 +1,94 @@
+version: '2.1'
+
+networks:
+  myapp_network:
+    external: true
+    name: myapp_network
+
+services:
+  myapp_db:
+    image: "percona:latest"
+    networks:
+      - myapp_network
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: myapp_db
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ['CMD', 'mysqladmin', '-uroot', '-ppass', 'ping', '-h', '127.0.0.1']
+      timeout: 1s
+      retries: 30
+
+  vk_api:
+    build: ./docker/mock/
+    networks:
+      - myapp_network
+    volumes:
+      - ./docker/mock/flask_app:/app
+    working_dir: /app
+    entrypoint: ["python", "views.py"]
+    ports:
+      - "8008:8008"
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+
+  myapp:
+    image: "myapp:latest"
+    networks:
+      - myapp_network
+    entrypoint: /app/myapp --config=/config/config.txt
+    volumes:
+      - ./docker/app/config:/config
+    ports:
+      - "8070:8070"
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+      vk_api:
+        condition: service_started
+
+  selenoid:
+    image: "aerokube/selenoid:latest"
+    networks:
+      - myapp_network
+    volumes:
+      - ./tests/browsers.json:/etc/selenoid/browsers.json
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "4444:4444"
+    command: [ "-container-network", "myapp_network" ]
+
+  selenoid-ui:
+    image: "aerokube/selenoid-ui:latest"
+    networks:
+      - myapp_network
+    ports:
+      - "9090:8080"
+    command: [ "--selenoid-uri", "http://selenoid:4444" ]
+    depends_on:
+      selenoid:
+        condition: service_started
+
+  tests:
+    build: ./tests
+    networks:
+      - myapp_network
+    volumes:
+      - ./tests/code:/tests
+    working_dir: /tests
+    entrypoint: [ "pytest", "-lsv", "--selenoid_vnc" ]
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+      vk_api:
+        condition: service_started
+      myapp:
+        condition: service_started
+      selenoid:
+        condition: service_started
+      selenoid-ui:
+        condition: service_started

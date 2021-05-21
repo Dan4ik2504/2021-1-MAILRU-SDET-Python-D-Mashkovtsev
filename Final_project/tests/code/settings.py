@@ -1,8 +1,6 @@
 from logging import INFO as LOG_LEVEL_INFO
 from utils.paths import paths
 
-BASE_URL = 'http://localhost'
-
 
 # App settings
 
@@ -14,21 +12,17 @@ class DATABASE_SETTINGS:
 
 
 class MOCK_SETTINGS:
-    HOST = '0.0.0.0'
+    HOST = 'vk_api'
     PORT = '8008'
-    URL = f'{BASE_URL}:{PORT}'
+    URL = f'http://{HOST}:{PORT}'
     DB_NAME = 'vk_api_db'
     TABLE_VK_ID_NAME = 'vk_id_table'
 
-    class LOGGING:
-        LOG_FILE_PATH = paths.different_os_path('/tmp/mock_logs.log')
-        LOGGER_NAME = 'vk_api_mock_logger'
-
 
 class APP_SETTINGS:
-    HOST = '0.0.0.0'
+    HOST = 'myapp'
     PORT = '8070'
-    URL = f'{BASE_URL}:{PORT}'
+    URL = f'http://{HOST}:{PORT}'
     DB_NAME = 'myapp_db'
     TABLE_USERS_NAME = 'test_users'
 
@@ -57,13 +51,15 @@ class API_CLIENT:
 
 
 class GLOBAL_LOGGING:
-    LOGS_FOLDER = paths.different_os_path('/tmp/myapp_tests_logs/')
+    LOGS_FOLDER = paths.different_os_path('/myapp_tests_logs/')
     LEVEL = LOG_LEVEL_INFO
     DEFAULT_FORMAT = '%(asctime)s - %(filename)-15s - %(levelname)-8s - %(message)s'
 
 
 class SELENOID:
-    URL = "http://127.0.0.1:4444/wd/hub"
+    HOST = 'selenoid'
+    PORT = '4444'
+    URL = f"http://{HOST}:{PORT}/wd/hub"
     CHROME_LATEST = 'latest'
     CHROME_DEFAULT_VERSION = '90.0'
     CHROME_DEFAULT_VERSION_VNC = '90.0_vnc'
