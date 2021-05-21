@@ -1,27 +1,10 @@
-import logging
 from flask import Flask, jsonify
-import sys
-
-sys.path.insert(0, '/settings')
-
 from db_client import MysqlClient
 import settings
 
 
-def configure_logger(logger):
-    logger.setLevel(settings.GLOBAL_LOGGING.LEVEL)
-
-    file_handler = logging.FileHandler(settings.MOCK_SETTINGS.LOGGING.LOG_FILE_PATH, 'w')
-    file_handler.setLevel(settings.GLOBAL_LOGGING.LEVEL)
-    logger.addHandler(file_handler)
-
-
 app = Flask(__name__)
 db_client = MysqlClient(db_name=settings.MOCK_SETTINGS.DB_NAME)
-
-
-app_logger = logging.getLogger('werkzeug')
-configure_logger(app_logger)
 
 
 @app.route('/vk_id/<username>', methods=['GET'])
