@@ -16,7 +16,7 @@ class ApiClient:
 
     def __init__(self, session):
         self.session: requests.Session = session
-        self.logger = logging.getLogger(settings.Logging.LOGGER_NAME)
+        self.logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
     def _set_headers(self, headers):
         """Adds the required headers"""
@@ -52,11 +52,11 @@ class ApiClient:
             log_str = 'Got response:\n' \
                       f'RESPONSE STATUS: {response.status_code}'
 
-            if len(response.text) > settings.Logging.MAX_RESPONSE_LENGTH:
+            if len(response.text) > settings.GLOBAL_LOGGING.MAX_RESPONSE_LENGTH:
                 if logger.level == logging.INFO:
                     logger.info(f'{log_str}\n'
                                 f'RESPONSE CONTENT: COLLAPSED due to response size > '
-                                f'{settings.Logging.MAX_RESPONSE_LENGTH}. '
+                                f'{settings.GLOBAL_LOGGING.MAX_RESPONSE_LENGTH}. '
                                 f'Use DEBUG logging.\n')
                 elif logger.level == logging.DEBUG:
                     logger.debug(f'{log_str}\n'
