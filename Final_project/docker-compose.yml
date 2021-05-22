@@ -14,7 +14,7 @@ services:
       MYSQL_ROOT_PASSWORD: pass
       MYSQL_DATABASE: myapp_db
     volumes:
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./application/mysql/init:/docker-entrypoint-initdb.d
     ports:
       - "3306:3306"
     healthcheck:
@@ -23,11 +23,11 @@ services:
       retries: 30
 
   vk_api:
-    build: ./docker/mock/
+    build: ./application/mock/
     networks:
       - myapp_network
     volumes:
-      - ./docker/mock/flask_app:/app
+      - ./application/mock/flask_app:/app
     working_dir: /app
     entrypoint: ["python", "views.py"]
     ports:
@@ -42,7 +42,7 @@ services:
       - myapp_network
     entrypoint: /app/myapp --config=/config/config.txt
     volumes:
-      - ./docker/app/config:/config
+      - ./application/myapp/config:/config
     ports:
       - "8070:8070"
     depends_on:
