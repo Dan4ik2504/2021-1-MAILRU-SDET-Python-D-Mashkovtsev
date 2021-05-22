@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ui.fixtures import *
 from utils.logging_utils import set_up_logger
-from utils.random_values import random_values
+from utils.random_values import random_equal_values, random_different_values
 import settings
 
 
@@ -32,7 +32,6 @@ def config(request):
     option_selenoid = request.config.getoption('--selenoid')
     option_selenoid_vnc = request.config.getoption('--selenoid_vnc')
     if option_selenoid or option_selenoid_vnc:
-        with_selenoid = True
         selenoid = settings.SELENOID.URL
 
         if option_selenoid_vnc:
@@ -56,6 +55,9 @@ def pytest_configure(config):
         create_test_dir()
     config.base_test_dir = settings.GLOBAL_LOGGING.LOGS_FOLDER
     config.is_master_process = is_master
+
+    random_equal_values.init_random_seed(config)
+    random_different_values.init_random_seed(config)
 
 
 @pytest.fixture(scope='function')
