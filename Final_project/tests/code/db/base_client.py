@@ -28,7 +28,7 @@ class MysqlClient:
         db = self.db_name if db_created else ''
 
         self.engine = sqlalchemy.create_engine(
-            f'mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{db}',
+            f'{settings.DATABASE_SETTINGS.URL}/{db}',
             encoding='utf8'
         )
         self.connection = self.engine.connect()

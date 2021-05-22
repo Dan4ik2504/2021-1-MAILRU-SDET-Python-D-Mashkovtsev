@@ -3,6 +3,8 @@ from pathlib import Path
 
 from ui.fixtures import *
 from utils.logging_utils import set_up_logger
+from utils.random_values import random_values
+import settings
 
 
 def is_master_process(config):
@@ -16,6 +18,7 @@ def pytest_addoption(parser):
     parser.addoption('--debug_log', action='store_true')
     parser.addoption('--selenoid', action='store_true')
     parser.addoption('--selenoid_vnc', action='store_true')
+    parser.addoption('--in_docker', action='store_true')
 
 
 @pytest.fixture(scope='session')
@@ -29,12 +32,15 @@ def config(request):
     option_selenoid = request.config.getoption('--selenoid')
     option_selenoid_vnc = request.config.getoption('--selenoid_vnc')
     if option_selenoid or option_selenoid_vnc:
+        with_selenoid = True
         selenoid = settings.SELENOID.URL
 
         if option_selenoid_vnc:
             vnc = True
 
-    return {'browser': browser, 'debug_log': debug_log, 'selenoid': selenoid, 'vnc': vnc}
+    in_docker = request.config.getoption('--in_docker')
+
+    return {'browser': browser, 'debug_log': debug_log, 'selenoid': selenoid, 'vnc': vnc, 'in_docker': in_docker}
 
 
 def create_test_dir():

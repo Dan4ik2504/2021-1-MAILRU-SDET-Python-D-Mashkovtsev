@@ -80,7 +80,7 @@ services:
     volumes:
       - ./tests/code:/tests
     working_dir: /tests
-    entrypoint: [ "pytest", "-lsv", "--selenoid_vnc" ]
+    entrypoint: [ "pytest", "-lsv", "--selenoid_vnc", "--in_docker" ]
     depends_on:
       myapp_db:
         condition: service_healthy
