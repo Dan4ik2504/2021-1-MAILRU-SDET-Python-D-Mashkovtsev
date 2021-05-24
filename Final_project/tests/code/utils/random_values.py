@@ -79,6 +79,14 @@ class _RandomEqualValues(_RandomValues):
     def password(self):
         return self.fake.unique.password(16)
 
+    @property
+    def id(self):
+        return self.fake.unique.random_number()
+
+    @property
+    def boolean(self):
+        return self.fake.unique.boolean()
+
 
 class _RandomDifferentValues(_RandomValues):
     """
@@ -99,6 +107,16 @@ class _RandomDifferentValues(_RandomValues):
     @separate_fakes_between_processes
     def password(self, fake):
         return fake.unique.password(16)
+
+    @property
+    @separate_fakes_between_processes
+    def id(self, fake):
+        return fake.unique.random_number()
+
+    @property
+    @separate_fakes_between_processes
+    def boolean(self, fake):
+        return fake.unique.boolean()
 
 
 random_equal_values = _RandomEqualValues()
