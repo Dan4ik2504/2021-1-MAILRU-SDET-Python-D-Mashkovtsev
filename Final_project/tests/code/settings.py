@@ -1,6 +1,7 @@
 from logging import INFO as LOG_LEVEL_INFO
 from utils.paths import paths
 import sys
+import inspect
 
 IN_DOCKER = '--in_docker' in sys.argv
 WITH_SELENOID = '--selenoid' in sys.argv or '--selenoid_vnc' in sys.argv
@@ -62,6 +63,36 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
 
 
 APP_SETTINGS = _APP_SETTINGS()
+
+
+class _URLS:
+    LOGIN = '/login'
+    REGISTRATION = '/reg'
+    MAIN = '/welcome/'
+    LOGOUT = '/logout'
+
+    def __init__(self, url):
+        attrs = inspect.getmembers(self)
+        attrs = [a for a in attrs if isinstance(a[1], str) and not a[0].startswith('_')]
+
+        for k, v in attrs:
+            setattr(self, k, url + v)
+
+
+APP_SETTINGS.URLS = _URLS(APP_SETTINGS.URL)
+
+
+class EXTERNAL_URLS:
+    WHAT_IS_AN_API = "https://en.wikipedia.org/wiki/API"
+    FUTURE_OF_INTERNET = "https://www.popularmechanics.com/technology/infrastructure/a29666802/future-of-the-internet/"
+    SMTP = "https://ru.wikipedia.org/wiki/SMTP"
+    PYTHON = "https://www.python.org/"
+    PYTHON_HISTORY = "https://en.wikipedia.org/wiki/History_of_Python"
+    FLASK = "https://flask.palletsprojects.com/en/1.1.x/#"
+    CENTOS_7 = "http://isoredirect.centos.org/centos/7/isos/x86_64/"
+    WIRESHARK_NEWS = "https://www.wireshark.org/news/"
+    WIRESHARK_DOWNLOAD = "https://www.wireshark.org/#download"
+    TCPDUMP_EXAMPLES = "https://hackertarget.com/tcpdump-examples/"
 
 
 # Tests settings
