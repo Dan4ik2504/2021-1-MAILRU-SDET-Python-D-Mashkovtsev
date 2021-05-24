@@ -1,5 +1,8 @@
+import inspect
 import time
 import logging
+from functools import wraps
+
 import allure
 
 from selenium.webdriver.support.wait import WebDriverWait
@@ -22,6 +25,7 @@ class BasePage:
     def __init__(self, driver):
         self.driver: WebDriver = driver
         self.check = self._Check(self)
+        self.wait_until = self._WaitUntil(self)
 
     def is_opened(self):
         """Additional check to see that page has been opened"""
@@ -223,7 +227,7 @@ class BasePage:
             self.logger.debug(f'Value of the input field: {result}')
             return result
 
-    def custom_wait(self, method, *args, error=exceptions.CheckingException, timeout=settings.UI.DEFAULT_TIMEOUT,
+    def custom_wait(self, method, *args, error=Exception, timeout=settings.UI.DEFAULT_TIMEOUT,
                     interval=settings.UI.DEFAULT_CHECKING_INTERVAL, check=True, **kwargs):
         """A custom function to wait for the passed function to succeed"""
         log_msg = f'Waiting for successfully method "{method.__name__}" execution'
@@ -256,14 +260,13 @@ class BasePage:
                 f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
 
     class _Check:
-        page = None
-        exceptions: dict = None
+        _page = None
 
         def __init__(self, page):
-            self.page = page
+            self._page = page
 
         def _raise_exception_wrapper(self, exc, exc_msg, raise_exception, result=False):
-            self.page.logger.debug(f'Raised exception "{exc.__name__}" with message: "{exc_msg}"')
+            self._page.logger.debug(f'Raised exception "{exc.__name__}" with message: "{exc_msg}"')
             if raise_exception:
                 raise exc(exc_msg)
             else:
@@ -271,42 +274,42 @@ class BasePage:
 
         def _is_element_visible(self, element):
             try:
-                result = self.page.driver.execute_script(JsCode.is_visible, element)
-                self.page.logger.debug(f'Element "{element.tag_name}" visibility status: "{result}"')
+                result = self._page.driver.execute_script(JsCode.is_visible, element)
+                self._page.logger.debug(f'Element "{element.tag_name}" visibility status: "{result}"')
                 return result
             except (JavascriptException, StaleElementReferenceException):
-                self.page.logger.debug(f'Element is not visible or stale')
+                self._page.logger.debug(f'Element is not visible or stale')
                 return False
 
-        def is_element_visible(self, element, raise_exception=True):
+        def is_element_visible(self, element, raise_exception=False):
             """Checking that an element is visible"""
-            self.page.logger.debug(f'Checking that element is visible')
+            self._page.logger.debug(f'Checking that element is visible')
             if self._is_element_visible(element):
                 return True
 
             exc_msg = f'Element is not visible'
             return self._raise_exception_wrapper(exceptions.ElementNotVisibleException, exc_msg, raise_exception)
 
-        def is_visible(self, locator, raise_exception=True):
+        def is_visible(self, locator, raise_exception=False):
             """Checking that an element found by locator is visible"""
-            self.page.logger.debug(f'Checking that element found by locator '
-                                   f'"{locator[1]}" (type: {locator[0]}) is visible')
+            self._page.logger.debug(f'Checking that element found by locator '
+                                    f'"{locator[1]}" (type: {locator[0]}) is visible')
 
-            elem = self.page.find(locator)
+            elem = self._page.find(locator)
             if self.is_element_visible(elem, raise_exception=False):
-                self.page.logger.debug(
+                self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is visible')
                 return True
             else:
-                self.page.logger.debug(
+                self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
 
                 exc_msg = f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible'
                 return self._raise_exception_wrapper(exceptions.ElementNotVisibleException, exc_msg, raise_exception)
 
-        def is_element_not_visible(self, element, raise_exception=True):
+        def is_element_not_visible(self, element, raise_exception=False):
             """Checking that an element is not visible"""
-            self.page.logger.debug(f'Checking that element is not visible')
+            self._page.logger.debug(f'Checking that element is not visible')
 
             if not self._is_element_visible(element):
                 return True
@@ -314,35 +317,35 @@ class BasePage:
             exc_msg = f'Element is visible'
             return self._raise_exception_wrapper(exceptions.ElementVisibleException, exc_msg, raise_exception)
 
-        def is_not_visible(self, locator, raise_exception=True):
+        def is_not_visible(self, locator, raise_exception=False):
             """Checking that an element found by locator is not visible"""
-            self.page.logger.debug(
+            self._page.logger.debug(
                 f'Checking that element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
             try:
-                elem = self.page.fast_find(locator)
-            except self.page.FastFindingException:
-                self.page.logger.debug(f'Element is not founded by locator "{locator[1]}" (type: {locator[0]})')
+                elem = self._page.fast_find(locator)
+            except self._page.FastFindingException:
+                self._page.logger.debug(f'Element is not founded by locator "{locator[1]}" (type: {locator[0]})')
                 return True
 
             if self.is_element_not_visible(elem, raise_exception=raise_exception):
-                self.page.logger.debug(
+                self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
                 return True
             else:
-                self.page.logger.debug(
+                self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is visible')
 
             exc_msg = f'Element found by "{locator[1]}" (type: {locator[0]}) is visible'
             return self._raise_exception_wrapper(exceptions.ElementVisibleException, exc_msg, raise_exception)
 
-        def is_exists(self, locator, raise_exception=True):
+        def is_exists(self, locator, raise_exception=False):
             """Checking that an element found by locator exists"""
-            self.page.logger.debug(f'Checking that element found by locator '
-                                   f'"{locator[1]}" (type: {locator[0]}) does not exists')
+            self._page.logger.debug(f'Checking that element found by locator '
+                                    f'"{locator[1]}" (type: {locator[0]}) does not exists')
             try:
-                elem = self.page.driver.find_element(*locator)
+                elem = self._page.driver.find_element(*locator)
                 if elem:
-                    self.page.logger.debug(
+                    self._page.logger.debug(
                         f'Element found by locator "{locator[1]}" (type: {locator[0]}) exists')
                     return True
             except NoSuchElementException:
@@ -351,44 +354,46 @@ class BasePage:
             exc_msg = f'Element "{locator[1]}" (type: {locator[0]}) is not found'
             return self._raise_exception_wrapper(exceptions.ElementNotExistsException, exc_msg, raise_exception)
 
-        def is_not_exists(self, locator, raise_exception=True):
+        def is_not_exists(self, locator, raise_exception=False):
             """Checking that an element found by locator does not exist"""
-            self.page.logger.debug(f'Checking that element found by locator '
-                                   f'"{locator[1]}" (type: {locator[0]}) exists')
+            self._page.logger.debug(f'Checking that element found by locator '
+                                    f'"{locator[1]}" (type: {locator[0]}) exists')
             try:
-                elem = self.page.driver.find_element(*locator)
+                elem = self._page.driver.find_element(*locator)
                 if elem:
                     exc_msg = f'Element "{elem.tag_name}" found by {locator[1]} (type: {locator[0]}) exists'
                     return self._raise_exception_wrapper(exceptions.ElementExistsException, exc_msg, raise_exception)
             except (NoSuchElementException, StaleElementReferenceException):
                 pass
-            self.page.logger.debug(
+            self._page.logger.debug(
                 f'Element found by {locator[1]} (type: {locator[0]}) does not exists')
             return True
 
-        def is_element_text_equal(self, elem, text, raise_exception=True):
+        def is_element_text_equal(self, elem, text, raise_exception=False):
             """Checking that the text of an element is equal to the given text"""
-            self.page.logger.debug(f'Checking that element "{elem.tag_name}" text "{elem.text}" == given text "{text}"')
+            self._page.logger.debug(
+                f'Checking that element "{elem.tag_name}" text "{elem.text}" == given text "{text}"')
             if elem.text == text:
-                self.page.logger.debug(f'Element text "{elem.text}" == given text "{text}"')
+                self._page.logger.debug(f'Element text "{elem.text}" == given text "{text}"')
                 return True
             else:
                 exc_msg = f'Element text "{elem.text}" != given text "{text}"'
                 return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
 
-        def is_element_text_not_equal(self, elem, text, raise_exception=True):
+        def is_element_text_not_equal(self, elem, text, raise_exception=False):
             """Checking that the text of an element is not equal to the given text"""
-            self.page.logger.debug(f'Checking that element "{elem.tag_name}" text "{elem.text}" != given text "{text}"')
+            self._page.logger.debug(
+                f'Checking that element "{elem.tag_name}" text "{elem.text}" != given text "{text}"')
             if elem.text != text:
-                self.page.logger.debug(f'Element text "{elem.text}" != given text "{text}"')
+                self._page.logger.debug(f'Element text "{elem.text}" != given text "{text}"')
                 return True
             else:
                 exc_msg = f'Element text "{elem.text}" == given text "{text}"'
                 return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
 
-        def is_links_equal(self, url_1, url_2, raise_exception=True):
+        def is_links_equal(self, url_1, url_2, raise_exception=False):
             """Url comparison without arguments"""
-            self.page.logger.debug(f'Checking that URLs equal: "{url_1}" == "{url_2}"')
+            self._page.logger.debug(f'Checking that URLs equal: "{url_1}" == "{url_2}"')
             urls = (url_1, url_2)
             new_urls = []
             for url in urls:
@@ -399,18 +404,18 @@ class BasePage:
             new_url_1, new_url_2 = new_urls
             result = new_url_1 == new_url_2
             if result:
-                self.page.logger.debug(f'URLs "{url_1}" == URL "{url_2}"')
+                self._page.logger.debug(f'URLs "{url_1}" == URL "{url_2}"')
                 return True
             else:
                 exc_msg = f'URL "{url_1}" != URL "{url_2}"'
                 return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
 
-        def is_page_url_match_driver_url(self, raise_exception=True):
+        def is_page_url_match_driver_url(self, raise_exception=False):
             """Checking that the current url matches the url of the page"""
-            url_1 = self.page.driver.current_url
-            url_2 = self.page.URL
-            self.page.logger.debug(
-                f'Checking that current URL "{url_1}" == {self.page.__class__.__name__} page URL {url_2}')
+            url_1 = self._page.driver.current_url
+            url_2 = self._page.URL
+            self._page.logger.debug(
+                f'Checking that current URL "{url_1}" == {self._page.__class__.__name__} page URL {url_2}')
             result = self.is_links_equal(url_1, url_2, raise_exception=False)
             if result:
                 return True
@@ -418,31 +423,60 @@ class BasePage:
             exc_msg = f'Current url "{url_1}" does not match page object url "{url_2}"'
             return self._raise_exception_wrapper(exceptions.PageUrlDoesNotMatchDriverUrl, exc_msg, raise_exception)
 
-        def is_page_opened(self, url=None, check_url=True, raise_exception=True):
+        def is_page_opened(self, url=None, check_url=True, raise_exception=False):
             """Checking that the page has been opened and fully loaded"""
-            self.page.logger.debug('Checking that the page has been opened and fully loaded')
+            self._page.logger.debug('Checking that the page has been opened and fully loaded')
 
             if check_url:
-                url = url if url else self.page.URL
-                current_url = self.page.driver.current_url
+                url = url if url else self._page.URL
+                current_url = self._page.driver.current_url
                 if not self.is_links_equal(current_url, url, raise_exception=False):
                     exc_msg = f'Current URL "{current_url}" != page URL "{url}"'
                     return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
                 else:
-                    self.page.logger.debug(f'Current URL "{current_url}" == page URL "{url}"')
+                    self._page.logger.debug(f'Current URL "{current_url}" == page URL "{url}"')
 
-            status = self.page.driver.execute_script(JsCode.document_ready_state)
+            status = self._page.driver.execute_script(JsCode.document_ready_state)
             expected = "complete"
             if not status == expected:
                 exc_msg = f'Current page loading status "{status}" != expected status "{expected}"'
                 return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
             else:
-                self.page.logger.debug(f'Current page loading status "{status}" == expected status "{expected}"')
+                self._page.logger.debug(f'Current page loading status "{status}" == expected status "{expected}"')
 
-            result = self.page.is_opened()
+            result = self._page.is_opened()
             if not result:
                 exc_msg = "Page is not opened"
                 return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
 
-            self.page.logger.debug(f'Page (URL: {self.page.driver.current_url}) has been opened and fully loaded')
+            self._page.logger.debug(f'Page (URL: {self._page.driver.current_url}) has been opened and fully loaded')
             return True
+
+    class _WaitUntil(_Check):
+        _page = None
+        _error = exceptions.CheckingException
+
+        def __init__(self, page):
+            super().__init__(page)
+            methods = inspect.getmembers(self)
+            methods = [a for a in methods if inspect.ismethod(a[1]) and not a[0].startswith('_')]
+
+            for k, v in methods:
+                setattr(self, k, self.wait_decorator(self._wait)(v))
+
+        def _wait(self, method, *args, timeout=settings.UI.DEFAULT_TIMEOUT,
+                  interval=settings.UI.DEFAULT_CHECKING_INTERVAL, check=True, **kwargs):
+            return self._page.custom_wait(method, *args, timeout=timeout, interval=interval, check=check,
+                                          error=self._error, **kwargs)
+
+        @staticmethod
+        def wait_decorator(waiter):
+            def inner(func):
+                @wraps(func)
+                def wrapper(*args, **kwargs):
+                    kwargs['raise_exception'] = False
+                    return waiter(func, *args, **kwargs)
+
+                return wrapper
+
+            return inner
