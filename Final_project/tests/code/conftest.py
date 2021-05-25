@@ -63,7 +63,7 @@ def pytest_configure(config):
 
 @pytest.fixture(scope='function')
 def test_dir(request):
-    test_name = request._pyfuncitem.nodeid.replace('/', '_').replace(':', '_')
+    test_name = request._pyfuncitem.nodeid.replace('/', '_').replace(':', '_')[:255]
     test_dir = os.path.join(request.config.base_test_dir, test_name)
     os.makedirs(test_dir)
     return test_dir

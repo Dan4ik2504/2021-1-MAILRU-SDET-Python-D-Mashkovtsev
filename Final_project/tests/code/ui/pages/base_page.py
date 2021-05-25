@@ -324,7 +324,7 @@ class BasePage:
                 f'Checking that element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
             try:
                 elem = self._page.fast_find(locator)
-            except self._page.FastFindingException:
+            except exceptions.FindingException:
                 self._page.logger.debug(f'Element is not founded by locator "{locator[1]}" (type: {locator[0]})')
                 return True
 
@@ -454,7 +454,6 @@ class BasePage:
             return True
 
     class _WaitUntil(_Check):
-        _page = None
         _error = exceptions.CheckingException
 
         def __init__(self, page):
