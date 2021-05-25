@@ -1,6 +1,7 @@
 import inspect
 import time
 import logging
+from contextlib import contextmanager
 from functools import wraps
 
 import allure
@@ -259,6 +260,30 @@ class BasePage:
 
             raise exceptions.CustomWaitTimeoutException(
                 f'Method {method.__name__} timeout in {timeout}sec with exception: "{last_exception}"')
+
+    def get_page_loaded_time(self):
+        """Returns the time when the page was loaded"""
+        return self.driver.execute_script(JsCode.dom_complete_time) / 1000
+
+    @contextmanager
+    def is_page_reloaded__context_manager(self):
+        """Checks that the page has been reloaded.
+        Compares page loaded time before and after block 'with'"""
+        start_time = self.get_page_loaded_time()
+        yield
+        end_time = self.get_page_loaded_time()
+        if start_time == end_time:
+            raise exceptions.CheckingException("Page has not been reloaded")
+
+    @contextmanager
+    def is_page_not_reloaded__context_manager(self):
+        """Checks that the page has not been reloaded.
+        Compares page loaded time before and after block 'with'"""
+        start_time = self.get_page_loaded_time()
+        yield
+        end_time = self.get_page_loaded_time()
+        if start_time != end_time:
+            raise exceptions.CheckingException("Page has been reloaded")
 
     class _Check:
         _page = None

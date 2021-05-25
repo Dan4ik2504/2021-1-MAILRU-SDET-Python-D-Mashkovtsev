@@ -4,6 +4,14 @@ class TestException(Exception):
     """
 
 
+# Randomizer exceptions
+
+class TooManyRetries(Exception):
+    """
+    Too many retries
+    """
+
+
 # API client exceptions
 
 class APIClientException(TestException):

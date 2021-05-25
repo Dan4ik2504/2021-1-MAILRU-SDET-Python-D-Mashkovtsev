@@ -1,7 +1,11 @@
 import os
+import string
 import sys
 import time
 from faker import Faker
+
+import exceptions
+import settings
 
 
 def fake_generator(func, seed, pid, proc_num, **kwargs):
@@ -30,6 +34,16 @@ def separate_fakes_between_processes(func):
             return next(generator)
 
     return wrapper
+
+
+def get_value_by_filter_func(func, filter_func, retry=20, *args, **kwargs):
+    attempt = 0
+    while attempt < retry:
+        attempt += 1
+        value = func(*args, **kwargs)
+        if filter_func(value):
+            return value
+    raise exceptions.TooManyRetries(f"Too many retries to get a random value. Max retries: {retry}")
 
 
 class _RandomValues:
@@ -69,7 +83,7 @@ class _RandomEqualValues(_RandomValues):
 
     @property
     def username(self):
-        return self.fake.unique.user_name()
+        return get_value_by_filter_func(self.fake.unique.user_name, lambda i: 6 <= len(i) <= 16)
 
     @property
     def email(self):
@@ -87,6 +101,12 @@ class _RandomEqualValues(_RandomValues):
     def boolean(self):
         return self.fake.unique.boolean()
 
+    def get_random_letters_and_digits(self, length=settings.RANDOMIZER.DEFAULT_LENGTH):
+        return ''.join(self.fake.random_choices(string.ascii_letters + string.digits, length))
+
+    def get_random_letters(self, length=settings.RANDOMIZER.DEFAULT_LENGTH):
+        return ''.join(self.fake.random_choices(string.ascii_letters, length))
+
 
 class _RandomDifferentValues(_RandomValues):
     """
@@ -96,7 +116,7 @@ class _RandomDifferentValues(_RandomValues):
     @property
     @separate_fakes_between_processes
     def username(self, fake):
-        return fake.unique.user_name()
+        return get_value_by_filter_func(fake.unique.user_name, lambda i: 6 <= len(i) <= 16)
 
     @property
     @separate_fakes_between_processes

@@ -31,3 +31,6 @@ class JsCode:
 
     document_ready_state = "return document.readyState"
     scroll_into_view = "arguments[0].scrollIntoView(true)"
+    navigation_start_time = "return window.performance.timing.navigationStart"
+    response_start_time = "return window.performance.timing.responseStart"
+    dom_complete_time = "return window.performance.timing.domComplete"

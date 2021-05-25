@@ -12,6 +12,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 import settings
 import exceptions
 from ui.pages.login_page import LoginPage
+from ui.pages.main_page import MainPage
 
 logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
@@ -19,6 +20,11 @@ logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 @pytest.fixture(scope='function')
 def login_page(driver):
     return LoginPage(driver=driver)
+
+
+@pytest.fixture(scope='function')
+def main_page(driver):
+    return MainPage(driver=driver)
 
 
 @allure.step('Creating "{browser_name}" driver')
