@@ -19,13 +19,14 @@ import exceptions
 
 class BasePage:
     """Base page object"""
-    URL = settings.APP_SETTINGS.URL
+    URL = ''
     logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
     def __init__(self, driver):
         self.driver: WebDriver = driver
         self.check = self._Check(self)
         self.wait_until = self._WaitUntil(self)
+        self.URL = settings.APP_SETTINGS.URL + self.URL
 
     def is_opened(self):
         """Additional check to see that page has been opened"""

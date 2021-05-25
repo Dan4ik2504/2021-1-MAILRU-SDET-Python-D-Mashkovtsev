@@ -1,10 +1,29 @@
+import os
+import sys
 from logging import INFO as LOG_LEVEL_INFO
 from utils.paths import paths
-import sys
 import inspect
 
-IN_DOCKER = '--in_docker' in sys.argv
-WITH_SELENOID = '--selenoid' in sys.argv or '--selenoid_vnc' in sys.argv
+
+class _EXTERNAL_SETTINGS:
+    _in_docker = False
+    _with_selenoid = False
+
+    @property
+    def IN_DOCKER(self):
+        if not self._in_docker:
+            self._in_docker = bool(int(os.environ.get('TESTS_IN_DOCKER', False)))
+        return self._in_docker
+
+    @property
+    def WITH_SELENOID(self):
+        if not self._with_selenoid:
+            self._with_selenoid = bool(int(os.environ.get('TESTS_WITH_SELENOID', False))) or '--selenoid' in sys.argv \
+                                  or '--selenoid_vnc' in sys.argv
+        return self._with_selenoid
+
+
+EXTERNAL_SETTINGS = _EXTERNAL_SETTINGS()
 
 
 # App settings
@@ -17,7 +36,7 @@ class _BASE_APP_CLASS:
 
     @property
     def HOST(self):
-        if IN_DOCKER:
+        if EXTERNAL_SETTINGS.IN_DOCKER:
             return self.HOST_DOCKER
         else:
             return self.HOST_DEFAULT
@@ -54,32 +73,21 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
     DB_NAME = 'myapp_db'
     TABLE_USERS_NAME = 'test_users'
 
+    class URLS:
+        LOGIN = '/login'
+        REGISTRATION = '/reg'
+        MAIN = '/welcome/'
+        LOGOUT = '/logout'
+
     @property
     def HOST(self):
-        if IN_DOCKER or WITH_SELENOID:
+        if EXTERNAL_SETTINGS.IN_DOCKER or EXTERNAL_SETTINGS.WITH_SELENOID:
             return self.HOST_DOCKER
         else:
             return self.HOST_DEFAULT
 
 
 APP_SETTINGS = _APP_SETTINGS()
-
-
-class _URLS:
-    LOGIN = '/login'
-    REGISTRATION = '/reg'
-    MAIN = '/welcome/'
-    LOGOUT = '/logout'
-
-    def __init__(self, url):
-        attrs = inspect.getmembers(self)
-        attrs = [a for a in attrs if isinstance(a[1], str) and not a[0].startswith('_')]
-
-        for k, v in attrs:
-            setattr(self, k, url + v)
-
-
-APP_SETTINGS.URLS = _URLS(APP_SETTINGS.URL)
 
 
 class EXTERNAL_URLS:
@@ -135,7 +143,7 @@ class API_CLIENT:
 
 
 class GLOBAL_LOGGING:
-    LOGS_FOLDER = paths.different_os_path('/myapp_tests_logs/' if IN_DOCKER
+    LOGS_FOLDER = paths.different_os_path('/myapp_tests_logs/' if EXTERNAL_SETTINGS.IN_DOCKER
                                           else '/tmp/myapp_tests_logs')
     LEVEL = LOG_LEVEL_INFO
     DEFAULT_FORMAT = '%(asctime)s - %(filename)-15s - %(levelname)-8s - %(message)s'

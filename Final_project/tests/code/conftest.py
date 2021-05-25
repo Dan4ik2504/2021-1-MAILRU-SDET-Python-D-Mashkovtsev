@@ -18,7 +18,6 @@ def pytest_addoption(parser):
     parser.addoption('--debug_log', action='store_true')
     parser.addoption('--selenoid', action='store_true')
     parser.addoption('--selenoid_vnc', action='store_true')
-    parser.addoption('--in_docker', action='store_true')
 
 
 @pytest.fixture(scope='session')
@@ -27,19 +26,21 @@ def config(request):
     debug_log = request.config.getoption('--debug_log')
 
     selenoid = None
+    with_selenoid = False
     vnc = False
 
     option_selenoid = request.config.getoption('--selenoid')
     option_selenoid_vnc = request.config.getoption('--selenoid_vnc')
     if option_selenoid or option_selenoid_vnc:
         selenoid = settings.SELENOID.URL
+        with_selenoid = True
 
         if option_selenoid_vnc:
             vnc = True
 
-    in_docker = request.config.getoption('--in_docker')
+    os.environ['TESTS_WITH_SELENOID'] = str(int(with_selenoid))
 
-    return {'browser': browser, 'debug_log': debug_log, 'selenoid': selenoid, 'vnc': vnc, 'in_docker': in_docker}
+    return {'browser': browser, 'debug_log': debug_log, 'selenoid': selenoid, 'vnc': vnc}
 
 
 def create_test_dir():
