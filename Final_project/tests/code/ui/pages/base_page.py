@@ -3,8 +3,10 @@ import time
 import logging
 from contextlib import contextmanager
 from functools import wraps
+from urllib.parse import urljoin
 
 import allure
+from furl import furl
 
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, \
@@ -27,7 +29,7 @@ class BasePage:
         self.driver: WebDriver = driver
         self.check = self._Check(self)
         self.wait_until = self._WaitUntil(self)
-        self.URL = settings.APP_SETTINGS.URL + self.URL
+        self.URL = urljoin(settings.APP_SETTINGS.URL, self.URL)
 
     def is_opened(self):
         """Additional check to see that page has been opened"""
@@ -42,7 +44,12 @@ class BasePage:
         """WebDriverWait"""
         return WebDriverWait(self.driver, timeout)
 
-    def open_page(self, url=None):
+    @property
+    def current_url(self) -> furl:
+        """Returns furl object with the current url"""
+        return furl(self.driver.current_url)
+
+    def open_page(self, url=None, check_page_is_open=True):
         """Open the page"""
         url = url if url else self.URL
         log_msg = f"Page opening: {url}"
@@ -52,17 +59,18 @@ class BasePage:
             log_msg = f'URL checking'
             with allure.step(log_msg):
                 self.logger.info(log_msg)
-                if not self.check.is_links_equal(self.driver.current_url, url, raise_exception=False):
+                if not self.check.is_paths_equal(self.driver.current_url, url, raise_exception=False):
                     log_msg = f'Opening URL: "{url}". Previous URL: "{self.driver.current_url}"'
                     with allure.step(log_msg):
                         self.logger.info(log_msg)
                         self.driver.get(url)
 
-            log_msg = 'Checking page load'
-            with allure.step(log_msg):
-                self.logger.info(log_msg)
-                self.custom_wait(self.check.is_page_opened)
-                self.logger.info(f'Page opened: "{url}"')
+            if check_page_is_open:
+                log_msg = 'Checking page load'
+                with allure.step(log_msg):
+                    self.logger.info(log_msg)
+                    self.wait_until.is_page_opened(url=url)
+            self.logger.info(f'Page opened: "{url}"')
 
     def scroll_to_element(self, element):
         """Scrolling to the element found by locator"""
@@ -132,7 +140,7 @@ class BasePage:
                         log_msg = f'Waiting for page opening and loading'
                         with allure.step(log_msg):
                             self.logger.info(log_msg)
-                            self.custom_wait(self.check.is_page_opened, check_url=False)
+                            self.wait_until.is_page_opened(check_url=False)
 
                         log_msg = f'Searching of the element found by locator "{locator[1]}" (type: {locator[0]})'
                         with allure.step(log_msg):
@@ -164,7 +172,7 @@ class BasePage:
         log_msg = f'Waiting for page opening and loading'
         with allure.step(log_msg):
             self.logger.info(log_msg)
-            self.custom_wait(self.check.is_page_opened, check_url=False)
+            self.wait_until.is_page_opened(check_url=False)
 
         log_msg = f'Waiting for element found by locator ' \
                   f'"{locator[1]}" (type: {locator[0]}) visibility to be located'
@@ -180,7 +188,7 @@ class BasePage:
         log_msg = f'Waiting for element found by locator "{locator[1]}" (type: {locator[0]}) to be visible'
         with allure.step(log_msg):
             self.logger.info(log_msg)
-            self.custom_wait(self.check.is_visible, locator)
+            self.wait_until.is_visible(locator)
 
         log_msg = f'Filling element found by locator "{locator[1]}" (type: {locator[0]}) with "{text}"'
         with allure.step(log_msg):
@@ -322,7 +330,7 @@ class BasePage:
                                     f'"{locator[1]}" (type: {locator[0]}) is visible')
 
             elem = self._page.find(locator)
-            if self.is_element_visible(elem, raise_exception=False):
+            if self._page.check.is_element_visible(elem, raise_exception=False):
                 self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is visible')
                 return True
@@ -353,7 +361,7 @@ class BasePage:
                 self._page.logger.debug(f'Element is not founded by locator "{locator[1]}" (type: {locator[0]})')
                 return True
 
-            if self.is_element_not_visible(elem, raise_exception=raise_exception):
+            if self._page.check.is_element_not_visible(elem, raise_exception=raise_exception):
                 self._page.logger.debug(
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
                 return True
@@ -417,20 +425,12 @@ class BasePage:
                 exc_msg = f'Element text "{elem.text}" == given text "{text}"'
                 return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
 
-        def is_links_equal(self, url_1, url_2, raise_exception=False):
+        def is_paths_equal(self, url_1, url_2, raise_exception=False):
             """Url comparison without arguments"""
-            self._page.logger.debug(f'Checking that URLs equal: "{url_1}" == "{url_2}"')
-            urls = (url_1, url_2)
-            new_urls = []
-            for url in urls:
-                url = url.split("?")[0]
-                url = url.split("#")[0]
-                url = url.rstrip("/")
-                new_urls.append(url)
-            new_url_1, new_url_2 = new_urls
-            result = new_url_1 == new_url_2
-            if result:
-                self._page.logger.debug(f'URLs "{url_1}" == URL "{url_2}"')
+            self._page.logger.debug(f'Checking that URL paths equal: "{url_1}" == "{url_2}"')
+            url_1, url_2 = furl(url_1), furl(url_2)
+            if url_1.path == url_2.path:
+                self._page.logger.debug(f'URL "{url_1}" == URL "{url_2}"')
                 return True
             else:
                 exc_msg = f'URL "{url_1}" != URL "{url_2}"'
@@ -442,7 +442,7 @@ class BasePage:
             url_2 = self._page.URL
             self._page.logger.debug(
                 f'Checking that current URL "{url_1}" == {self._page.__class__.__name__} page URL {url_2}')
-            result = self.is_links_equal(url_1, url_2, raise_exception=False)
+            result = self._page.check.is_paths_equal(url_1, url_2, raise_exception=False)
             if result:
                 return True
 
@@ -456,7 +456,7 @@ class BasePage:
             if check_url:
                 url = url if url else self._page.URL
                 current_url = self._page.driver.current_url
-                if not self.is_links_equal(current_url, url, raise_exception=False):
+                if not self._page.check.is_paths_equal(current_url, url, raise_exception=False):
                     exc_msg = f'Current URL "{current_url}" != page URL "{url}"'
                     return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
                 else:
