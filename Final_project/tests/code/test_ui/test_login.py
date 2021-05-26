@@ -107,3 +107,37 @@ class TestLoginPage(BaseUICase):
             self.login_page.login(username=username, password=password)
             self.login_page.wait_until.is_page_url_match_driver_url()
             assert self.login_page.get_error_text() == f'{username_err}\n{password_err}'
+
+
+class AccessToPagesBase(BaseUICase):
+    auto_open_page = False
+
+    def test_access_login_page(self):
+        self.login_page.open_page()
+        assert self.login_page.check.is_page_url_match_driver_url()
+
+    def test_access_login_page_2(self):
+        self.login_page.open_page(url=settings.APP_SETTINGS.URL)
+        assert self.login_page.current_url.path == '/'
+
+    def test_access_register_page(self):
+        self.register_page.open_page()
+        assert self.register_page.check.is_page_url_match_driver_url()
+
+
+class TestAccessToPagesWithoutLogin(AccessToPagesBase):
+    authorize = False
+
+    def test_no_login_access_main_page(self):
+        self.main_page.open_page(check_page_is_open=False)
+        self.login_page.wait_until.is_page_opened()
+        assert self.login_page.current_url.args['next'] == settings.APP_SETTINGS.URLS.MAIN
+        assert self.login_page.get_error_text() == tests_data.LoginPage.ErrorMsgs.NOT_AUTHORIZED
+
+
+class TestAccessToPageWithLogin(AccessToPagesBase):
+    authorize = True
+
+    def test_login_access_main_page(self):
+        self.main_page.open_page()
+        assert self.main_page.check.is_page_url_match_driver_url()
