@@ -34,3 +34,4 @@ class JsCode:
     navigation_start_time = "return window.performance.timing.navigationStart"
     response_start_time = "return window.performance.timing.responseStart"
     dom_complete_time = "return window.performance.timing.domComplete"
+    user_agent = "return navigator.userAgent"

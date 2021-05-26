@@ -32,7 +32,7 @@ class _BASE_APP_CLASS:
     HOST_DEFAULT = 'localhost'
     HOST_DOCKER = None
     PORT = None
-    URL_BASE = 'http://{host}:{port}'
+    URL_BASE = 'http://{host}:{port}/'
 
     @property
     def HOST(self):
@@ -68,7 +68,7 @@ MOCK_SETTINGS = _MOCK_SETTINGS()
 
 
 class _APP_SETTINGS(_BASE_APP_CLASS):
-    HOST_DOCKER = 'myapp'
+    HOST_DOCKER = 'myapp_proxy'
     PORT = '8070'
     DB_NAME = 'myapp_db'
     TABLE_USERS_NAME = 'test_users'
@@ -79,12 +79,33 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
         MAIN = '/welcome/'
         LOGOUT = '/logout'
 
+    class API_URLS:
+        API_PREFIX = '/api'
+        ADD_USER = API_PREFIX + '/add_user'
+        DELETE_USER = API_PREFIX + '/del_user/{username}'
+        BLOCK_USER = API_PREFIX + '/block_user/{username}'
+        ACCEPT_USER = API_PREFIX + '/api/accept_user/{username}'
+        APP_STATUS = '/status'
+
     @property
     def HOST(self):
         if EXTERNAL_SETTINGS.IN_DOCKER or EXTERNAL_SETTINGS.WITH_SELENOID:
             return self.HOST_DOCKER
         else:
             return self.HOST_DEFAULT
+
+    @property
+    def HOST_API(self):
+        if EXTERNAL_SETTINGS.IN_DOCKER:
+            return self.HOST_DOCKER
+        else:
+            return self.HOST_DEFAULT
+
+    @property
+    def URL_API(self):
+        return self.URL_BASE.format(host=self.HOST_API, port=self.PORT)
+
+
 
 
 APP_SETTINGS = _APP_SETTINGS()

@@ -4,7 +4,6 @@ import logging
 from contextlib import contextmanager
 from functools import wraps
 from urllib.parse import urljoin
-
 import allure
 from furl import furl
 
@@ -48,6 +47,11 @@ class BasePage:
     def current_url(self) -> furl:
         """Returns furl object with the current url"""
         return furl(self.driver.current_url)
+
+    @property
+    def user_agent(self):
+        """Returns user agent"""
+        return self.driver.execute_script(JsCode.user_agent)
 
     def open_page(self, url=None, check_page_is_open=True):
         """Open the page"""
@@ -499,7 +503,7 @@ class BasePage:
             def inner(func):
                 @wraps(func)
                 def wrapper(*args, **kwargs):
-                    kwargs['raise_exception'] = False
+                    kwargs['raise_exception'] = True
                     return waiter(func, *args, **kwargs)
 
                 return wrapper

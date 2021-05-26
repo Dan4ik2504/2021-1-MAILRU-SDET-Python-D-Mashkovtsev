@@ -17,13 +17,16 @@ class ApiClient:
     def __init__(self, session):
         self.session: requests.Session = session
         self.logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
+        self.headers = {
+            "Referer": settings.APP_SETTINGS.URL
+        }
 
     def _set_headers(self, headers):
         """Adds the required headers"""
         if not isinstance(headers, dict):
             headers = {}
-        if headers.get("Referer", None) is None:
-            headers["Referer"] = settings.APP_SETTINGS.URL
+        for k, v in self.headers.items():
+            headers[k] = v
 
         return headers
 
@@ -110,8 +113,10 @@ class ApiClient:
     def cookies_list(self):
         """Returns list of dicts with cookie information.
         Dict keys: name, value, domain, path, secure"""
-        return [{'name': c.name, 'value': c.value, 'domain': c.domain, 'path': c.path, 'secure': c.secure}
-                for c in self.session.cookies]
+        cookies = [{'name': c.name, 'value': c.value}
+                   for c in self.session.cookies]
+
+        return cookies
 
     def get_cookie(self, name):
         """Get cookie by name"""
