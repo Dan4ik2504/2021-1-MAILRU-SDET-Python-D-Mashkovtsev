@@ -26,6 +26,7 @@ class BaseUICase:
 
         self.login_page: LoginPage = request.getfixturevalue("login_page")
         self.main_page: MainPage = request.getfixturevalue("main_page")
+        self.register_page: RegisterPage = request.getfixturevalue("register_page")
 
         if self.auto_open_page:
             self.login_page.open_page()

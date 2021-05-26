@@ -13,6 +13,7 @@ import settings
 import exceptions
 from ui.pages.login_page import LoginPage
 from ui.pages.main_page import MainPage
+from ui.pages.register_page import RegisterPage
 
 logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
@@ -25,6 +26,11 @@ def login_page(driver):
 @pytest.fixture(scope='function')
 def main_page(driver):
     return MainPage(driver=driver)
+
+
+@pytest.fixture(scope='function')
+def register_page(driver):
+    return RegisterPage(driver)
 
 
 @allure.step('Creating "{browser_name}" driver')
