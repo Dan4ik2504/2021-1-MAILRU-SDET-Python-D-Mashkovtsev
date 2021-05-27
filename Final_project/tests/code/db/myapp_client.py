@@ -35,3 +35,6 @@ class MyappDBClient(MysqlClient):
 
     def delete_users_by_filter(self, **kwargs):
         self.base_query.filter_by(**kwargs).delete()
+
+    def is_user_exists(self, **kwargs):
+        return self.session_autocommit.query(self.base_query.filter_by(**kwargs).exists()).scalar()

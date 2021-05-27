@@ -34,12 +34,16 @@ class UserBuilder:
         self.client = client
         self.logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
-    def generate_user(self, username=None, password=None, email=None, access=True, active=None, start_active_time=None):
+    def generate_user(self, username=None, password=None, email=None, access=True, active=None, start_active_time=None,
+                      save_in_db=True):
         username = username if username is not None else rand_val_diff.username
         password = password if password is not None else rand_val_diff.password
         email = email if email is not None else rand_val_diff.email
 
-        self.client.create_user(username=username, password=password, email=email, access=access, active=active,
-                                start_active_time=start_active_time)
-
-        return User(username, password, email, access, active, start_active_time)
+        if save_in_db:
+            obj = self.client.create_user(username=username, password=password, email=email, access=access,
+                                          active=active,
+                                          start_active_time=start_active_time)
+            return obj
+        else:
+            return User(username, password, email, access, active, start_active_time)
