@@ -15,7 +15,6 @@ from utils.random_values import random_different_values
 class BaseUICase:
     authorize = True
     auto_open_page = True
-    current_user = None
 
     @pytest.fixture(scope='function', autouse=True)
     def setup(self, driver, config, request: FixtureRequest, logger, ui_report):
@@ -23,8 +22,8 @@ class BaseUICase:
         self.driver = driver
         self.config = config
         self.logger = logger
-        self.vkapi_db = VkApiDBClient()
-        self.myapp_db = MyappDBClient()
+        self.vkapi_db: VkApiDBClient = request.getfixturevalue("vk_api_client")
+        self.myapp_db: MyappDBClient = request.getfixturevalue("myapp_client")
         self.vkapi_builder = VkApiBuilder(self.vkapi_db)
         self.users_builder = UserBuilder(self.myapp_db)
 
