@@ -5,6 +5,7 @@ from db.models import VkIdTable
 
 class VkApiDBClient(MysqlClient):
     table = VkIdTable
+    tables = [VkIdTable]
 
     def __init__(self, db_name=settings.MOCK_SETTINGS.DB_NAME, **kwargs):
         super().__init__(db_name=db_name, **kwargs)

@@ -7,6 +7,7 @@ from db.models import MyappUserTable
 
 class MyappDBClient(MysqlClient):
     table = MyappUserTable
+    tables = [MyappUserTable]
 
     def __init__(self, db_name=settings.APP_SETTINGS.DB_NAME, **kwargs):
         super().__init__(db_name=db_name, **kwargs)
