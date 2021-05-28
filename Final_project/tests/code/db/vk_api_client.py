@@ -22,7 +22,7 @@ class VkApiDBClient(MysqlClient):
         query = self.base_query.filter_by(username=username)
         exists = self.session_autocommit.query(query.exists()).first()[0]
         if exists:
-            obj = query.first()
+            obj = self.session.query(self.table).filter_by(username=username).first()
             obj.vk_id = vk_id
             self.session.commit()
         else:
