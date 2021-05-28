@@ -9,7 +9,8 @@ class MysqlClient:
 
     def __init__(self, user=settings.DATABASE_SETTINGS.USER, password=settings.DATABASE_SETTINGS.PASSWORD,
                  db_name=settings.MOCK_SETTINGS.DB_NAME,
-                 host=settings.DATABASE_SETTINGS.HOST, port=settings.DATABASE_SETTINGS.PORT):
+                 host=settings.DATABASE_SETTINGS.HOST, port=settings.DATABASE_SETTINGS.PORT,
+                 autoconnect=True):
         self.user = user
         self.password = password
         self.db_name = db_name
@@ -20,6 +21,9 @@ class MysqlClient:
         self.engine = None
         self.connection = None
         self.session = None
+
+        if autoconnect:
+            self.connect()
 
     def connect(self, db_created=True):
         db = self.db_name if db_created else ''
@@ -45,6 +49,7 @@ class MysqlClient:
         self.execute_query(f'USE {self.db_name}', fetch=False)
         self.connection.close()
         self.create_tables()
+        self.connect()
 
     def create_tables(self):
         Base.metadata.create_all(self.engine)

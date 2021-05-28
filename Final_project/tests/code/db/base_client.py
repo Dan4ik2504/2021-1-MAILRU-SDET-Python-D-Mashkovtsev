@@ -14,7 +14,7 @@ class MysqlClient:
     def __init__(self, user=settings.DATABASE_SETTINGS.USER, password=settings.DATABASE_SETTINGS.PASSWORD,
                  db_name=settings.APP_SETTINGS.DB_NAME,
                  host=settings.DATABASE_SETTINGS.HOST, port=settings.DATABASE_SETTINGS.PORT,
-                 autoconnect=True, autotruncate_tables=True):
+                 autoconnect=True):
         self.user = user
         self.password = password
         self.db_name = db_name
@@ -24,8 +24,6 @@ class MysqlClient:
 
         if autoconnect:
             self.connect()
-            if autotruncate_tables:
-                self.truncate_tables()
 
     def connect(self, db_created=True):
         db = self.db_name if db_created else ''

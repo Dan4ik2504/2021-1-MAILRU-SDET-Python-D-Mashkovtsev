@@ -52,10 +52,19 @@ def create_test_dir():
     os.makedirs(base_test_dir)
 
 
+def truncate_db_tables():
+    db_clients = (MyappDBClient(), VkApiDBClient())
+    for db_client in db_clients:
+        db_client.truncate_tables()
+        db_client.connection.close()
+
+
 def pytest_configure(config):
     is_master = is_master_process(config)
     if is_master:
         create_test_dir()
+        truncate_db_tables()
+
     config.base_test_dir = settings.GLOBAL_LOGGING.LOGS_FOLDER
     config.is_master_process = is_master
 
