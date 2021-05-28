@@ -53,6 +53,28 @@ class BasePage:
         """Returns user agent"""
         return self.driver.execute_script(JsCode.user_agent)
 
+    def refresh(self, check_url=True):
+        """Refresh page and wait until the page opens"""
+        self.driver.refresh()
+        self.wait_until.is_page_opened(check_url=check_url)
+
+    def get_cookie(self, name):
+        """Returns cookie from browser"""
+        return self.driver.execute_script(JsCode.get_cookie, name)
+
+    def get_elem_text(self, locator):
+        """Returns text of the element found by locator"""
+        try:
+            return self.fast_find(locator).text
+        except (StaleElementReferenceException, exceptions.FindingException):
+            raise exceptions.FindingException(
+                f'Element not found by locator or stale: "{locator[1]}" (type: {locator[0]})')
+
+    def hover_over_element(self, locator, pause=0):
+        """Hover cursor over element found by locator"""
+        elem = self.fast_find(locator)
+        self.action_chains.move_to_element(elem).pause(pause).perform()
+
     def open_page(self, url=None, check_page_is_open=True):
         """Open the page"""
         url = url if url else self.URL
@@ -297,11 +319,44 @@ class BasePage:
         if start_time != end_time:
             raise exceptions.CheckingException("Page has been reloaded")
 
+    @contextmanager
+    def is_new_tab_open(self, url=None, new_tabs_count=1, switch_to_new_tab=True):
+        """
+        Checks that new tab is open.
+        Checks the URL of the newest tab if specified
+        """
+        tabs_number = len(self.driver.window_handles)
+        yield
+        tabs_opened = len(self.driver.window_handles) - tabs_number
+
+        if tabs_opened != new_tabs_count:
+            raise exceptions.CheckingException(f"Expected opening {new_tabs_count} tabs. Opened {tabs_opened} tabs")
+
+        if url:
+            old_window_handle = self.driver.current_window_handle
+            self.driver.switch_to.window(self.driver.window_handles[-1])
+            new_tab_url = self.driver.current_url
+            if new_tab_url != url:
+                raise exceptions.CheckingException(f'New tab url "{new_tab_url}" does not match given url "{url}"')
+            if not switch_to_new_tab:
+                self.driver.switch_to.window(old_window_handle)
+
+        if switch_to_new_tab:
+            self.driver.switch_to.window(self.driver.window_handles[-1])
+
     class _Check:
         _page = None
 
         def __init__(self, page):
             self._page = page
+
+        def is_cookie_exists(self, name):
+            """Checking that cookie exists in browser"""
+            return bool(self._page.get_cookie(name))
+
+        def is_session_cookie_exists(self):
+            """Checking that session cookie exists in browser"""
+            return self._page.check.is_cookie_exists(settings.API_CLIENT.COOKIES.SESSION)
 
         def _raise_exception_wrapper(self, exc, exc_msg, raise_exception, result=False):
             self._page.logger.debug(f'Raised exception "{exc.__name__}" with message: "{exc_msg}"')
@@ -451,7 +506,29 @@ class BasePage:
                 return True
 
             exc_msg = f'Current url "{url_1}" does not match page object url "{url_2}"'
-            return self._raise_exception_wrapper(exceptions.PageUrlDoesNotMatchDriverUrl, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
+
+        def is_current_url_matches(self, url, raise_exception=False):
+            current_url = self._page.driver.current_url
+            self._page.logger.debug(
+                f'Checking that current URL "{current_url}" == {self._page.__class__.__name__} given URL {url}')
+            result = self._page.check.is_paths_equal(current_url, url, raise_exception=False)
+            if result:
+                return True
+
+            exc_msg = f'Current url "{current_url}" does not match given url "{url}"'
+            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
+
+        def is_current_url_not_matches(self, url, raise_exception=False):
+            current_url = self._page.driver.current_url
+            self._page.logger.debug(
+                f'Checking that current URL "{current_url}" != {self._page.__class__.__name__} given URL {url}')
+            result = self._page.check.is_paths_equal(current_url, url, raise_exception=False)
+            if result:
+                return True
+
+            exc_msg = f'Current url "{current_url}" match given url "{url}"'
+            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
 
         def is_page_opened(self, url=None, check_url=True, raise_exception=False):
             """Checking that the page has been opened and fully loaded"""

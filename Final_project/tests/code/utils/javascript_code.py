@@ -29,6 +29,16 @@ class JsCode:
     return isVisible(arguments[0]);
     """
 
+    get_cookie = """
+    function getCookie(name) {
+      let matches = document.cookie.match(new RegExp(
+        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+      ));
+      return matches ? decodeURIComponent(matches[1]) : undefined;
+    };
+    return getCookie(arguments[0]);
+    """
+
     document_ready_state = "return document.readyState"
     scroll_into_view = "arguments[0].scrollIntoView(true)"
     navigation_start_time = "return window.performance.timing.navigationStart"

@@ -1,2 +1,36 @@
 from selenium.webdriver.common.by import By
 
+USERNAME_TEXT = (By.CSS_SELECTOR, "div[id='login-name'] ul li:first-child")
+VK_ID_TEXT = (By.CSS_SELECTOR, "div[id='login-name'] ul li:last-child")
+LOGOUT_BUTTON = (By.CSS_SELECTOR, "div[id='logout'] a[href$='/logout']")
+HEADER_LOGO = (By.XPATH, "//nav/ul/a[contains(text(), 'TM version')]")
+_HEADER_ITEM_BASE_XPATH = "//nav/ul/li[a[contains(text(), '{}')]]"
+_HEADER_LINK_IN_ITEM_BASE_XPATH = "//a[contains(text(), '{}')]"
+HEADER_HOME_BTN = (By.XPATH, _HEADER_ITEM_BASE_XPATH.format("HOME"))
+HEADER_PYTHON_BTN = (By.XPATH, _HEADER_ITEM_BASE_XPATH.format("Python"))
+HEADER_PYTHON_HISTORY_LINK = (By.XPATH, HEADER_PYTHON_BTN[1] + _HEADER_LINK_IN_ITEM_BASE_XPATH.format('Python history'))
+HEADER_PYTHON_FLASK_LINK = (By.XPATH, HEADER_PYTHON_BTN[1] + _HEADER_LINK_IN_ITEM_BASE_XPATH.format('About Flask'))
+HEADER_LINUX_BTN = (By.XPATH, _HEADER_ITEM_BASE_XPATH.format("Linux"))
+HEADER_LINUX_DOWNLOAD_CENTOS_LINK = \
+    (By.XPATH, HEADER_LINUX_BTN[1] + _HEADER_LINK_IN_ITEM_BASE_XPATH.format('Download Centos7'))
+HEADER_NETWORK_BTN = (By.XPATH, _HEADER_ITEM_BASE_XPATH.format("Network"))
+_HEADER_LINK_IN_ITEM_NETWORK_BASE_XPATH = "//li[contains(text(), '{}')]//a[contains(text(), '{}')]"
+HEADER_NETWORK_WIRESHARK_NEWS_LINK = \
+    (By.XPATH, HEADER_NETWORK_BTN[1] + _HEADER_LINK_IN_ITEM_NETWORK_BASE_XPATH.format('Wireshark', 'News'))
+HEADER_NETWORK_WIRESHARK_DOWNLOAD_LINK = \
+    (By.XPATH, HEADER_NETWORK_BTN[1] + _HEADER_LINK_IN_ITEM_NETWORK_BASE_XPATH.format('Wireshark', 'Download'))
+HEADER_NETWORK_TCPDUMP_EXAMPLES = \
+    (By.XPATH, HEADER_NETWORK_BTN[1] + _HEADER_LINK_IN_ITEM_NETWORK_BASE_XPATH.format('Tcpdump', 'Examples'))
+BODY_BUTTON_BASE_XPATH = (By.XPATH, "//*[@id='content']/div[2]/div[div[contains(text(), '{}')]]/figure/a/img")
+BODY_BUTTONS_LIST = (By.XPATH, "//*[@id='content']/div[2]/div/div")
+POWERED_BY_TEXT = (By.CSS_SELECTOR, "footer div p:first-child")
+RANDOM_FACT_TEXT = (By.CSS_SELECTOR, "footer div p:last-child")
+
+HEADER_NAVBAR_DEPENDENCIES = {
+    HEADER_PYTHON_HISTORY_LINK: HEADER_PYTHON_BTN,
+    HEADER_PYTHON_FLASK_LINK: HEADER_PYTHON_BTN,
+    HEADER_LINUX_DOWNLOAD_CENTOS_LINK: HEADER_LINUX_BTN,
+    HEADER_NETWORK_WIRESHARK_NEWS_LINK: HEADER_NETWORK_BTN,
+    HEADER_NETWORK_WIRESHARK_DOWNLOAD_LINK: HEADER_NETWORK_BTN,
+    HEADER_NETWORK_TCPDUMP_EXAMPLES: HEADER_NETWORK_BTN
+}

@@ -15,6 +15,7 @@ from utils.random_values import random_different_values
 class BaseUICase:
     authorize = True
     auto_open_page = True
+    current_user = None
 
     @pytest.fixture(scope='function', autouse=True)
     def setup(self, driver, config, request: FixtureRequest, logger, ui_report):
@@ -37,6 +38,7 @@ class BaseUICase:
             self.users_api.api.headers['User-Agent'] = self.login_page.user_agent
 
             user = self.users_builder.generate_user()
+            self.current_user = user
             self.users_api.login(user.username, user.password)
 
             cookies = self.users_api.api.cookies_list

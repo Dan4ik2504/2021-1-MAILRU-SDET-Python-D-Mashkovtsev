@@ -24,7 +24,11 @@ class VkApiDBClient(MysqlClient):
         if exists:
             obj = query.first()
             obj.vk_id = vk_id
+            self.session.commit()
         else:
             obj = self.table(username=username, vk_id=vk_id)
             self.session.add(obj)
             self.session.commit()
+
+    def delete_vk_id(self, username):
+        self.base_query.filter_by(username=username).delete()

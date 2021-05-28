@@ -22,9 +22,8 @@ class LoginPage(BasePage):
         self.logger.info("Getting form error text")
         self.wait_until.is_visible(self.locators.ERROR_TEXT)
         try:
-            elem = self.fast_find(self.locators.ERROR_TEXT)
+            text = self.get_elem_text(self.locators.ERROR_TEXT)
         except exceptions.FindingException:
             return None
-        text = elem.text
         self.logger.info(f"Form error text: {text}")
         return text

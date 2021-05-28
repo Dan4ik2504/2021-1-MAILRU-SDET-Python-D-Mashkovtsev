@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, SmallInteger, DateTime
+from sqlalchemy import Column, Integer, String, SmallInteger, DateTime, Text
 from sqlalchemy.orm import declarative_base
 
 import settings
@@ -23,4 +23,4 @@ class VkIdTable(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(16), nullable=False)
-    vk_id = Column(Integer, nullable=False)
+    vk_id = Column(Text)

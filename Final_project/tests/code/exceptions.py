@@ -100,7 +100,7 @@ class PageNotOpenedException(CheckingException):
     """
 
 
-class PageUrlDoesNotMatchDriverUrl(CheckingException):
+class UrlComparisonException(CheckingException):
     """
-    Page url != driver url
+    Urls do not match
     """
