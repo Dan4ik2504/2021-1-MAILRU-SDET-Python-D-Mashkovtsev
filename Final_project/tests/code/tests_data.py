@@ -41,3 +41,11 @@ class MainPage:
             'link': settings.EXTERNAL_URLS.SMTP
         }
     )
+
+
+class Api:
+    USER_ADDED = "User was added!"
+    CANT_ADD_USER = "Can not add user: "
+    CANT_ADD_USER__MISSING_USERNAME = CANT_ADD_USER + "'username'"
+    CANT_ADD_USER__MISSING_EMAIL = CANT_ADD_USER + "'email'"
+    CANT_ADD_USER__MISSING_PASSWORD = CANT_ADD_USER + "'password'"

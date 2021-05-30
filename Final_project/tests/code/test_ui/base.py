@@ -2,7 +2,7 @@ import pytest
 from _pytest.fixtures import FixtureRequest
 
 import settings
-from api.users_api import UsersApi
+from api.myapp_api import MyappApi
 from db.vk_api_client import VkApiDBClient
 from db.myapp_client import MyappDBClient
 from db.builder import VkApiBuilder, UserBuilder
@@ -32,16 +32,16 @@ class BaseUICase:
         self.main_page: MainPage = request.getfixturevalue("main_page")
         self.register_page: RegisterPage = request.getfixturevalue("register_page")
 
-        self.users_api: UsersApi = request.getfixturevalue('users_api')
+        self.myapp_api: MyappApi = request.getfixturevalue('users_api')
 
         if self.authorize:
-            self.users_api.api.headers['User-Agent'] = self.login_page.user_agent
+            self.myapp_api.api.headers['User-Agent'] = self.login_page.user_agent
 
             user = self.users_builder.generate_user()
             self.current_user = user
-            self.users_api.login(user.username, user.password)
+            self.myapp_api.login(user.username, user.password)
 
-            cookies = self.users_api.api.cookies_list
+            cookies = self.myapp_api.api.cookies_list
             self.login_page.open_page()
             for cookie in cookies:
                 self.login_page.driver.add_cookie(cookie)
