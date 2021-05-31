@@ -115,10 +115,10 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
     @pytest.mark.parametrize(
         ("username", "email", "password", "erorr_msg"),
         (
-                ('', '', '', td_api.CANT_ADD_USER__MISSING_USERNAME),
-                (rand_val_eq.username, rand_val_eq.email, ' ', td_api.CANT_ADD_USER__MISSING_PASSWORD),
-                (rand_val_eq.username, ' ', rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_EMAIL),
-                (' ', rand_val_eq.email, rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_USERNAME)
+                ('  ', '  ', '  ', td_api.CANT_ADD_USER__MISSING_USERNAME),
+                (rand_val_eq.username, rand_val_eq.email, '  ', td_api.CANT_ADD_USER__MISSING_PASSWORD),
+                (rand_val_eq.username, '  ', rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_EMAIL),
+                ('  ', rand_val_eq.email, rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_USERNAME)
         )
     )
     def test_api__add_user__empty_data(self, username, email, password, erorr_msg):
@@ -128,11 +128,10 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         Шаги:
         1. Отправка неполных данных пользователя
 
-        ОР: Код ответа: 400. Пользователь не создан
+        ОР: Код ответа: 304. Пользователь не создан
         """
-        response = self.myapp_api.add_user(username, email, password,
-                                           expected_status=self.select_status_code(400))
-        assert response.text == erorr_msg
+        self.myapp_api.add_user(username, email, password,
+                                           expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
     def test_api__add_user_request_without_json(self):
@@ -221,7 +220,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         username = self.fake.username
         email = self.fake.email
         response = self.myapp_api.add_user(username, email, user.password,
-                                           expected_status=self.select_status_code(304))
+                                           expected_status=self.select_status_code(201))
         assert response.text == self.td_api.USER_ADDED
         assert self.myapp_db.is_user_exists(username=username, email=email)
 
@@ -245,13 +244,13 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         Шаги:
         1. Отправка запроса с некорректным email
 
-        ОР: Код ответа: 400. Пользователь не создан
+        ОР: Код ответа: 304. Пользователь не создан
         """
 
         username = self.fake.username
         password = self.fake.password
 
-        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(400))
+        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
     @pytest.mark.parametrize(
@@ -265,12 +264,12 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         Шаги:
         1. Отправка запроса с именем пользователя некорректной длины
 
-        ОР: Код ответа: 400. Пользователь не создан
+        ОР: Код ответа: 304. Пользователь не создан
         """
 
         email = self.fake.email
         password = self.fake.password
-        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(400))
+        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
@@ -284,12 +283,12 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         Шаги:
         1. Отправка запроса с email некорректной длины
 
-        ОР: Код ответа: 400. Пользователь не создан
+        ОР: Код ответа: 304. Пользователь не создан
         """
 
         username = self.fake.username
         password = self.fake.password
-        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(400))
+        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
@@ -303,12 +302,12 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         Шаги:
         1. Отправка запроса с паролем некорректной длины
 
-        ОР: Код ответа: 400. Пользователь не создан
+        ОР: Код ответа: 304. Пользователь не создан
         """
 
         username = self.fake.username
         email = self.fake.email
-        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(400))
+        self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
     def test_api__delete_user__positive(self):

@@ -162,8 +162,7 @@ class API_CLIENT:
 
 
 class GLOBAL_LOGGING:
-    LOGS_FOLDER = paths.different_os_path('/myapp_tests_logs/' if EXTERNAL_SETTINGS.IN_DOCKER
-                                          else '/tmp/myapp_tests_logs')
+    LOGS_FOLDER = paths.different_os_path(os.environ.get('WORKSPACE', '/tmp') + '/myapp_tests_logs/')
     LEVEL = LOG_LEVEL_INFO
     DEFAULT_FORMAT = '%(asctime)s - %(filename)-15s - %(levelname)-8s - %(message)s'
     MAX_RESPONSE_LENGTH = 200
