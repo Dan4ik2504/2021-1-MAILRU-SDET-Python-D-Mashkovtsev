@@ -1,0 +1,70 @@
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '3'))
+        timestamps()
+    }
+
+    environment {
+        PYTHON = sh(returnStdout: true, script: 'which python3')
+    }
+
+    stages {
+        stage("Preparing the environment") {
+            steps {
+                sh 'docker network create myapp_network || true'
+
+                dir('Final_project/tests'){
+                    sh 'docker-compose up -d'
+                }
+
+                withEnv(["PATH+EXTRA=$PYTHON"]) {
+                    dir('Final_project/tests'){
+                        sh 'pip install -r requirements.txt'
+                    }
+                }
+            }
+        }
+
+        stage("App starting") {
+            steps {
+                dir('Final_project'){
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+
+        stage("Testing") {
+            steps {
+                withEnv(["PATH+EXTRA=$PYTHON"]) {
+                    dir('Final_project/tests/code'){
+                        sh 'pytest -lsv -n4 --selenoid_vnc --debug_log --alluredir=$WORKSPACE/alluredir $PYTEST_KEYS'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            dir('Final_project'){
+                sh 'docker-compose down --remove-orphans'
+            }
+
+            dir('Final_project/tests'){
+                sh 'docker-compose down --remove-orphans'
+            }
+
+            allure([
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'alluredir']]
+            ])
+            cleanWs()
+        }
+    }
+}
