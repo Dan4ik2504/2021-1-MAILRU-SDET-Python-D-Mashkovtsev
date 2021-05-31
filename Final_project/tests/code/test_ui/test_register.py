@@ -84,7 +84,6 @@ class TestRegisterPage(BaseUICase):
         self.do_register_existing_user(username=user.username, password=password, email=email)
         assert not self.myapp_db.is_user_exists(password=password, email=email)
 
-    @pytest.mark.xfail
     def test_register_form__existing_email(self):
         """
         Негативный тест регистрации пользователя c существующим в БД email
@@ -153,7 +152,6 @@ class TestRegisterPage(BaseUICase):
         assert self.register_page.get_error_text() == self.form_errors.INVALID_EMAIL
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
-    @pytest.mark.xfail
     def test_register_form__do_not_repeat_password_1(self):
         """
         Негативный тест отправки формы регистрации с незаполненным полем "Repeat password", но заполненным "Password"
@@ -219,7 +217,6 @@ class TestRegisterPage(BaseUICase):
                 )
         )
     )
-    @pytest.mark.xfail
     def test_register_form__empty_data(self, username, email, password):
         """
         Негативный тест отправки формы регистрации с пустыми полями
@@ -236,7 +233,6 @@ class TestRegisterPage(BaseUICase):
         assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT)
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
-    @pytest.mark.xfail
     def test_register_form__incorrect_empty_username(self):
         """
         Негативный тест регистрации с именем, состоящим из символа "пробел"
@@ -256,7 +252,6 @@ class TestRegisterPage(BaseUICase):
         assert self.register_page.get_error_text() == self.form_errors.USERNAME_NOT_SPECIFIED
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
-    @pytest.mark.xfail
     def test_register_form__incorrect_empty_email(self):
         """
         Негативный тест регистрации с email, состоящим из символа "пробел"
@@ -276,7 +271,6 @@ class TestRegisterPage(BaseUICase):
         assert self.register_page.get_error_text() == self.form_errors.EMAIL_NOT_SPECIFIED
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
-    @pytest.mark.xfail
     def test_register_form__incorrect_empty_password(self):
         """
         Негативный тест регистрации с паролем, состоящим из символа "пробел"
@@ -344,7 +338,6 @@ class TestRegisterPage(BaseUICase):
         'password',
         [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5]]
     )
-    @pytest.mark.xfail
     def test_register_form__incorrect_password_length(self, password):
         """
         Негативный тест регистрации с коротким паролем (меньше 6 символов)
@@ -381,7 +374,6 @@ class TestRegisterPage(BaseUICase):
 
         assert not self.myapp_db.is_user_exists(username=user.username, password=user.password, email=user.email)
 
-    @pytest.mark.xfail
     def test_register_form__more_than_one_errors(self):
         """
         Тест отображения нескольких сообщений об ошибках в форме

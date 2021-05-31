@@ -121,7 +121,6 @@ class TestMainPageHeaderUserInfo(BaseMainPageTestCase):
         vk_id = string.digits + string.ascii_letters + string.punctuation
         self.set_and_check_vk_id(vk_id)
 
-    @pytest.mark.xfail
     def test_main_page__header__vk_id__empty(self):
         """
         Тест отображения VK ID, состоящего из пробела
@@ -217,7 +216,6 @@ class TestMainPageHeader(BaseMainPageTestCase):
                 (mp_locators.HEADER_NETWORK_BTN, mp_locators.HEADER_NETWORK_TCPDUMP_EXAMPLES)
         )
     )
-    @pytest.mark.xfail
     def test_main_page__header__dropdown_opens_on_click(self, dropdown_locator, dropdown_item_locator):
         """
         Тест открытия выпадающих списков на навигационной панели по клику
@@ -271,7 +269,6 @@ class TestMainPageHeader(BaseMainPageTestCase):
                 (mp_locators.HEADER_NETWORK_TCPDUMP_EXAMPLES, settings.EXTERNAL_URLS.TCPDUMP_EXAMPLES)
         )
     )
-    @pytest.mark.xfail
     def test_main_page__header__navbar_dropdown_links(self, locator, url):
         """
         Тест внешних ссылок в выпадающих списках на навигационной панели

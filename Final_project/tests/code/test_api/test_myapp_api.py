@@ -73,7 +73,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
 
     # Tests
 
-    @pytest.mark.xfail
     def test_api__add_user_positive(self):
         """
         Тест на создание пользователя через API
@@ -122,7 +121,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
                 (' ', rand_val_eq.email, rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_USERNAME)
         )
     )
-    @pytest.mark.xfail
     def test_api__add_user__empty_data(self, username, email, password, erorr_msg):
         """
         Тест на отправку запроса на добавление пользователя с неполными данными
@@ -189,7 +187,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         assert response.text != self.td_api.USER_ADDED
         assert not self.myapp_db.is_user_exists(email=email, password=password)
 
-    @pytest.mark.xfail
     def test_api__add_existing_email(self):
         """
         Негативный тест добавления пользователя c существующим в БД email
@@ -209,7 +206,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         assert response.text != self.td_api.USER_ADDED
         assert not self.myapp_db.is_user_exists(username=username, password=password)
 
-    @pytest.mark.xfail
     def test_api__add_existing_password(self):
         """
         Тест добавления пользователя c существующим в БД паролем
@@ -242,7 +238,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ))
         )
     )
-    @pytest.mark.xfail
     def test_api__add_user__incorrect_email(self, email):
         """
         Негативный тест добавления пользователя с некорректным email
@@ -263,7 +258,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         'username',
         [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5, 17, 50, 100]]
     )
-    @pytest.mark.xfail
     def test_api__add_user__incorrect_username_length(self, username):
         """
         Негативный тест добавления пользователя с именем пользователя некорректной длины
@@ -283,7 +277,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         'email',
         [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5]]
     )
-    @pytest.mark.xfail
     def test_api__add_user__incorrect_email_length(self, email):
         """
         Негативный тест добавления пользователя с email некорректной длины
@@ -303,7 +296,6 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         'password',
         [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5]]
     )
-    @pytest.mark.xfail
     def test_api__add_user__incorrect_password_length(self, password):
         """
         Негативный тест добавления пользователя с коротким паролем (меньше 6 символов)

@@ -268,7 +268,6 @@ class TestLoginPage(BaseUICase):
                 )
         )
     )
-    @pytest.mark.xfail
     def test_login_form__two_errors(self, username, username_err, password, password_err):
         """
         Тест отображения нескольких сообщений об ошибках в форме авторизации
