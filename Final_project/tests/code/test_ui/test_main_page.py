@@ -1,16 +1,12 @@
-import time
+from datetime import datetime
 from urllib.parse import urljoin
 
 import pytest
-from selenium.webdriver.common.keys import Keys
 import string
-import textwrap
-from itertools import product
 
 import settings
 from test_ui.base import BaseUICase
 import tests_data
-from utils.random_values import random_equal_values as rand_val_eq
 from ui.locators import main_page_locators as mp_locators
 
 
@@ -164,10 +160,15 @@ class TestMainPageHeaderUserInfo(BaseMainPageTestCase):
         3. Подождать открытия страницы авторизации
         4. Перейти на главную страницу
 
-        ОР: Сессионная кука отсутствует. Главная страница недоступна без повторной авторизации
+        ОР: Успешный логаут. Сессионная кука отсутствует. Главная страница недоступна без повторной авторизации.
+        В БД: спущен флаг активности пользователя; время логина не изменилось после логаута
         """
 
         assert self.login_page.check.is_session_cookie_exists()
+
+        logout_time = datetime.utcnow()
+        login_time = self.myapp_db.get_user(username=self.current_user.username, password=self.current_user.password,
+                                      email=self.current_user.email).start_active_time
 
         self.main_page.click(self.main_page.locators.LOGOUT_BUTTON)
         self.login_page.wait_until.is_page_opened()
@@ -176,6 +177,13 @@ class TestMainPageHeaderUserInfo(BaseMainPageTestCase):
 
         self.main_page.open_page(check_page_is_open=False)
         self.login_page.wait_until.is_page_opened()
+
+        user = self.myapp_db.get_user(username=self.current_user.username, password=self.current_user.password,
+                                      email=self.current_user.email)
+        assert user.access == 1
+        assert user.active == 0
+        assert user.start_active_time == login_time
+        assert user.start_active_time <= logout_time
 
 
 class TestMainPageHeader(BaseMainPageTestCase):

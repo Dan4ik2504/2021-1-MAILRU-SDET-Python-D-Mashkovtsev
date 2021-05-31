@@ -1,11 +1,7 @@
-import time
 import pytest
 from selenium.webdriver.common.keys import Keys
-import string
-import textwrap
 from itertools import product
 
-import settings
 from test_ui.base import BaseUICase
 import tests_data
 from utils.random_values import random_equal_values as rand_val_eq

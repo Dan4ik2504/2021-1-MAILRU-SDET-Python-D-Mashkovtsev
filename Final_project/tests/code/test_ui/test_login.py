@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 import pytest
 from selenium.webdriver.common.keys import Keys
 import string
@@ -46,12 +46,34 @@ class TestLoginPage(BaseUICase):
         1. Создание пользователя
         2. Отправка формы с корректными именем и паролем
 
-        ОР: Авторизация успешна. Открылась главная страница
+        ОР: Авторизация успешна. Открылась главная страница.
+        В БД: поднят флаг активности пользователя; записано время логина
         """
 
         user = self.users_builder.generate_user()
+        login_time = datetime.utcnow()
         self.login_page.login(user.username, user.password)
         self.main_page.wait_until.is_page_opened()
+        user = self.myapp_db.get_user(username=user.username, password=user.password, email=user.email)
+        assert user.access == 1
+        assert user.active == 1
+        assert login_time <= user.start_active_time <= datetime.utcnow()
+
+    def test_login_form__blocked_user(self):
+        """
+        Тест авторизации с данными заблокированного пользователя
+
+        Шаги:
+        1. Создание заблокированного пользователя
+        2. Отправка формы с корректными именем и паролем
+
+        ОР: Отобразилось сообщение об ошибке:
+        """
+
+        user = self.users_builder.generate_user(access=0)
+        self.login_page.login(user.username, user.password)
+        self.login_page.wait_until.is_page_opened()
+        assert self.login_page.get_error_text() == self.form_errors.BLOCKED_USER
 
     def test_login_form__invalid_data(self):
         """
@@ -380,3 +402,5 @@ class TestAccessToPageWithLogin(BaseUICase):
 
         self.main_page.open_page()
         assert self.main_page.check.is_page_url_match_driver_url()
+
+

@@ -1,22 +1,22 @@
+import datetime
 from itertools import product
+from urllib.parse import urljoin
 
 import pytest
+import requests
+from furl import furl
 from selenium.webdriver.common.keys import Keys
 
+import settings
 from utils.random_values import random_equal_values as rand_val_eq
 from test_api.base import BaseAPICase
 from tests_data import Api as td_api
+from api.client import ApiClient
+from api.myapp_api import MyappApi
 
 
-class TestMyappApiAuth(BaseAPICase):
-    authorize = True
+class BaseAPITestCase(BaseAPICase):
     td_api = td_api
-
-
-class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
-    check_status_code = True
-
-    # Methods
 
     def create_user_data_and_send_post_request(self, send_username=True, send_email=True, send_password=True,
                                                expected_status=None):
@@ -30,6 +30,43 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
             user_data["password"] = user.password
 
         return user_data, self.myapp_api.add_user(**user_data, expected_status=expected_status)
+
+    @staticmethod
+    def create_new_myapp_api_client():
+        return MyappApi(ApiClient(requests.Session()))
+
+
+class BaseAPIAuthTestCase(BaseAPITestCase):
+    authorize = True
+
+
+class BaseAPINoAuthTestCase(BaseAPITestCase):
+    authorize = False
+
+
+class TestMyappApiAuth(BaseAPIAuthTestCase):
+
+    def test_api__start_active_time_change(self):
+        """
+        Тест на изменение времени логина при повторном логине
+
+        Шаги:
+        1. Создание пользователя с временем последнего логина, которое меньше, чем текущее время
+        2. Осуществить успешный логин
+
+        ОР: Время последнего логина изменилось
+        """
+        user = self.users_builder.generate_user(start_active_time=datetime.datetime.now() - datetime.timedelta(days=1))
+        first_login_time = user.start_active_time
+        self.myapp_api.logout()
+        self.myapp_api.login(user.username, user.password)
+        user = self.myapp_db.get_user(username=user.username)
+        second_login_time = user.start_active_time
+        assert first_login_time < second_login_time
+
+
+class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
+    check_status_code = True
 
     def select_status_code(self, status_code):
         return status_code if self.check_status_code else None
@@ -54,7 +91,7 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
         assert response.text == self.td_api.USER_ADDED
 
     @pytest.mark.parametrize(
-        ("username", "email", "password", "erorr_msg"),
+        ("username", "email", "password", "error_msg"),
         (
                 (rand_val_eq.username, rand_val_eq.email, None, td_api.CANT_ADD_USER__MISSING_PASSWORD),
                 (rand_val_eq.username, None, rand_val_eq.password, td_api.CANT_ADD_USER__MISSING_EMAIL),
@@ -62,7 +99,7 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
                 (None, None, None, td_api.CANT_ADD_USER__MISSING_USERNAME)
         )
     )
-    def test_api__add_user__incorrect_request_json_data(self, username, email, password, erorr_msg):
+    def test_api__add_user__incorrect_request_json_data(self, username, email, password, error_msg):
         """
         Тест на отправку запроса на добавление пользователя с неполными данными
 
@@ -73,7 +110,7 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
         """
         response = self.myapp_api.add_user(username, email, password,
                                            expected_status=self.select_status_code(400))
-        assert response.text == erorr_msg
+        assert response.text == error_msg
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
     @pytest.mark.parametrize(
@@ -110,7 +147,8 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
         ОР: Код ответа: 400
         """
 
-        response = self.myapp_api.api.post_request(self.myapp_api.url_add_login, expected_status=400)
+        response = self.myapp_api.api.post_request(self.myapp_api.url_add_user,
+                                                   expected_status=self.select_status_code(400))
         assert response.text.startswith(td_api.CANT_ADD_USER)
 
     def test_api__add_existing_user(self):
@@ -281,6 +319,236 @@ class TestMyappApiAuthWithStatusCodeChecking(TestMyappApiAuth):
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(400))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
+    def test_api__delete_user__positive(self):
+        """
+        Тест удаления существующего пользователя
+
+        Шаги:
+        1. Создать пользователя в БД
+        2. Отправить запрос на удаление пользователя
+
+        ОР: Код ответа: 204. Пользователь удален
+        """
+
+        user = self.users_builder.generate_user()
+        self.myapp_api.delete_user(username=user.username, expected_status=self.select_status_code(204))
+        assert not self.myapp_db.is_user_exists(username=user.username, password=user.password, email=user.email)
+
+    def test_api__delete_nonexistent_user(self):
+        """
+        Тест удаления несуществующего пользователя
+
+        Шаги:
+        1. Отправить запрос на удаление несуществующего пользователя
+
+        ОР: Код ответа: 404
+        """
+
+        response = self.myapp_api.delete_user(username=self.fake.username, expected_status=self.select_status_code(404))
+        assert response.text == td_api.USER_DOES_NOT_EXIST
+
+    def test_api__block_user__positive(self):
+        """
+        Тест блокировки пользователя
+
+        Шаги:
+        1. Создать незаблокированного пользователя в БД
+        2. Отправка запроса на блокировку данного пользователя
+
+        ОР: Код ответа: 200. Пользователь заблокирован
+        """
+
+        user = self.users_builder.generate_user()
+
+        temp_client = self.create_new_myapp_api_client()
+        temp_client.login(user.username, user.password)
+        response1 = temp_client.get_main_page()
+        assert furl(response1.url).path == furl(temp_client.url_main_page).path
+
+        response2 = self.myapp_api.block_user(user.username, expected_status=self.select_status_code(200))
+        assert response2.text == td_api.USER_BLOCKED
+        assert self.myapp_db.get_user(username=user.username).access == 0
+
+        response3 = temp_client.get_main_page()
+        assert furl(response3.url).path == furl(temp_client.url_login).path
+
+    def test_api__block_blocked_user(self):
+        """
+        Тест блокировки заблокированного пользователя
+
+        Шаги:
+        1. Создать заблокированного пользователя в БД
+        2. Отправка запроса на блокировку данного пользователя
+
+        ОР: Код ответа: 304. Пользователь заблокирован
+        """
+
+        user = self.users_builder.generate_user(access=0)
+        self.myapp_api.block_user(user.username, expected_status=self.select_status_code(304))
+        assert self.myapp_db.get_user(username=user.username).access == 0
+
+    def test_api__block_nonexistent_user(self):
+        """
+        Тест блокировки несуществующего пользователя
+
+        Шаги:
+        1. Отправка запроса на блокировку несуществующего пользователя
+
+        ОР: Код ответа: 404
+        """
+
+        response = self.myapp_api.block_user(self.fake.username, expected_status=self.select_status_code(404))
+        assert response.text == td_api.USER_DOES_NOT_EXIST
+
+    def test_api__unblock_user__positive(self):
+        """
+        Тест разблокировки пользователя
+
+        Шаги:
+        1. Создать заблокированного пользователя в БД
+        2. Отправка запроса на разблокировку данного пользователя
+
+        ОР: Код ответа: 200. Пользователь не заблокирован
+        """
+
+        user = self.users_builder.generate_user(access=0)
+
+        temp_client = self.create_new_myapp_api_client()
+        temp_client.login(user.username, user.password, expected_status=self.select_status_code(401))
+
+        response = self.myapp_api.accept_user(user.username, expected_status=self.select_status_code(200))
+        assert response.text == td_api.USER_UNBLOCKED
+        assert self.myapp_db.get_user(username=user.username).access == 1
+
+        temp_client.login(user.username, user.password)
+        response2 = temp_client.get_main_page()
+        assert furl(response2.url).path == furl(temp_client.url_main_page).path
+
+    def test_api__unblock_unblocked_user(self):
+        """
+        Тест разблокировки незаблокированного пользователя
+
+        Шаги:
+        1. Создать незаблокированного пользователя в БД
+        2. Отправка запроса на разблокировку данного пользователя
+
+        ОР: Код ответа: 304. Пользователь не заблокирован
+        """
+
+        user = self.users_builder.generate_user(access=1)
+        self.myapp_api.accept_user(user.username, expected_status=self.select_status_code(304))
+        assert self.myapp_db.get_user(username=user.username).access == 1
+
+    def test_api__unblock_nonexistent_user(self):
+        """
+        Тест разблокировки несуществующего пользователя
+
+        Шаги:
+        1. Отправка запроса на разблокировку несуществующего пользователя
+
+        ОР: Код ответа: 404
+        """
+
+        response = self.myapp_api.accept_user(self.fake.username, expected_status=self.select_status_code(404))
+        assert response.text == td_api.USER_DOES_NOT_EXIST
+
 
 class TestMyappApiAuthWithoutStatusCodeChecking(TestMyappApiAuthWithStatusCodeChecking):
     check_status_code = False
+
+
+class TestMyappApiNoAuthAccess(BaseAPINoAuthTestCase):
+    def test_api__no_auth_access__add_user(self):
+        """
+        Тест добавления пользователя без предварительной авторизации
+
+        Шаги:
+        1. Создание случайных данных пользователя
+        2. Отправка данных
+
+        ОР: Код ответа: 401. Пользователь не создан
+        """
+        user, response = self.create_user_data_and_send_post_request(expected_status=401)
+        assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
+        assert not self.myapp_db.is_user_exists(**user)
+
+    def test_api__no_auth_access__delete_user(self):
+        """
+        Тест удаления пользователя без предварительной авторизации
+
+        Шаги:
+        1. Создать пользователя в БД
+        2. Отправка запроса на удаление данного пользователя
+
+        ОР: Код ответа: 401. Пользователь не удален
+        """
+
+        user = self.users_builder.generate_user()
+        response = self.myapp_api.delete_user(user.username, expected_status=401)
+        assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
+        assert self.myapp_db.is_user_exists(username=user.username)
+
+    def test_api__no_auth_access__block_user(self):
+        """
+        Тест блокировки пользователя без предварительной авторизации
+
+        Шаги:
+        1. Создать не заблокированного пользователя в БД
+        2. Отправка запроса на блокировку данного пользователя
+
+        ОР: Код ответа: 401. Пользователь не заблокирован
+        """
+
+        user = self.users_builder.generate_user()
+        response = self.myapp_api.block_user(user.username, expected_status=401)
+        assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
+        assert self.myapp_db.get_user(username=user.username).access == 1
+
+    def test_api__no_auth_access__unblock_user(self):
+        """
+        Тест разблокировки пользователя без предварительной авторизации
+
+        Шаги:
+        1. Создать заблокированного пользователя в БД
+        2. Отправка запроса на разблокировку данного пользователя
+
+        ОР: Код ответа: 401. Пользователь заблокирован
+        """
+
+        user = self.users_builder.generate_user(access=0)
+        response = self.myapp_api.accept_user(user.username, expected_status=401)
+        assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
+        assert self.myapp_db.get_user(username=user.username).access == 0
+
+
+class TestMyappStatus(BaseAPINoAuthTestCase):
+    def check_myapp_status(self):
+        response = self.myapp_api.app_status(expected_status=200)
+        assert response.json()['status'] == 'ok'
+
+    def test_api__no_auth__myapp_status(self):
+        """
+        Тест проверки статуса приложения без авторизации
+
+        Шаги:
+        1. Отправка запроса
+
+        ОР: Код ответа: 200. Статус: 'ok'
+        """
+
+        self.check_myapp_status()
+
+    def test_api__auth__myapp_status(self):
+        """
+        Тест проверки статуса приложения с предварительной авторизацией
+
+        Шаги:
+        1. Авторизация
+        2. Отправка запроса
+
+        ОР: Код ответа: 200. Статус: 'ok'
+        """
+
+        user = self.users_builder.generate_user()
+        self.myapp_api.login(user.username, user.password)
+        self.check_myapp_status()

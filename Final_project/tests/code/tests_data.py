@@ -8,6 +8,7 @@ class LoginPage:
         USERNAME_NOT_SPECIFIED = "Необходимо указать логин для авторизации"
         PASSWORD_NOT_SPECIFIED = "Необходимо указать пароль для авторизации"
         NOT_AUTHORIZED = "This page is available only to authorized users"
+        BLOCKED_USER = "Ваша учетная запись заблокирована"
 
 
 class RegisterPage:
@@ -49,3 +50,9 @@ class Api:
     CANT_ADD_USER__MISSING_USERNAME = CANT_ADD_USER + "'username'"
     CANT_ADD_USER__MISSING_EMAIL = CANT_ADD_USER + "'email'"
     CANT_ADD_USER__MISSING_PASSWORD = CANT_ADD_USER + "'password'"
+    AUTHORIZATION_FAILED = "session lifetime expires"
+    STATUS_OK = 'ok'
+    USER_BLOCKED = "User was blocked!"
+    USER_UNBLOCKED = "User access granted!"
+    USER_DOES_NOT_EXIST = "User does not exist!"
+

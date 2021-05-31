@@ -21,7 +21,7 @@ class BaseAPICase:
         self.myapp_db: MyappDBClient = request.getfixturevalue("myapp_client")
         self.users_builder = UserBuilder(self.myapp_db)
 
-        self.myapp_api: MyappApi = request.getfixturevalue('users_api')
+        self.myapp_api: MyappApi = request.getfixturevalue('myapp_api')
 
         if self.authorize:
             user = self.users_builder.generate_user()

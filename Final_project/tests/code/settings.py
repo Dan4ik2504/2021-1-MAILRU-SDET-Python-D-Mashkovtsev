@@ -84,7 +84,7 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
         ADD_USER = API_PREFIX + '/add_user'
         DELETE_USER = API_PREFIX + '/del_user/{username}'
         BLOCK_USER = API_PREFIX + '/block_user/{username}'
-        ACCEPT_USER = API_PREFIX + '/api/accept_user/{username}'
+        ACCEPT_USER = API_PREFIX + '/accept_user/{username}'
         APP_STATUS = '/status'
 
     @property
@@ -104,8 +104,6 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
     @property
     def URL_API(self):
         return self.URL_BASE.format(host=self.HOST_API, port=self.PORT)
-
-
 
 
 APP_SETTINGS = _APP_SETTINGS()

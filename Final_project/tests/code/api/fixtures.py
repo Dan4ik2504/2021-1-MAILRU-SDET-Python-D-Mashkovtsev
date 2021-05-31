@@ -16,5 +16,5 @@ def api_client(api_session):
 
 
 @pytest.fixture(scope='function')
-def users_api(api_client):
+def myapp_api(api_client):
     return MyappApi(api_client)

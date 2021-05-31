@@ -32,7 +32,7 @@ class BaseUICase:
         self.main_page: MainPage = request.getfixturevalue("main_page")
         self.register_page: RegisterPage = request.getfixturevalue("register_page")
 
-        self.myapp_api: MyappApi = request.getfixturevalue('users_api')
+        self.myapp_api: MyappApi = request.getfixturevalue('myapp_api')
 
         if self.authorize:
             self.myapp_api.api.headers['User-Agent'] = self.login_page.user_agent
