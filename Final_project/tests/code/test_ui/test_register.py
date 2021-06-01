@@ -211,8 +211,10 @@ class TestRegisterPage(BaseUICase):
         (
                 list(
                     filter(
-                        lambda l: '' in l,
-                        product(('', rand_val_eq.get_username()), ('', rand_val_eq.get_email()), ('', rand_val_eq.get_password())),
+                        lambda l: None in l,
+                        product((None, rand_val_eq.get_username()),
+                                (None, rand_val_eq.get_email()),
+                                (None, rand_val_eq.get_password())),
                     )
                 )
         )
@@ -226,6 +228,9 @@ class TestRegisterPage(BaseUICase):
 
         ОР: Страница не перезагрузилась (т.е. POST запрос не отправился). Пользователь не создан
         """
+        username = username or self.fake.username
+        email = email or self.fake.email
+        password = password or self.fake.password
 
         with self.register_page.is_page_not_reloaded__context_manager():
             self.register_page.register(username=username, password=password, email=email)

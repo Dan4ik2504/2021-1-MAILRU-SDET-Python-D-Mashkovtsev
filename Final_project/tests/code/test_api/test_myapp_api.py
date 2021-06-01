@@ -66,10 +66,10 @@ class TestMyappApiAuth(BaseAPIAuthTestCase):
 
 
 class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
-    check_status_code = True
+    check_response_status = True
 
     def select_status_code(self, status_code):
-        return status_code if self.check_status_code else None
+        return status_code if self.check_response_status else None
 
     # Tests
 
@@ -86,8 +86,9 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
 
         user, response = self.create_user_data_and_send_post_request(
             expected_status=self.select_status_code(201))
+        if self.check_response_status:
+            assert response.text == self.td_api.USER_ADDED
         assert self.myapp_db.is_user_exists(**user)
-        assert response.text == self.td_api.USER_ADDED
 
     @pytest.mark.parametrize(
         ("username", "email", "password", "error_msg"),
@@ -113,7 +114,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         password = password if password is None else self.fake.get_password()
         response = self.myapp_api.add_user(username, email, password,
                                            expected_status=self.select_status_code(400))
-        assert response.text == error_msg
+        if self.check_response_status:
+            assert response.text == error_msg
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
     @pytest.mark.parametrize(
@@ -153,7 +155,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
 
         response = self.myapp_api.api.post_request(self.myapp_api.url_add_user,
                                                    expected_status=self.select_status_code(400))
-        assert response.text.startswith(td_api.CANT_ADD_USER)
+        if self.check_response_status:
+            assert response.text.startswith(td_api.CANT_ADD_USER)
 
     def test_api__add_existing_user(self):
         """
@@ -163,7 +166,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         1. Создание нового пользователя
         2. Отправка данных этого же пользователя
 
-        ОР: Код ответа: 304
+        ОР: Код ответа: 304. Пользователь не создан
         """
 
         user = self.users_builder.generate_user()
@@ -172,7 +175,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         password = user.password
         response = self.myapp_api.add_user(username, email, password,
                                            expected_status=self.select_status_code(304))
-        assert response.text != self.td_api.USER_ADDED
+        if self.check_response_status:
+            assert response.text != self.td_api.USER_ADDED
 
     def test_api__add_existing_username(self):
         """
@@ -190,7 +194,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         email = self.fake.get_email()
         response = self.myapp_api.add_user(user.username, email, password,
                                            expected_status=self.select_status_code(304))
-        assert response.text != self.td_api.USER_ADDED
+        if self.check_response_status:
+            assert response.text != self.td_api.USER_ADDED
         assert not self.myapp_db.is_user_exists(email=email, password=password)
 
     def test_api__add_existing_email(self):
@@ -209,7 +214,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         password = self.fake.get_password()
         response = self.myapp_api.add_user(username=username, email=user.email, password=password,
                                            expected_status=self.select_status_code(304))
-        assert response.text != self.td_api.USER_ADDED
+        if self.check_response_status:
+            assert response.text != self.td_api.USER_ADDED
         assert not self.myapp_db.is_user_exists(username=username, password=password)
 
     def test_api__add_existing_password(self):
@@ -228,7 +234,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         email = self.fake.get_email()
         response = self.myapp_api.add_user(username, email, user.password,
                                            expected_status=self.select_status_code(201))
-        assert response.text == self.td_api.USER_ADDED
+        if self.check_response_status:
+            assert response.text == self.td_api.USER_ADDED
         assert self.myapp_db.is_user_exists(username=username, email=email)
 
     def test_api__add_user__incorrect_email(self):
@@ -334,7 +341,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         response = self.myapp_api.delete_user(username=self.fake.get_username(), expected_status=self.select_status_code(404))
-        assert response.text == td_api.USER_DOES_NOT_EXIST
+        if self.check_response_status:
+            assert response.text == td_api.USER_DOES_NOT_EXIST
 
     def test_api__block_user__positive(self):
         """
@@ -387,7 +395,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         response = self.myapp_api.block_user(self.fake.get_username(), expected_status=self.select_status_code(404))
-        assert response.text == td_api.USER_DOES_NOT_EXIST
+        if self.check_response_status:
+            assert response.text == td_api.USER_DOES_NOT_EXIST
 
     def test_api__unblock_user__positive(self):
         """
@@ -406,7 +415,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         temp_client.login(user.username, user.password, expected_status=self.select_status_code(401))
 
         response = self.myapp_api.accept_user(user.username, expected_status=self.select_status_code(200))
-        assert response.text == td_api.USER_UNBLOCKED
+        if self.check_response_status:
+            assert response.text == td_api.USER_UNBLOCKED
         assert self.myapp_db.get_user(username=user.username).access == 1
 
         temp_client.login(user.username, user.password)
@@ -439,11 +449,12 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         response = self.myapp_api.accept_user(self.fake.get_username(), expected_status=self.select_status_code(404))
-        assert response.text == td_api.USER_DOES_NOT_EXIST
+        if self.check_response_status:
+            assert response.text == td_api.USER_DOES_NOT_EXIST
 
 
 class TestMyappApiAuthWithoutStatusCodeChecking(TestMyappApiAuthWithStatusCodeChecking):
-    check_status_code = False
+    check_response_status = False
 
 
 class TestMyappApiNoAuthAccess(BaseAPINoAuthTestCase):
