@@ -86,8 +86,8 @@ class TestLoginPage(BaseUICase):
         ОР: Отобразилось сообщение об ошибке "Неверное имя пользователя или пароль"
         """
 
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         self.do_incorrect_login(username, password)
 
     def test_login_form__invalid_username(self):
@@ -101,7 +101,7 @@ class TestLoginPage(BaseUICase):
         ОР: Отобразилось сообщение об ошибке "Неверное имя пользователя или пароль"
         """
 
-        username, fake_username = self.fake.username, self.fake.username
+        username, fake_username = self.fake.get_username(), self.fake.get_username()
         user = self.users_builder.generate_user(username=username)
         self.do_incorrect_login(fake_username, user.password)
 
@@ -116,7 +116,7 @@ class TestLoginPage(BaseUICase):
         ОР: Отобразилось сообщение об ошибке "Неверное имя пользователя или пароль"
         """
 
-        password, fake_password = self.fake.password, self.fake.password
+        password, fake_password = self.fake.get_password(), self.fake.get_password()
         user = self.users_builder.generate_user(password=password)
         self.do_incorrect_login(user.username, fake_password)
 
@@ -124,8 +124,8 @@ class TestLoginPage(BaseUICase):
         ('username', 'password'),
         (
                 ('', ''),
-                ('', rand_val_eq.password),
-                (rand_val_eq.username, '')
+                ('', rand_val_eq.get_password()),
+                (rand_val_eq.get_username(), '')
         )
     )
     def test_login_form__empty_data(self, username, password):
@@ -160,7 +160,7 @@ class TestLoginPage(BaseUICase):
         """
 
         with self.login_page.is_page_reloaded__context_manager():
-            self.login_page.login(username=username, password=self.fake.password)
+            self.login_page.login(username=username, password=self.fake.get_password())
             self.login_page.wait_until.is_page_opened()
         assert self.login_page.get_error_text() == self.form_errors.INCORRECT_USERNAME_LENGTH
 
@@ -181,7 +181,7 @@ class TestLoginPage(BaseUICase):
         """
 
         with self.login_page.is_page_reloaded__context_manager():
-            self.login_page.login(username=self.fake.username, password=password)
+            self.login_page.login(username=self.fake.get_username(), password=password)
             self.login_page.wait_until.is_page_opened()
         assert self.login_page.get_error_text() == self.form_errors.INVALID_DATA
 
@@ -197,7 +197,7 @@ class TestLoginPage(BaseUICase):
 
         username = Keys.SPACE
         with self.login_page.is_page_reloaded__context_manager():
-            self.login_page.login(username=username, password=self.fake.password)
+            self.login_page.login(username=username, password=self.fake.get_password())
             self.login_page.wait_until.is_page_opened()
         assert self.login_page.get_error_text() == self.form_errors.USERNAME_NOT_SPECIFIED
 
@@ -213,7 +213,7 @@ class TestLoginPage(BaseUICase):
 
         password = Keys.SPACE
         with self.login_page.is_page_reloaded__context_manager():
-            self.login_page.login(username=self.fake.username, password=password)
+            self.login_page.login(username=self.fake.get_username(), password=password)
             self.login_page.wait_until.is_page_opened()
         assert self.login_page.get_error_text() == self.form_errors.PASSWORD_NOT_SPECIFIED
 

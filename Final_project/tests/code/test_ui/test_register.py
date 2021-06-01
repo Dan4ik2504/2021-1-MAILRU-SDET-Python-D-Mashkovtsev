@@ -79,8 +79,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         user = self.users_builder.generate_user()
-        password = self.fake.password
-        email = self.fake.email
+        password = self.fake.get_password()
+        email = self.fake.get_email()
         self.do_register_existing_user(username=user.username, password=password, email=email)
         assert not self.myapp_db.is_user_exists(password=password, email=email)
 
@@ -96,8 +96,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         user = self.users_builder.generate_user()
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         self.do_register_existing_user(username=username, password=password, email=user.email)
         assert not self.myapp_db.is_user_exists(username=username, password=password)
 
@@ -113,8 +113,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         user = self.users_builder.generate_user()
-        username = self.fake.username
-        email = self.fake.email
+        username = self.fake.get_username()
+        email = self.fake.get_email()
         self.register_page.register(username=username, password=user.password, email=email)
         self.main_page.wait_until.is_page_opened()
         assert self.myapp_db.is_user_exists(username=username, email=email)
@@ -142,8 +142,8 @@ class TestRegisterPage(BaseUICase):
         ОР: Пользователь не создан. Отображается сообщение об ошибке "Некорректный email"
         """
 
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
 
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, password=password, email=email)
@@ -201,7 +201,7 @@ class TestRegisterPage(BaseUICase):
         user = self.users_builder.generate_user(save_in_db=False)
 
         with self.register_page.is_page_reloaded__context_manager():
-            self.register_page.register(user.username, user.email, self.fake.password, self.fake.password)
+            self.register_page.register(user.username, user.email, self.fake.get_password(), self.fake.get_password())
             self.register_page.wait_until.is_page_opened()
 
         assert self.register_page.get_error_text() == self.form_errors.PASSWORDS_MUST_MATCH
@@ -212,7 +212,7 @@ class TestRegisterPage(BaseUICase):
                 list(
                     filter(
                         lambda l: '' in l,
-                        product(('', rand_val_eq.username), ('', rand_val_eq.email), ('', rand_val_eq.password)),
+                        product(('', rand_val_eq.get_username()), ('', rand_val_eq.get_email()), ('', rand_val_eq.get_password())),
                     )
                 )
         )
@@ -244,8 +244,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         username = Keys.SPACE
-        email = self.fake.email
-        password = self.fake.password
+        email = self.fake.get_email()
+        password = self.fake.get_password()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
@@ -263,8 +263,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         email = Keys.SPACE
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
@@ -282,8 +282,8 @@ class TestRegisterPage(BaseUICase):
         """
 
         password = Keys.SPACE
-        username = self.fake.username
-        email = self.fake.email
+        username = self.fake.get_username()
+        email = self.fake.get_email()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
@@ -304,8 +304,8 @@ class TestRegisterPage(BaseUICase):
         ОР: Отобразилось сообщение ошибке "Некорректная длина имени пользователя". Пользователь не создан
         """
 
-        email = self.fake.email
-        password = self.fake.password
+        email = self.fake.get_email()
+        password = self.fake.get_password()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
@@ -326,8 +326,8 @@ class TestRegisterPage(BaseUICase):
         ОР: Отобразилось сообщение ошибке "Некорректная длина email". Пользователь не создан
         """
 
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
@@ -348,8 +348,8 @@ class TestRegisterPage(BaseUICase):
         ОР: Отобразилось сообщение ошибке "Некорректная длина пароля". Пользователь не создан
         """
 
-        username = self.fake.username
-        email = self.fake.email
+        username = self.fake.get_username()
+        email = self.fake.get_email()
         with self.register_page.is_page_reloaded__context_manager():
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()

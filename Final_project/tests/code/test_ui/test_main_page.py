@@ -87,7 +87,7 @@ class TestMainPageHeaderUserInfo(BaseMainPageTestCase):
         """
 
         self.create_and_check_vk_id()
-        vk_id = self.fake.id
+        vk_id = self.fake.get_id()
         self.set_and_check_vk_id(vk_id)
 
     def test_main_page__header__vk_id__delete(self):

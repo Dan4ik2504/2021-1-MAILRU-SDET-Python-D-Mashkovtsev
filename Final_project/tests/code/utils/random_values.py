@@ -88,26 +88,6 @@ class _RandomEqualValues(_RandomValues):
 
     _empty_value_current_length = 0
 
-    @property
-    def username(self):
-        return self.get_username()
-
-    @property
-    def email(self):
-        return self.get_email()
-
-    @property
-    def password(self):
-        return self.get_password()
-
-    @property
-    def id(self):
-        return self.get_id()
-
-    @property
-    def boolean(self):
-        return self.get_boolean()
-
     def get_username(self):
         return get_value_by_filter_func(self.fake.unique.user_name, lambda i: 6 <= len(i) <= 16)
 
@@ -140,26 +120,6 @@ class _RandomDifferentValues(_RandomValues):
     """
 
     _empty_value_current_length = None
-
-    @property
-    def username(self):
-        return self.get_username()
-
-    @property
-    def email(self):
-        return self.get_email()
-
-    @property
-    def password(self):
-        return self.get_password()
-
-    @property
-    def id(self):
-        return self.get_id()
-
-    @property
-    def boolean(self):
-        return self.get_boolean()
 
     @separate_fakes_between_processes
     def _get_username(self, fake):

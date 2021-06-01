@@ -108,9 +108,9 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 400. Пользователь не создан
         """
 
-        username = username if username is None else self.fake.username
-        email = email if email is None else self.fake.email
-        password = password if password is None else self.fake.password
+        username = username if username is None else self.fake.get_username()
+        email = email if email is None else self.fake.get_email()
+        password = password if password is None else self.fake.get_password()
         response = self.myapp_api.add_user(username, email, password,
                                            expected_status=self.select_status_code(400))
         assert response.text == error_msg
@@ -135,9 +135,9 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 304. Пользователь не создан
         """
 
-        username = self.fake.get_empty_value() if username is False else self.fake.username
-        email = self.fake.get_empty_value() if email is False else self.fake.email
-        password = self.fake.get_empty_value() if password is False else self.fake.password
+        username = self.fake.get_empty_value() if username is False else self.fake.get_username()
+        email = self.fake.get_empty_value() if email is False else self.fake.get_email()
+        password = self.fake.get_empty_value() if password is False else self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
 
@@ -186,8 +186,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         user = self.users_builder.generate_user()
-        password = self.fake.password
-        email = self.fake.email
+        password = self.fake.get_password()
+        email = self.fake.get_email()
         response = self.myapp_api.add_user(user.username, email, password,
                                            expected_status=self.select_status_code(304))
         assert response.text != self.td_api.USER_ADDED
@@ -205,8 +205,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         user = self.users_builder.generate_user()
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         response = self.myapp_api.add_user(username=username, email=user.email, password=password,
                                            expected_status=self.select_status_code(304))
         assert response.text != self.td_api.USER_ADDED
@@ -224,8 +224,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         user = self.users_builder.generate_user()
-        username = self.fake.username
-        email = self.fake.email
+        username = self.fake.get_username()
+        email = self.fake.get_email()
         response = self.myapp_api.add_user(username, email, user.password,
                                            expected_status=self.select_status_code(201))
         assert response.text == self.td_api.USER_ADDED
@@ -241,9 +241,9 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 304. Пользователь не создан
         """
 
-        email = self.fake.password.replace("@", "")
-        username = self.fake.username
-        password = self.fake.password
+        email = self.fake.get_password().replace("@", "")
+        username = self.fake.get_username()
+        password = self.fake.get_password()
 
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
@@ -263,8 +263,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         username = self.fake.get_random_string(username_length)
-        email = self.fake.email
-        password = self.fake.password
+        email = self.fake.get_email()
+        password = self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
@@ -283,8 +283,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         email = self.fake.get_random_string(email_length)
-        username = self.fake.username
-        password = self.fake.password
+        username = self.fake.get_username()
+        password = self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
@@ -303,8 +303,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         """
 
         password = self.fake.get_random_string(password_length)
-        username = self.fake.username
-        email = self.fake.email
+        username = self.fake.get_username()
+        email = self.fake.get_email()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
         assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
 
@@ -333,7 +333,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 404
         """
 
-        response = self.myapp_api.delete_user(username=self.fake.username, expected_status=self.select_status_code(404))
+        response = self.myapp_api.delete_user(username=self.fake.get_username(), expected_status=self.select_status_code(404))
         assert response.text == td_api.USER_DOES_NOT_EXIST
 
     def test_api__block_user__positive(self):
@@ -386,7 +386,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 404
         """
 
-        response = self.myapp_api.block_user(self.fake.username, expected_status=self.select_status_code(404))
+        response = self.myapp_api.block_user(self.fake.get_username(), expected_status=self.select_status_code(404))
         assert response.text == td_api.USER_DOES_NOT_EXIST
 
     def test_api__unblock_user__positive(self):
@@ -438,7 +438,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 404
         """
 
-        response = self.myapp_api.accept_user(self.fake.username, expected_status=self.select_status_code(404))
+        response = self.myapp_api.accept_user(self.fake.get_username(), expected_status=self.select_status_code(404))
         assert response.text == td_api.USER_DOES_NOT_EXIST
 
 
