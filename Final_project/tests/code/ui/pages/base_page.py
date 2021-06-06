@@ -12,7 +12,7 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
     JavascriptException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
-from selenium.webdriver.remote.webdriver import WebDriver
+from seleniumwire.webdriver import Remote
 
 from utils.javascript_code import JsCode
 import settings
@@ -25,7 +25,7 @@ class BasePage:
     logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
     def __init__(self, driver):
-        self.driver: WebDriver = driver
+        self.driver: Remote = driver
         self.check = self._Check(self)
         self.wait_until = self._WaitUntil(self)
         self.URL = urljoin(settings.APP_SETTINGS.URL, self.URL)
@@ -61,6 +61,10 @@ class BasePage:
     def get_cookie(self, name):
         """Returns cookie from browser"""
         return self.driver.execute_script(JsCode.get_cookie, name)
+
+    def get_requests(self):
+        """Returns requests list"""
+        return self.driver.requests
 
     def get_elem_text(self, locator):
         """Returns text of the element found by locator"""

@@ -1,11 +1,9 @@
 import logging
 import os
-
 import pytest
 import allure
 
-from selenium import webdriver
-from selenium.webdriver import ChromeOptions
+from seleniumwire import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
@@ -39,7 +37,7 @@ def get_driver(config, browser_name='chrome',  page_load_strategy=None):
     vnc = config['vnc']
 
     if browser_name == 'chrome':
-        options = ChromeOptions()
+        options = webdriver.ChromeOptions()
         if page_load_strategy:
             options.page_load_strategy = page_load_strategy
 
