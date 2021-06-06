@@ -3,41 +3,24 @@ import os
 import pytest
 import allure
 
-from seleniumwire import webdriver
+from selenium import webdriver
+from seleniumwire import webdriver as seleniumwire_webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
 import settings
 import exceptions
-from ui.pages.login_page import LoginPage
-from ui.pages.main_page import MainPage
-from ui.pages.register_page import RegisterPage
 
 logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 
 
-@pytest.fixture(scope='function')
-def login_page(driver):
-    return LoginPage(driver=driver)
-
-
-@pytest.fixture(scope='function')
-def main_page(driver):
-    return MainPage(driver=driver)
-
-
-@pytest.fixture(scope='function')
-def register_page(driver):
-    return RegisterPage(driver)
-
-
-@allure.step('Creating "{browser_name}" driver')
-def get_driver(config, browser_name='chrome',  page_load_strategy=None):
+def _get_driver(current_webdriver, config, browser_name='chrome', page_load_strategy=None,
+                seleniumwire_options=None):
     selenoid = config['selenoid']
     vnc = config['vnc']
 
     if browser_name == 'chrome':
-        options = webdriver.ChromeOptions()
+        options = current_webdriver.ChromeOptions()
         if page_load_strategy:
             options.page_load_strategy = page_load_strategy
 
@@ -56,12 +39,17 @@ def get_driver(config, browser_name='chrome',  page_load_strategy=None):
             else:
                 caps['version'] = settings.SELENOID.CHROME_LATEST
 
-            browser = webdriver.Remote(selenoid, options=options, desired_capabilities=caps)
+            if seleniumwire_options:
+                browser = current_webdriver.Remote(selenoid, options=options, desired_capabilities=caps,
+                                                   seleniumwire_options=seleniumwire_options)
+            else:
+                browser = current_webdriver.Remote(selenoid, options=options, desired_capabilities=caps)
+
             logger.info(f'Chrome driver for remote launch created. Chrome version: "{caps["version"]}"')
         else:
             chrome_version = 'latest'
             manager = ChromeDriverManager(version=chrome_version)
-            browser = webdriver.Chrome(executable_path=manager.install(), options=options)
+            browser = current_webdriver.Chrome(executable_path=manager.install(), options=options)
             logger.info(f'Chrome driver for local launch created. Chrome version: "{chrome_version}"')
 
         if page_load_strategy:
@@ -76,11 +64,26 @@ def get_driver(config, browser_name='chrome',  page_load_strategy=None):
             logger.warning('Sorry, but there is no way to launch Firefox remotely yet')
         firefox_version = 'latest'
         manager = GeckoDriverManager(version=firefox_version, log_level=0)
-        browser = webdriver.Firefox(executable_path=manager.install())
+        browser = current_webdriver.Firefox(executable_path=manager.install())
         logger.info(f'Firefox driver for local launch created. Firefox version: "{firefox_version}"')
         return browser
     else:
         raise exceptions.UnsupportedBrowserType(f'Unsupported browser: "{browser_name}"')
+
+
+@allure.step('Creating "{browser_name}" driver')
+def get_driver(config, browser_name='chrome', page_load_strategy=None):
+    return _get_driver(webdriver, config, browser_name, page_load_strategy)
+
+
+@allure.step('Creating "{browser_name}" seleniumwire driver')
+def get_seleniumwire_driver(config, browser_name='chrome', page_load_strategy=None):
+    seleniumwire_options = {
+        "auto_config": False,
+        "addr": '0.0.0.0',
+    }
+    return _get_driver(seleniumwire_webdriver, config, browser_name, page_load_strategy,
+                       seleniumwire_options=seleniumwire_options)
 
 
 @pytest.fixture(scope='function')
@@ -104,7 +107,17 @@ def all_drivers(config, request, test_dir):
 
 
 @pytest.fixture(scope='function')
-def ui_report(driver, request, test_dir):
+def seleniumwire_driver(config, test_dir):
+    browser_name = config['browser']
+
+    browser = get_seleniumwire_driver(config, browser_name)
+
+    browser.maximize_window()
+    yield browser
+    browser.quit()
+
+
+def _ui_report(driver, request, test_dir):
     failed_tests_count = request.session.testsfailed
     yield
     if request.session.testsfailed > failed_tests_count:
@@ -120,3 +133,13 @@ def ui_report(driver, request, test_dir):
 
         with open(browser_logfile, 'r') as f:
             allure.attach(f.read(), settings.BROWSER.LOG_FILE_NAME, attachment_type=allure.attachment_type.TEXT)
+
+
+@pytest.fixture(scope='function')
+def ui_report(driver, request, test_dir):
+    _ui_report(driver, request, test_dir)
+
+
+@pytest.fixture(scope='function')
+def ui_seleniumwire_report(seleniumwire_driver, request, test_dir):
+    _ui_report(seleniumwire_driver, request, test_dir)

@@ -128,6 +128,7 @@ class TestAccessToPageWithLogin(BaseUICase):
 class TestCheckResourcesAvailability(BaseUICase):
     auto_open_page = False
     authorize = False
+    seleniumwire_pages = True
 
     @pytest.mark.parametrize(
         ("path", "authorize_required"),
@@ -135,7 +136,7 @@ class TestCheckResourcesAvailability(BaseUICase):
                 ('', False),
                 (settings.APP_SETTINGS.URLS.LOGIN, False),
                 (settings.APP_SETTINGS.URLS.REGISTRATION, False),
-                (settings.APP_SETTINGS.URLS.MAIN, True)
+                (settings.APP_SETTINGS.URLS.MAIN, True),
         )
     )
     def test__resources_availability(self, path, authorize_required):
@@ -148,15 +149,18 @@ class TestCheckResourcesAvailability(BaseUICase):
         ОР: Все внешние ресурсы загрузились
         """
 
-        url = urljoin(settings.APP_SETTINGS.URL, path)
-        if authorize_required:
-            user = self.users_builder.generate_user()
-            self.login_page.open_page()
-            self.login_page.login(user.username, user.password)
+        if settings.EXTERNAL_SETTINGS.WITH_SELENOID:
+            pytest.skip("Can't intercept requests when using the selenoid")
 
-        self.login_page.open_page(url, check_page_is_open=False)
-        self.login_page.wait_until.is_page_opened(url=url)
-        invalid_requests = [r for r in self.login_page.get_requests()
+        url = urljoin(settings.APP_SETTINGS.URL, path)
+
+        if authorize_required:
+            self.do_login()
+
+        self.base_page.open_page(url, check_page_is_open=False)
+        self.base_page.wait_until.is_page_opened(url=url)
+        print("Requests:", self.base_page.driver.requests)
+        invalid_requests = [r for r in self.base_page.driver.requests
                             if r.response
                             and (
                                     str(r.response.status_code).startswith('4')
