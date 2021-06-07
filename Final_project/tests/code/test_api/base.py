@@ -7,9 +7,11 @@ from db.vk_api_client import VkApiDBClient
 from db.myapp_client import MyappDBClient
 from db.builder import VkApiBuilder, UserBuilder
 from utils.random_values import random_different_values
+from utils.tests_utils import AddMarks
 
 
-class BaseAPICase:
+class BaseAPICase(metaclass=AddMarks):
+    scope = 'API'
     authorize = True
     current_user = None
 

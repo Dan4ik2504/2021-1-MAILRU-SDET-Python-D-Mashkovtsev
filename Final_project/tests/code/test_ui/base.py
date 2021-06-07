@@ -11,9 +11,11 @@ from ui.pages.login_page import LoginPage
 from ui.pages.main_page import MainPage
 from ui.pages.register_page import RegisterPage
 from utils.random_values import random_different_values
+from utils.tests_utils import AddMarks
 
 
-class BaseUICase:
+class BaseUICase(metaclass=AddMarks):
+    scope = 'UI'
     authorize = True
     auto_open_page = True
     current_user = None
