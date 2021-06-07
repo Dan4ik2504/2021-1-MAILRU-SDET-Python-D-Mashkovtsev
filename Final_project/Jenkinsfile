@@ -60,6 +60,8 @@ pipeline {
                 sh 'docker-compose down --remove-orphans'
             }
 
+            sh 'docker network rm myapp_network'
+
             allure([
                 reportBuildPolicy: 'ALWAYS',
                 results: [[path: 'alluredir']]
