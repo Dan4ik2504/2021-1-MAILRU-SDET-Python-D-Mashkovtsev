@@ -2,8 +2,8 @@ import allure
 
 import exceptions
 import settings
-from ui.pages.base_page import BasePage
 from ui.locators import register_page_locators
+from ui.pages.base_page import BasePage
 
 
 class RegisterPage(BasePage):

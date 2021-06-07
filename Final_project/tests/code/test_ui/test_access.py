@@ -1,4 +1,5 @@
 from urllib.parse import urljoin
+
 import pytest
 
 import settings
@@ -21,7 +22,6 @@ class TestAccessToPagesWithoutLogin(BaseUICase):
         """
 
         self.login_page.open_page()
-        assert self.login_page.check.is_page_url_match_driver_url()
 
     def test_no_login__access_login_page_2(self):
         """
@@ -34,7 +34,6 @@ class TestAccessToPagesWithoutLogin(BaseUICase):
         """
 
         self.login_page.open_page(url=settings.APP_SETTINGS.URL)
-        assert self.login_page.current_url.path == '/'
 
     def test_no_login__access_register_page(self):
         """
@@ -47,7 +46,6 @@ class TestAccessToPagesWithoutLogin(BaseUICase):
         """
 
         self.register_page.open_page()
-        assert self.register_page.check.is_page_url_match_driver_url()
 
     def test_no_login__access_main_page(self):
         """
@@ -81,7 +79,6 @@ class TestAccessToPageWithLogin(BaseUICase):
 
         self.login_page.open_page(check_page_is_open=False)
         self.main_page.wait_until.is_page_opened()
-        assert self.main_page.check.is_page_url_match_driver_url()
 
     def test_login__access_login_page_2(self):
         """
@@ -95,7 +92,6 @@ class TestAccessToPageWithLogin(BaseUICase):
 
         self.login_page.open_page(url=settings.APP_SETTINGS.URL, check_page_is_open=False)
         self.main_page.wait_until.is_page_opened()
-        assert self.main_page.check.is_page_url_match_driver_url()
 
     def test_login__access_register_page(self):
         """
@@ -109,7 +105,6 @@ class TestAccessToPageWithLogin(BaseUICase):
 
         self.register_page.open_page(check_page_is_open=False)
         self.main_page.wait_until.is_page_opened()
-        assert self.main_page.check.is_page_url_match_driver_url()
 
     def test_login__access_main_page(self):
         """
@@ -122,7 +117,6 @@ class TestAccessToPageWithLogin(BaseUICase):
         """
 
         self.main_page.open_page()
-        assert self.main_page.check.is_page_url_match_driver_url()
 
 
 class TestCheckResourcesAvailability(BaseUICase):

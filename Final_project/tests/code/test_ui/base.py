@@ -1,11 +1,10 @@
 import pytest
 from _pytest.fixtures import FixtureRequest
 
-import settings
 from api.myapp_api import MyappApi
-from db.vk_api_client import VkApiDBClient
-from db.myapp_client import MyappDBClient
 from db.builder import VkApiBuilder, UserBuilder
+from db.myapp_client import MyappDBClient
+from db.vk_api_client import VkApiDBClient
 from ui.pages.base_page import BasePage
 from ui.pages.login_page import LoginPage
 from ui.pages.main_page import MainPage

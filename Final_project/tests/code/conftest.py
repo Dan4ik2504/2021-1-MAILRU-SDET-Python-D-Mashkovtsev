@@ -1,9 +1,10 @@
 import shutil
 from pathlib import Path
+import allure
 
-from ui.fixtures import *
 from api.fixtures import *
 from db.fixtures import *
+from ui.fixtures import *
 from utils.logging_utils import set_up_logger
 from utils.random_values import random_equal_values, random_different_values
 import settings

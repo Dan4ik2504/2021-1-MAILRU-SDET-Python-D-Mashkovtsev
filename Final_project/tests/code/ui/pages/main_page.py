@@ -2,8 +2,8 @@ import allure
 
 import exceptions
 import settings
-from ui.pages.base_page import BasePage
 from ui.locators import main_page_locators
+from ui.pages.base_page import BasePage
 
 
 class MainPage(BasePage):
@@ -38,4 +38,3 @@ class MainPage(BasePage):
         if not self.check.is_visible(locator):
             self.open_navbar_dropdown(locator)
         self.click(locator)
-

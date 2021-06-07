@@ -1,9 +1,10 @@
 import logging
 from urllib.parse import urljoin
+
 import allure
 
-from api.client import ApiClient
 import settings
+from api.client import ApiClient
 
 
 class MyappApi:
@@ -85,5 +86,6 @@ class MyappApi:
     @allure.step("Checking app status")
     def app_status(self, expected_status=200, return_json_data=False):
         self.logger.info(f"Checking app status")
-        response = self.api.get_request(url=self.url_app_status, expected_status=expected_status, return_json_data=return_json_data)
+        response = self.api.get_request(url=self.url_app_status, expected_status=expected_status,
+                                        return_json_data=return_json_data)
         return response

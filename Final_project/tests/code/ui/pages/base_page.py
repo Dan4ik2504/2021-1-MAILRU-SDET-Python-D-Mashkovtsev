@@ -1,22 +1,22 @@
 import inspect
-import time
 import logging
+import time
 from contextlib import contextmanager
 from functools import wraps
 from urllib.parse import urljoin
+
 import allure
 from furl import furl
-
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, \
     JavascriptException
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
-from utils.javascript_code import JsCode
-import settings
 import exceptions
+import settings
+from utils.javascript_code import JsCode
 
 
 class BasePage:
@@ -307,7 +307,7 @@ class BasePage:
         yield
         end_time = self.get_page_loaded_time()
         if start_time == end_time:
-            raise exceptions.CheckingException("Page has not been reloaded")
+            raise exceptions.UICheckingException("Page has not been reloaded")
 
     @contextmanager
     def is_page_not_reloaded__context_manager(self):
@@ -317,7 +317,7 @@ class BasePage:
         yield
         end_time = self.get_page_loaded_time()
         if start_time != end_time:
-            raise exceptions.CheckingException("Page has been reloaded")
+            raise exceptions.UICheckingException("Page has been reloaded")
 
     @contextmanager
     def is_new_tab_open(self, url=None, new_tabs_count=1, switch_to_new_tab=True):
@@ -330,14 +330,14 @@ class BasePage:
         tabs_opened = len(self.driver.window_handles) - tabs_number
 
         if tabs_opened != new_tabs_count:
-            raise exceptions.CheckingException(f"Expected opening {new_tabs_count} tabs. Opened {tabs_opened} tabs")
+            raise exceptions.UICheckingException(f"Expected opening {new_tabs_count} tabs. Opened {tabs_opened} tabs")
 
         if url:
             old_window_handle = self.driver.current_window_handle
             self.driver.switch_to.window(self.driver.window_handles[-1])
             new_tab_url = self.driver.current_url
             if new_tab_url != url:
-                raise exceptions.CheckingException(f'New tab url "{new_tab_url}" does not match given url "{url}"')
+                raise exceptions.UICheckingException(f'New tab url "{new_tab_url}" does not match given url "{url}"')
             if not switch_to_new_tab:
                 self.driver.switch_to.window(old_window_handle)
 
@@ -350,13 +350,40 @@ class BasePage:
         def __init__(self, page):
             self._page = page
 
-        def is_cookie_exists(self, name):
-            """Checking that cookie exists in browser"""
+        def _is_cookie_exists(self, name):
             return bool(self._page.get_cookie(name))
 
-        def is_session_cookie_exists(self):
+        def is_cookie_exists(self, name, raise_exception=False):
+            """Checking that cookie exists in browser"""
+            if self._is_cookie_exists(name):
+                return True
+
+            exc_msg = f'Cookie does not exists'
+            return self._raise_exception_wrapper(exceptions.UICheckingException, exc_msg, raise_exception)
+
+        def is_cookie_not_exists(self, name, raise_exception=False):
+            """Checking that cookie not exists in browser"""
+            if not self._is_cookie_exists(name):
+                return True
+
+            exc_msg = f'Cookie exists'
+            return self._raise_exception_wrapper(exceptions.UICheckingException, exc_msg, raise_exception)
+
+        def is_session_cookie_exists(self, raise_exception=False):
             """Checking that session cookie exists in browser"""
-            return self._page.check.is_cookie_exists(settings.API_CLIENT.COOKIES.SESSION)
+            if self._page.check.is_cookie_exists(settings.API_CLIENT.COOKIES.SESSION, raise_exception=False):
+                return True
+
+            exc_msg = f'Session cookie does not exists'
+            return self._raise_exception_wrapper(exceptions.UICheckingException, exc_msg, raise_exception)
+
+        def is_session_cookie_not_exists(self, raise_exception=False):
+            """Checking that session cookie not exists in browser"""
+            if self._page.check.is_cookie_not_exists(settings.API_CLIENT.COOKIES.SESSION, raise_exception=False):
+                return True
+
+            exc_msg = f'Session cookie exists'
+            return self._raise_exception_wrapper(exceptions.UICheckingException, exc_msg, raise_exception)
 
         def _raise_exception_wrapper(self, exc, exc_msg, raise_exception, result=False):
             self._page.logger.debug(f'Raised exception "{exc.__name__}" with message: "{exc_msg}"')
@@ -381,7 +408,7 @@ class BasePage:
                 return True
 
             exc_msg = f'Element is not visible'
-            return self._raise_exception_wrapper(exceptions.ElementNotVisibleException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIElementNotVisibleException, exc_msg, raise_exception)
 
         def is_visible(self, locator, raise_exception=False):
             """Checking that an element found by locator is visible"""
@@ -398,7 +425,7 @@ class BasePage:
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible')
 
                 exc_msg = f'Element found by locator "{locator[1]}" (type: {locator[0]}) is not visible'
-                return self._raise_exception_wrapper(exceptions.ElementNotVisibleException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIElementNotVisibleException, exc_msg, raise_exception)
 
         def is_element_not_visible(self, element, raise_exception=False):
             """Checking that an element is not visible"""
@@ -408,7 +435,7 @@ class BasePage:
                 return True
 
             exc_msg = f'Element is visible'
-            return self._raise_exception_wrapper(exceptions.ElementVisibleException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIElementVisibleException, exc_msg, raise_exception)
 
         def is_not_visible(self, locator, raise_exception=False):
             """Checking that an element found by locator is not visible"""
@@ -429,7 +456,7 @@ class BasePage:
                     f'Element found by locator "{locator[1]}" (type: {locator[0]}) is visible')
 
             exc_msg = f'Element found by "{locator[1]}" (type: {locator[0]}) is visible'
-            return self._raise_exception_wrapper(exceptions.ElementVisibleException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIElementVisibleException, exc_msg, raise_exception)
 
         def is_exists(self, locator, raise_exception=False):
             """Checking that an element found by locator exists"""
@@ -445,7 +472,7 @@ class BasePage:
                 pass
 
             exc_msg = f'Element "{locator[1]}" (type: {locator[0]}) is not found'
-            return self._raise_exception_wrapper(exceptions.ElementNotExistsException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIElementNotExistsException, exc_msg, raise_exception)
 
         def is_not_exists(self, locator, raise_exception=False):
             """Checking that an element found by locator does not exist"""
@@ -455,7 +482,7 @@ class BasePage:
                 elem = self._page.driver.find_element(*locator)
                 if elem:
                     exc_msg = f'Element "{elem.tag_name}" found by {locator[1]} (type: {locator[0]}) exists'
-                    return self._raise_exception_wrapper(exceptions.ElementExistsException, exc_msg, raise_exception)
+                    return self._raise_exception_wrapper(exceptions.UIElementExistsException, exc_msg, raise_exception)
             except (NoSuchElementException, StaleElementReferenceException):
                 pass
             self._page.logger.debug(
@@ -471,7 +498,7 @@ class BasePage:
                 return True
             else:
                 exc_msg = f'Element text "{elem.text}" != given text "{text}"'
-                return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIComparisonException, exc_msg, raise_exception)
 
         def is_element_text_not_equal(self, elem, text, raise_exception=False):
             """Checking that the text of an element is not equal to the given text"""
@@ -482,7 +509,7 @@ class BasePage:
                 return True
             else:
                 exc_msg = f'Element text "{elem.text}" == given text "{text}"'
-                return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIComparisonException, exc_msg, raise_exception)
 
         def is_paths_equal(self, url_1, url_2, raise_exception=False):
             """Url comparison without arguments"""
@@ -493,7 +520,7 @@ class BasePage:
                 return True
             else:
                 exc_msg = f'URL "{url_1}" != URL "{url_2}"'
-                return self._raise_exception_wrapper(exceptions.ComparisonException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIComparisonException, exc_msg, raise_exception)
 
         def is_page_url_match_driver_url(self, raise_exception=False):
             """Checking that the current url matches the url of the page"""
@@ -506,7 +533,7 @@ class BasePage:
                 return True
 
             exc_msg = f'Current url "{url_1}" does not match page object url "{url_2}"'
-            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIUrlComparisonException, exc_msg, raise_exception)
 
         def is_current_url_matches(self, url, raise_exception=False):
             current_url = self._page.driver.current_url
@@ -517,7 +544,7 @@ class BasePage:
                 return True
 
             exc_msg = f'Current url "{current_url}" does not match given url "{url}"'
-            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIUrlComparisonException, exc_msg, raise_exception)
 
         def is_current_url_not_matches(self, url, raise_exception=False):
             current_url = self._page.driver.current_url
@@ -528,7 +555,7 @@ class BasePage:
                 return True
 
             exc_msg = f'Current url "{current_url}" match given url "{url}"'
-            return self._raise_exception_wrapper(exceptions.UrlComparisonException, exc_msg, raise_exception)
+            return self._raise_exception_wrapper(exceptions.UIUrlComparisonException, exc_msg, raise_exception)
 
         def is_page_opened(self, url=None, check_url=True, raise_exception=False):
             """Checking that the page has been opened and fully loaded"""
@@ -539,7 +566,7 @@ class BasePage:
                 current_url = self._page.driver.current_url
                 if not self._page.check.is_paths_equal(current_url, url, raise_exception=False):
                     exc_msg = f'Current URL "{current_url}" != page URL "{url}"'
-                    return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
+                    return self._raise_exception_wrapper(exceptions.UIPageNotOpenedException, exc_msg, raise_exception)
                 else:
                     self._page.logger.debug(f'Current URL "{current_url}" == page URL "{url}"')
 
@@ -547,20 +574,20 @@ class BasePage:
             expected = "complete"
             if not status == expected:
                 exc_msg = f'Current page loading status "{status}" != expected status "{expected}"'
-                return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIPageNotOpenedException, exc_msg, raise_exception)
             else:
                 self._page.logger.debug(f'Current page loading status "{status}" == expected status "{expected}"')
 
             result = self._page.is_opened()
             if not result:
                 exc_msg = "Page is not opened"
-                return self._raise_exception_wrapper(exceptions.PageNotOpenedException, exc_msg, raise_exception)
+                return self._raise_exception_wrapper(exceptions.UIPageNotOpenedException, exc_msg, raise_exception)
 
             self._page.logger.debug(f'Page (URL: {self._page.driver.current_url}) has been opened and fully loaded')
             return True
 
     class _WaitUntil(_Check):
-        _error = exceptions.CheckingException
+        _error = exceptions.UICheckingException
 
         def __init__(self, page):
             super().__init__(page)

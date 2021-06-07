@@ -32,6 +32,20 @@ class ResponseUnserializableToJSON(InvalidResponse):
     """
 
 
+# DB client exceptions
+
+class DBClientException(TestException):
+    """
+    Base DB client exception
+    """
+
+
+class DBClientCheckingException(DBClientException):
+    """
+    Exception in check functions in DB client
+    """
+
+
 # UI exceptions
 
 class UIException(TestException):
@@ -58,49 +72,49 @@ class FindingException(UIException):
     """
 
 
-class CheckingException(UIException):
+class UICheckingException(UIException):
     """
     Exception in check functions
     """
 
 
-class ComparisonException(CheckingException):
+class UIComparisonException(UICheckingException):
     """
     Comparison exception
     """
 
 
-class ElementNotVisibleException(CheckingException):
+class UIElementNotVisibleException(UICheckingException):
     """
     Element not visible
     """
 
 
-class ElementVisibleException(CheckingException):
+class UIElementVisibleException(UICheckingException):
     """
     Element visible
     """
 
 
-class ElementNotExistsException(CheckingException):
+class UIElementNotExistsException(UICheckingException):
     """
     Element does not exists
     """
 
 
-class ElementExistsException(CheckingException):
+class UIElementExistsException(UICheckingException):
     """
     Element exists
     """
 
 
-class PageNotOpenedException(CheckingException):
+class UIPageNotOpenedException(UICheckingException):
     """
     Page not opened
     """
 
 
-class UrlComparisonException(CheckingException):
+class UIUrlComparisonException(UICheckingException):
     """
     Urls do not match
     """

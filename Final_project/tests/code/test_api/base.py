@@ -1,11 +1,9 @@
 import pytest
 from _pytest.fixtures import FixtureRequest
 
-import settings
 from api.myapp_api import MyappApi
-from db.vk_api_client import VkApiDBClient
+from db.builder import UserBuilder
 from db.myapp_client import MyappDBClient
-from db.builder import VkApiBuilder, UserBuilder
 from utils.random_values import random_different_values
 from utils.tests_utils import AddMarks
 

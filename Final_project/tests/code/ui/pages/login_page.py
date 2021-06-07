@@ -1,9 +1,9 @@
 import allure
 
 import exceptions
-from ui.pages.base_page import BasePage
-from ui.locators import login_page_locators
 import settings
+from ui.locators import login_page_locators
+from ui.pages.base_page import BasePage
 
 
 class LoginPage(BasePage):

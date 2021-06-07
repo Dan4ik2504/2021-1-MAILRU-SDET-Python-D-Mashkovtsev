@@ -1,15 +1,15 @@
 import logging
 import os
-import pytest
-import allure
 
+import allure
+import pytest
 from selenium import webdriver
 from seleniumwire import webdriver as seleniumwire_webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
-import settings
 import exceptions
+import settings
 
 logger = logging.getLogger(settings.TESTS.LOGGER_NAME)
 

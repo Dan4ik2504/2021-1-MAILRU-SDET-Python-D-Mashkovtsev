@@ -1,18 +1,13 @@
 import datetime
-from itertools import product
-from urllib.parse import urljoin
 
 import pytest
 import requests
 from furl import furl
-from selenium.webdriver.common.keys import Keys
 
-import settings
-from utils.random_values import random_equal_values as rand_val_eq
-from test_api.base import BaseAPICase
-from tests_data import Api as td_api
 from api.client import ApiClient
 from api.myapp_api import MyappApi
+from test_api.base import BaseAPICase
+from tests_data import Api as td_api
 
 
 class BaseAPITestCase(BaseAPICase):
@@ -88,7 +83,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
             expected_status=self.select_status_code(201))
         if self.check_response_status:
             assert response.text == self.td_api.USER_ADDED
-        assert self.myapp_db.is_user_exists(**user)
+        assert self.myapp_db.check.is_user_exists(**user)
 
     @pytest.mark.parametrize(
         ("username", "email", "password", "error_msg"),
@@ -116,7 +111,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
                                            expected_status=self.select_status_code(400))
         if self.check_response_status:
             assert response.text == error_msg
-        assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, email=email, password=password)
 
     @pytest.mark.parametrize(
         ("username", "email", "password", "erorr_msg"),
@@ -141,7 +136,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         email = self.fake.get_empty_value() if email is False else self.fake.get_email()
         password = self.fake.get_empty_value() if password is False else self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
-        assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, email=email, password=password)
 
     def test_api__add_user_request_without_json(self):
         """
@@ -196,7 +191,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
                                            expected_status=self.select_status_code(304))
         if self.check_response_status:
             assert response.text != self.td_api.USER_ADDED
-        assert not self.myapp_db.is_user_exists(email=email, password=password)
+        assert self.myapp_db.check.is_not_user_exists(email=email, password=password)
 
     def test_api__add_existing_email(self):
         """
@@ -216,7 +211,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
                                            expected_status=self.select_status_code(304))
         if self.check_response_status:
             assert response.text != self.td_api.USER_ADDED
-        assert not self.myapp_db.is_user_exists(username=username, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password)
 
     def test_api__add_existing_password(self):
         """
@@ -236,7 +231,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
                                            expected_status=self.select_status_code(201))
         if self.check_response_status:
             assert response.text == self.td_api.USER_ADDED
-        assert self.myapp_db.is_user_exists(username=username, email=email)
+        assert self.myapp_db.check.is_user_exists(username=username, email=email)
 
     def test_api__add_user__incorrect_email(self):
         """
@@ -253,7 +248,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         password = self.fake.get_password()
 
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
-        assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, email=email, password=password)
 
     @pytest.mark.parametrize(
         'username_length',
@@ -273,7 +268,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         email = self.fake.get_email()
         password = self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
         'email_length',
@@ -293,7 +288,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         username = self.fake.get_username()
         password = self.fake.get_password()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
         'password_length',
@@ -313,7 +308,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         username = self.fake.get_username()
         email = self.fake.get_email()
         self.myapp_api.add_user(username, email, password, expected_status=self.select_status_code(304))
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     def test_api__delete_user__positive(self):
         """
@@ -328,7 +323,7 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
 
         user = self.users_builder.generate_user()
         self.myapp_api.delete_user(username=user.username, expected_status=self.select_status_code(204))
-        assert not self.myapp_db.is_user_exists(username=user.username, password=user.password, email=user.email)
+        assert self.myapp_db.check.is_not_user_exists(username=user.username, password=user.password, email=user.email)
 
     def test_api__delete_nonexistent_user(self):
         """
@@ -340,7 +335,8 @@ class TestMyappApiAuthWithStatusCodeChecking(BaseAPIAuthTestCase):
         ОР: Код ответа: 404
         """
 
-        response = self.myapp_api.delete_user(username=self.fake.get_username(), expected_status=self.select_status_code(404))
+        response = self.myapp_api.delete_user(username=self.fake.get_username(),
+                                              expected_status=self.select_status_code(404))
         if self.check_response_status:
             assert response.text == td_api.USER_DOES_NOT_EXIST
 
@@ -470,7 +466,7 @@ class TestMyappApiNoAuthAccess(BaseAPINoAuthTestCase):
         """
         user, response = self.create_user_data_and_send_post_request(expected_status=401)
         assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
-        assert not self.myapp_db.is_user_exists(**user)
+        assert self.myapp_db.check.is_not_user_exists(**user)
 
     def test_api__no_auth_access__delete_user(self):
         """
@@ -486,7 +482,7 @@ class TestMyappApiNoAuthAccess(BaseAPINoAuthTestCase):
         user = self.users_builder.generate_user()
         response = self.myapp_api.delete_user(user.username, expected_status=401)
         assert response.json().get('error') == td_api.AUTHORIZATION_FAILED
-        assert self.myapp_db.is_user_exists(username=user.username)
+        assert self.myapp_db.check.is_user_exists(username=user.username)
 
     def test_api__no_auth_access__block_user(self):
         """

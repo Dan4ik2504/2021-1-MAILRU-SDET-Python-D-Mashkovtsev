@@ -1,9 +1,10 @@
-import pytest
-from selenium.webdriver.common.keys import Keys
 from itertools import product
 
-from test_ui.base import BaseUICase
+import pytest
+from selenium.webdriver.common.keys import Keys
+
 import tests_data
+from test_ui.base import BaseUICase
 from utils.random_values import random_equal_values as rand_val_eq
 
 
@@ -36,7 +37,7 @@ class TestRegisterPage(BaseUICase):
 
         self.register_page.click(self.register_page.locators.LOGIN_PAGE_LINK)
         self.login_page.wait_until.is_page_opened()
-        assert self.login_page.check.is_page_url_match_driver_url()
+        assert self.login_page.check.is_page_url_match_driver_url(raise_exception=True)
 
     def test_register_form__positive(self):
         """
@@ -51,7 +52,7 @@ class TestRegisterPage(BaseUICase):
         user = self.users_builder.generate_user(save_in_db=False)
         self.register_page.register(username=user.username, password=user.password, email=user.email)
         self.main_page.wait_until.is_page_opened()
-        assert self.myapp_db.is_user_exists(username=user.username, password=user.password, email=user.email)
+        assert self.myapp_db.check.is_user_exists(username=user.username, password=user.password, email=user.email)
 
     def test_register_form__existing_user(self):
         """
@@ -82,7 +83,7 @@ class TestRegisterPage(BaseUICase):
         password = self.fake.get_password()
         email = self.fake.get_email()
         self.do_register_existing_user(username=user.username, password=password, email=email)
-        assert not self.myapp_db.is_user_exists(password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(password=password, email=email)
 
     def test_register_form__existing_email(self):
         """
@@ -99,7 +100,7 @@ class TestRegisterPage(BaseUICase):
         username = self.fake.get_username()
         password = self.fake.get_password()
         self.do_register_existing_user(username=username, password=password, email=user.email)
-        assert not self.myapp_db.is_user_exists(username=username, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password)
 
     def test_register_form__existing_password(self):
         """
@@ -117,19 +118,19 @@ class TestRegisterPage(BaseUICase):
         email = self.fake.get_email()
         self.register_page.register(username=username, password=user.password, email=email)
         self.main_page.wait_until.is_page_opened()
-        assert self.myapp_db.is_user_exists(username=username, email=email)
+        assert self.myapp_db.check.is_user_exists(username=username, email=email)
 
     @pytest.mark.parametrize(
         'email',
         (
-            '{}@{}.{}'.format(*i) for i in list(filter(
-                lambda l: '' in l and any(l),
-                product(
-                    ('', rand_val_eq.get_random_letters_and_digits(6)),
-                    ('', rand_val_eq.get_random_letters_and_digits(6)),
-                    ('', rand_val_eq.get_random_letters_and_digits(6))
-                )
-            ))
+                '{}@{}.{}'.format(*i) for i in list(filter(
+            lambda l: '' in l and any(l),
+            product(
+                ('', rand_val_eq.get_random_letters_and_digits(6)),
+                ('', rand_val_eq.get_random_letters_and_digits(6)),
+                ('', rand_val_eq.get_random_letters_and_digits(6))
+            )
+        ))
         )
     )
     def test_register_form__incorrect_email(self, email):
@@ -150,7 +151,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.wait_until.is_page_opened()
 
         assert self.register_page.get_error_text() == self.form_errors.INVALID_EMAIL
-        assert not self.myapp_db.is_user_exists(username=username, email=email, password=password)
+        assert self.myapp_db.check.is_not_user_exists(username=username, email=email, password=password)
 
     def test_register_form__do_not_repeat_password_1(self):
         """
@@ -168,7 +169,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(user.username, user.email, user.password, '')
             self.register_page.wait_until.is_page_opened()
 
-        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT)
+        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT, raise_exception=True)
 
     def test_register_form__do_not_repeat_password_2(self):
         """
@@ -186,7 +187,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(user.username, user.email, '', user.password)
             self.register_page.wait_until.is_page_opened()
 
-        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT)
+        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT, raise_exception=True)
 
     def test_register_form__passwords_not_match(self):
         """
@@ -235,8 +236,8 @@ class TestRegisterPage(BaseUICase):
         with self.register_page.is_page_not_reloaded__context_manager():
             self.register_page.register(username=username, password=password, email=email)
             self.register_page.wait_until.is_page_opened()
-        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT)
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.register_page.check.is_not_visible(self.register_page.locators.ERROR_TEXT, raise_exception=True)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     def test_register_form__incorrect_empty_username(self):
         """
@@ -255,7 +256,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.USERNAME_NOT_SPECIFIED
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     def test_register_form__incorrect_empty_email(self):
         """
@@ -274,7 +275,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.EMAIL_NOT_SPECIFIED
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     def test_register_form__incorrect_empty_password(self):
         """
@@ -293,7 +294,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.PASSWORD_NOT_SPECIFIED
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
         'username',
@@ -315,7 +316,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.INCORRECT_USERNAME_LENGTH
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
         'email',
@@ -337,7 +338,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.INCORRECT_EMAIL_LENGTH
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     @pytest.mark.parametrize(
         'password',
@@ -359,7 +360,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=username, email=email, password=password)
             self.register_page.wait_until.is_page_opened()
         assert self.register_page.get_error_text() == self.form_errors.INCORRECT_PASSWORD_LENGTH
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)
 
     def test_register_form__do_not_click_on_sdet_checkbox(self):
         """
@@ -377,7 +378,7 @@ class TestRegisterPage(BaseUICase):
             self.register_page.register(username=user.username, email=user.email, password=user.password, sdet=False)
             self.register_page.wait_until.is_page_opened()
 
-        assert not self.myapp_db.is_user_exists(username=user.username, password=user.password, email=user.email)
+        assert self.myapp_db.check.is_not_user_exists(username=user.username, password=user.password, email=user.email)
 
     def test_register_form__more_than_one_errors(self):
         """
@@ -398,4 +399,4 @@ class TestRegisterPage(BaseUICase):
                                                       f"{self.form_errors.INCORRECT_EMAIL_LENGTH}\n" \
                                                       f"{self.form_errors.INCORRECT_PASSWORD_LENGTH}"
 
-        assert not self.myapp_db.is_user_exists(username=username, password=password, email=email)
+        assert self.myapp_db.check.is_not_user_exists(username=username, password=password, email=email)

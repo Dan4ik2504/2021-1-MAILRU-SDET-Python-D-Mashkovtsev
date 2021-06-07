@@ -1,14 +1,12 @@
+import string
+import textwrap
 from datetime import datetime
-from urllib.parse import urljoin
 
 import pytest
 from selenium.webdriver.common.keys import Keys
-import string
-import textwrap
 
-import settings
-from test_ui.base import BaseUICase
 import tests_data
+from test_ui.base import BaseUICase
 from utils.random_values import random_equal_values as rand_val_eq
 
 
@@ -38,7 +36,6 @@ class TestLoginPage(BaseUICase):
 
         self.login_page.click(self.login_page.locators.REGISTER_PAGE_LINK)
         self.register_page.wait_until.is_page_opened()
-        assert self.register_page.check.is_page_url_match_driver_url()
 
     def test_login_form__positive(self):
         """
@@ -143,13 +140,13 @@ class TestLoginPage(BaseUICase):
         with self.login_page.is_page_not_reloaded__context_manager():
             self.login_page.login(username, password)
             self.login_page.wait_until.is_page_opened()
-        assert self.login_page.check.is_not_visible(self.login_page.locators.ERROR_TEXT)
+        assert self.login_page.check.is_not_visible(self.login_page.locators.ERROR_TEXT, raise_exception=True)
 
     @pytest.mark.parametrize(
         'username',
         (
                 [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5, 17, 50, 100]]
-         )
+        )
     )
     def test_login_form__incorrect_username_length(self, username):
         """
@@ -170,7 +167,7 @@ class TestLoginPage(BaseUICase):
         'password',
         (
                 [rand_val_eq.get_random_letters_and_digits(i) for i in [1, 5, 17, 50, 100]]
-         )
+        )
     )
     def test_login_form__password_length(self, password):
         """

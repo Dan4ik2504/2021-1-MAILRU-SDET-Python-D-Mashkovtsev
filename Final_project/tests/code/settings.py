@@ -1,8 +1,8 @@
 import os
 import sys
 from logging import INFO as LOG_LEVEL_INFO
+
 from utils.paths import paths
-import inspect
 
 
 class _EXTERNAL_SETTINGS:

@@ -55,4 +55,3 @@ class Api:
     USER_BLOCKED = "User was blocked!"
     USER_UNBLOCKED = "User access granted!"
     USER_DOES_NOT_EXIST = "User does not exist!"
-

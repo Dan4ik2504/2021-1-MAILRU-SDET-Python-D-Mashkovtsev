@@ -1,5 +1,5 @@
-from db.base_client import MysqlClient
 import settings
+from db.base_client import MysqlClient
 from db.models import VkIdTable
 
 

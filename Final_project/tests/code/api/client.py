@@ -1,10 +1,11 @@
-from json import JSONDecodeError
 import logging
+from json import JSONDecodeError
+
 import allure
 import requests
 
-import settings
 import exceptions
+import settings
 
 
 class ApiClient:

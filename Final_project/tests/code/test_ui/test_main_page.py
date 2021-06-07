@@ -1,12 +1,12 @@
+import string
 from datetime import datetime
 from urllib.parse import urljoin
 
 import pytest
-import string
 
 import settings
-from test_ui.base import BaseUICase
 import tests_data
+from test_ui.base import BaseUICase
 from ui.locators import main_page_locators as mp_locators
 
 
@@ -163,16 +163,16 @@ class TestMainPageHeaderUserInfo(BaseMainPageTestCase):
         В БД: спущен флаг активности пользователя; время логина не изменилось после логаута
         """
 
-        assert self.login_page.check.is_session_cookie_exists()
+        assert self.login_page.check.is_session_cookie_exists(raise_exception=True)
 
         logout_time = datetime.utcnow()
         login_time = self.myapp_db.get_user(username=self.current_user.username, password=self.current_user.password,
-                                      email=self.current_user.email).start_active_time
+                                            email=self.current_user.email).start_active_time
 
         self.main_page.click(self.main_page.locators.LOGOUT_BUTTON)
         self.login_page.wait_until.is_page_opened()
 
-        assert not self.login_page.check.is_session_cookie_exists()
+        assert self.login_page.check.is_session_cookie_not_exists(raise_exception=True)
 
         self.main_page.open_page(check_page_is_open=False)
         self.login_page.wait_until.is_page_opened()
@@ -206,7 +206,7 @@ class TestMainPageHeader(BaseMainPageTestCase):
         url = urljoin(settings.APP_SETTINGS.URL, path)
         with self.main_page.is_new_tab_open(url=url, new_tabs_count=0):
             self.main_page.click(locator)
-        assert self.main_page.check.is_page_url_match_driver_url()
+        assert self.main_page.check.is_page_url_match_driver_url(raise_exception=True)
 
     @pytest.mark.parametrize(
         ("dropdown_locator", "dropdown_item_locator"),
@@ -226,12 +226,12 @@ class TestMainPageHeader(BaseMainPageTestCase):
         ОР: Открылся выпадающий список. Не было перехода на другую страницу
         """
 
-        assert not self.main_page.check.is_visible(dropdown_item_locator)
+        assert self.main_page.check.is_not_visible(dropdown_item_locator, raise_exception=True)
         with self.main_page.is_page_not_reloaded__context_manager():
             self.main_page.click(dropdown_locator)
             self.main_page.wait_until.is_page_opened(check_url=False)
-            assert self.main_page.check.is_page_url_match_driver_url()
-        assert self.main_page.check.is_visible(dropdown_item_locator)
+            assert self.main_page.check.is_page_url_match_driver_url(raise_exception=True)
+        assert self.main_page.check.is_visible(dropdown_item_locator, raise_exception=True)
 
     @pytest.mark.parametrize(
         ("dropdown_locator", "dropdown_item_locator"),
@@ -251,12 +251,12 @@ class TestMainPageHeader(BaseMainPageTestCase):
         ОР: Открылся выпадающий список. Не было перехода на другую страницу
         """
 
-        assert not self.main_page.check.is_visible(dropdown_item_locator)
+        assert self.main_page.check.is_not_visible(dropdown_item_locator, raise_exception=True)
         with self.main_page.is_page_not_reloaded__context_manager():
             self.main_page.action_chains.move_to_element(self.main_page.find(dropdown_locator)).perform()
             self.main_page.wait_until.is_page_opened(check_url=False)
-            assert self.main_page.check.is_page_url_match_driver_url()
-        assert self.main_page.check.is_visible(dropdown_item_locator)
+            assert self.main_page.check.is_page_url_match_driver_url(raise_exception=True)
+        assert self.main_page.check.is_visible(dropdown_item_locator, raise_exception=True)
 
     @pytest.mark.parametrize(
         ("locator", "url"),

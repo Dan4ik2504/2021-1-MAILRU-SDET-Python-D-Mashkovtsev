@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from db.base_client import MysqlClient
+import exceptions
 import settings
+from db.base_client import MysqlClient
 from db.models import MyappUserTable
 
 
@@ -12,6 +13,7 @@ class MyappDBClient(MysqlClient):
     def __init__(self, db_name=settings.APP_SETTINGS.DB_NAME, **kwargs):
         super().__init__(db_name=db_name, **kwargs)
         self.base_query = self.session_autocommit.query(self.table)
+        self.check = self.Check(self)
 
     def get_all_users(self):
         return self.base_query.all()
@@ -37,5 +39,24 @@ class MyappDBClient(MysqlClient):
     def delete_users_by_filter(self, **kwargs):
         self.base_query.filter_by(**kwargs).delete()
 
-    def is_user_exists(self, **kwargs):
+    def user_exists(self, **kwargs):
         return self.session_autocommit.query(self.base_query.filter_by(**kwargs).exists()).scalar()
+
+    class Check:
+        def __init__(self, api):
+            self.api = api
+
+        @staticmethod
+        def _dict_to_str(dct):
+            lst = [f"{k.capitalize()}: {v}" for k, v in dct.items()]
+            return f'{". ".join(lst)}'
+
+        def is_user_exists(self, **kwargs):
+            if self.api.user_exists(**kwargs):
+                return True
+            raise exceptions.DBClientCheckingException(f"User does not exists. {self._dict_to_str(kwargs)}")
+
+        def is_not_user_exists(self, **kwargs):
+            if not self.api.user_exists(**kwargs):
+                return True
+            raise exceptions.DBClientCheckingException(f"User exists. {self._dict_to_str(kwargs)}")

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import settings
-from db.vk_api_client import VkApiDBClient
 from db.myapp_client import MyappDBClient
+from db.vk_api_client import VkApiDBClient
 from utils.random_values import random_different_values as rand_val_diff
 
 
