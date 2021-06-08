@@ -1,9 +1,9 @@
 upstream docker-myapp {
-    server myapp:8071;
+    server myapp:${MYAPP_PORT};
 }
 
 server {
-    listen 8070;
+    listen ${MYAPP_PROXY_PORT};
 
     location / {
          proxy_pass http://docker-myapp;

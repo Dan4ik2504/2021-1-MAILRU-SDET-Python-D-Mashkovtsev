@@ -48,7 +48,7 @@ class _BASE_APP_CLASS:
 
 class _DATABASE_SETTINGS(_BASE_APP_CLASS):
     HOST_DOCKER = 'myapp_db'
-    PORT = 3306
+    PORT = os.environ.get("MYAPP_DB_PORT", 3306)
     USER = 'root'
     PASSWORD = 'pass'
     URL_BASE = f'mysql+pymysql://{USER}:{PASSWORD}' + '@{host}:{port}'
@@ -59,7 +59,7 @@ DATABASE_SETTINGS = _DATABASE_SETTINGS()
 
 class _MOCK_SETTINGS(_BASE_APP_CLASS):
     HOST_DOCKER = 'vk_api'
-    PORT = '8008'
+    PORT = os.environ.get("VK_API_PORT", '8008')
     DB_NAME = 'vk_api_db'
     TABLE_VK_ID_NAME = 'vk_id_table'
 
@@ -69,7 +69,7 @@ MOCK_SETTINGS = _MOCK_SETTINGS()
 
 class _APP_SETTINGS(_BASE_APP_CLASS):
     HOST_DOCKER = 'myapp_proxy'
-    PORT = '8070'
+    PORT = os.environ.get("MYAPP_PROXY_PORT", '8070')
     DB_NAME = 'myapp_db'
     TABLE_USERS_NAME = 'test_users'
 
@@ -126,7 +126,7 @@ class EXTERNAL_URLS:
 
 class _SELENOID(_BASE_APP_CLASS):
     HOST_DOCKER = 'selenoid'
-    PORT = '4444'
+    PORT = os.environ.get("SELENOID_PORT", '4444')
     URL_BASE = "http://{host}:{port}/wd/hub"
     CHROME_LATEST = 'latest'
     CHROME_DEFAULT_VERSION = '90.0'

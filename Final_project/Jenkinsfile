@@ -1,4 +1,6 @@
-properties([disableConcurrentBuilds()])
+def random_port() {
+    return sh(returnStdout: true, script: """python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1], end=""); s.close()'""")
+}
 
 pipeline {
     agent {
@@ -6,18 +8,26 @@ pipeline {
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '3'))
+        buildDiscarder(logRotator(numToKeepStr: '5'))
         timestamps()
     }
 
     environment {
         PYTHON = sh(returnStdout: true, script: 'which python3')
+        DOCKER_NETWORK_NAME = UUID.randomUUID().toString()
+        COMPOSE_PROJECT_NAME = UUID.randomUUID().toString()
+        MYAPP_DB_PORT = random_port()
+        MYAPP_PORT = random_port()
+        MYAPP_PROXY_PORT = random_port()
+        VK_API_PORT = random_port()
+        SELENOID_PORT = random_port()
+        SELENOID_UI_PORT = random_port()
     }
 
     stages {
         stage("Preparing the environment") {
             steps {
-                sh 'docker network create myapp_network || true'
+                sh 'docker network create ${DOCKER_NETWORK_NAME} || true'
 
                 dir('Final_project/tests'){
                     sh 'docker-compose up -d'
@@ -60,7 +70,7 @@ pipeline {
                 sh 'docker-compose down --remove-orphans'
             }
 
-            sh 'docker network rm myapp_network || true'
+            sh 'docker network rm ${DOCKER_NETWORK_NAME} || true'
 
             allure([
                 reportBuildPolicy: 'ALWAYS',

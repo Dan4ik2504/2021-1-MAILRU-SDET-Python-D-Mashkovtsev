@@ -1,0 +1,6 @@
+APP_HOST = myapp
+APP_PORT = ${MYAPP_PORT}
+MYSQL_HOST = myapp_db
+MYSQL_PORT = ${MYAPP_DB_PORT}
+MYSQL_DB = myapp_db
+VK_URL = vk_api:${VK_API_PORT}

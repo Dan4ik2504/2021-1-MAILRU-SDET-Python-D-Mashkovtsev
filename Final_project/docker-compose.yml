@@ -3,7 +3,7 @@ version: '2.1'
 networks:
   myapp_network:
     external: true
-    name: myapp_network
+    name: ${DOCKER_NETWORK_NAME}
 
 services:
   myapp_db:
@@ -16,7 +16,7 @@ services:
     volumes:
       - ./application/mysql/init:/docker-entrypoint-initdb.d
     ports:
-      - "3306:3306"
+      - "${MYAPP_DB_PORT}:3306"
     healthcheck:
       test: ['CMD', 'mysqladmin', '-uroot', '-ppass', 'ping', '-h', '127.0.0.1']
       timeout: 1s
@@ -31,7 +31,7 @@ services:
     working_dir: /app
     entrypoint: ["python", "views.py"]
     ports:
-      - "8008:8008"
+      - "${VK_API_PORT}:8008"
     depends_on:
       myapp_db:
         condition: service_healthy
@@ -40,11 +40,16 @@ services:
     image: "myapp:latest"
     networks:
       - myapp_network
-    entrypoint: /app/myapp --config=/config/config.txt
+    environment:
+      MYAPP_PORT: ${MYAPP_PORT}
+      MYAPP_DB_PORT: ${MYAPP_DB_PORT}
+      VK_API_PORT: ${VK_API_PORT}
+    entrypoint: /bin/bash -c "envsubst < /config/config.txt.template > /config/config.txt && /app/myapp --config=/config/config.txt"
     volumes:
-      - ./application/myapp/config:/config
+      - ./application/myapp/config/config.txt.template:/config/config.txt.template
+      - /usr/bin/envsubst:/usr/bin/envsubst
     ports:
-      - "8071:8071"
+      - "${MYAPP_PORT}:8071"
     depends_on:
       myapp_db:
         condition: service_healthy
@@ -56,9 +61,12 @@ services:
     networks:
       - myapp_network
     ports:
-      - "8070:8070"
+      - "${MYAPP_PROXY_PORT}:8070"
+    environment:
+      MYAPP_PORT: ${MYAPP_PORT}
+      MYAPP_PROXY_PORT: ${MYAPP_PROXY_PORT}
     volumes:
-      - ./application/myapp_proxy/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./application/myapp_proxy/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     depends_on:
       myapp:
         condition: service_started
