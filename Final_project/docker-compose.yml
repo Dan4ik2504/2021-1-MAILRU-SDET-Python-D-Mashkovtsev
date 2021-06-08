@@ -1,15 +1,13 @@
 version: '2.1'
 
 networks:
-  myapp_network:
+  default:
     external: true
     name: ${DOCKER_NETWORK_NAME}
 
 services:
   myapp_db:
     image: "percona:latest"
-    networks:
-      - myapp_network
     environment:
       MYSQL_ROOT_PASSWORD: pass
       MYSQL_DATABASE: myapp_db
@@ -24,8 +22,6 @@ services:
 
   vk_api:
     build: ./application/mock/
-    networks:
-      - myapp_network
     volumes:
       - ./application/mock/flask_app:/app
     working_dir: /app
@@ -38,16 +34,9 @@ services:
 
   myapp:
     image: "myapp:latest"
-    networks:
-      - myapp_network
-    environment:
-      MYAPP_PORT: ${MYAPP_PORT}
-      MYAPP_DB_PORT: ${MYAPP_DB_PORT}
-      VK_API_PORT: ${VK_API_PORT}
-    entrypoint: /bin/bash -c "envsubst < /config/config.txt.template > /config/config.txt && /app/myapp --config=/config/config.txt"
+    entrypoint: /app/myapp --config=/config/config.txt
     volumes:
-      - ./application/myapp/config/config.txt.template:/config/config.txt.template
-      - /usr/bin/envsubst:/usr/bin/envsubst
+      - ./application/myapp/config/config.txt:/config/config.txt
     ports:
       - "${MYAPP_PORT}:8071"
     depends_on:
@@ -58,15 +47,10 @@ services:
 
   myapp_proxy:
     image: "nginx:stable"
-    networks:
-      - myapp_network
     ports:
       - "${MYAPP_PROXY_PORT}:8070"
-    environment:
-      MYAPP_PORT: ${MYAPP_PORT}
-      MYAPP_PROXY_PORT: ${MYAPP_PROXY_PORT}
     volumes:
-      - ./application/myapp_proxy/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
+      - ./application/myapp_proxy/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       myapp:
         condition: service_started

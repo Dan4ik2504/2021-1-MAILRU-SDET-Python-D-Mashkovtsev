@@ -27,6 +27,16 @@ pipeline {
     stages {
         stage("Preparing the environment") {
             steps {
+                sh 'echo "Python PATH: ${PYTHON}"'
+                sh 'echo "Docker network: ${DOCKER_NETWORK_NAME}"'
+                sh 'echo "Docker compose project name: ${COMPOSE_PROJECT_NAME}"'
+                sh 'echo "Myapp DB port: ${MYAPP_DB_PORT}"'
+                sh 'echo "Myapp port: ${MYAPP_PORT}"'
+                sh 'echo "Myapp proxy port: ${MYAPP_PROXY_PORT}"'
+                sh 'echo "VK API port: ${VK_API_PORT}"'
+                sh 'echo "Selenoid port: ${SELENOID_PORT}"'
+                sh 'echo "Selenoid UI port: ${SELENOID_UI_PORT}"'
+
                 sh 'docker network create ${DOCKER_NETWORK_NAME} || true'
 
                 dir('Final_project/tests'){
