@@ -1,5 +1,7 @@
 import shutil
 from pathlib import Path
+import docker
+import os
 import allure
 
 from api.fixtures import *
@@ -106,6 +108,46 @@ def loggers_init(test_dir, config):
         if file_path.is_file():
             with open(log_file_path, 'r') as f:
                 allure.attach(f.read(), log_file_name, attachment_type=allure.attachment_type.TEXT)
+
+
+@pytest.fixture(scope='session')
+def docker_client():
+    return docker.from_env()
+
+
+def get_docker_containers(docker_client):
+    project_name = os.environ.get('COMPOSE_PROJECT_NAME', '')
+    res = []
+
+    for container in docker_client.containers.list():
+        if not project_name:
+            res.append(container)
+            continue
+        if container.name.startswith(project_name):
+            res.append(container)
+
+    return res
+
+
+def get_docker_container_logs(container):
+    return container.logs().decode().split('\n')
+
+
+@pytest.fixture(scope='function', autouse=True)
+def docker_containers_logs_attach_to_allure_report(test_dir, config, docker_client):
+    containers = get_docker_containers(docker_client)
+    logs_start = {}
+
+    for container in containers:
+        logs_start[container.name] = len(get_docker_container_logs(container))
+
+    yield
+
+    for container in containers:
+        container_logs_start = logs_start[container.name] - 1 if logs_start[container.name] > 0 \
+            else logs_start[container.name]
+        logs_list = get_docker_container_logs(container)[container_logs_start:]
+        allure.attach('\n'.join(logs_list), container.name, attachment_type=allure.attachment_type.TEXT)
 
 
 @pytest.fixture(scope='function')

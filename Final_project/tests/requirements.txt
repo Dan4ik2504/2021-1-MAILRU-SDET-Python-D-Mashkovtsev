@@ -11,3 +11,4 @@ sqlalchemy~=1.4.13
 sqlalchemy-utils~=0.37.2
 furl~=2.1.2
 selenium-wire~=4.3.0
+docker~=5.0.0
