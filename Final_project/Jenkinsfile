@@ -60,7 +60,7 @@ pipeline {
                 sh 'docker-compose down --remove-orphans'
             }
 
-            sh 'docker network rm myapp_network'
+            sh 'docker network rm myapp_network || true'
 
             allure([
                 reportBuildPolicy: 'ALWAYS',
