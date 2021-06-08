@@ -6,14 +6,7 @@ from utils.paths import paths
 
 
 class _EXTERNAL_SETTINGS:
-    _in_docker = False
     _with_selenoid = False
-
-    @property
-    def IN_DOCKER(self):
-        if not self._in_docker:
-            self._in_docker = bool(int(os.environ.get('TESTS_IN_DOCKER', False)))
-        return self._in_docker
 
     @property
     def WITH_SELENOID(self):
@@ -29,17 +22,9 @@ EXTERNAL_SETTINGS = _EXTERNAL_SETTINGS()
 # App settings
 
 class _BASE_APP_CLASS:
-    HOST_DEFAULT = 'localhost'
-    HOST_DOCKER = None
+    HOST = 'localhost'
     PORT = None
     URL_BASE = 'http://{host}:{port}/'
-
-    @property
-    def HOST(self):
-        if EXTERNAL_SETTINGS.IN_DOCKER:
-            return self.HOST_DOCKER
-        else:
-            return self.HOST_DEFAULT
 
     @property
     def URL(self):
@@ -47,7 +32,6 @@ class _BASE_APP_CLASS:
 
 
 class _DATABASE_SETTINGS(_BASE_APP_CLASS):
-    HOST_DOCKER = 'myapp_db'
     PORT = os.environ.get("MYAPP_DB_PORT", 3306)
     USER = 'root'
     PASSWORD = 'pass'
@@ -58,7 +42,6 @@ DATABASE_SETTINGS = _DATABASE_SETTINGS()
 
 
 class _MOCK_SETTINGS(_BASE_APP_CLASS):
-    HOST_DOCKER = 'vk_api'
     PORT = os.environ.get("VK_API_PORT", '8008')
     DB_NAME = 'vk_api_db'
     TABLE_VK_ID_NAME = 'vk_id_table'
@@ -68,8 +51,9 @@ MOCK_SETTINGS = _MOCK_SETTINGS()
 
 
 class _APP_SETTINGS(_BASE_APP_CLASS):
-    HOST_DOCKER = 'myapp_proxy'
     PORT = os.environ.get("MYAPP_PROXY_PORT", '8070')
+    HOST_DOCKER = 'myapp_proxy'
+    PORT_DOCKER = '8070'
     DB_NAME = 'myapp_db'
     TABLE_USERS_NAME = 'test_users'
 
@@ -88,22 +72,15 @@ class _APP_SETTINGS(_BASE_APP_CLASS):
         APP_STATUS = '/status'
 
     @property
-    def HOST(self):
-        if EXTERNAL_SETTINGS.IN_DOCKER or EXTERNAL_SETTINGS.WITH_SELENOID:
-            return self.HOST_DOCKER
-        else:
-            return self.HOST_DEFAULT
-
-    @property
-    def HOST_API(self):
-        if EXTERNAL_SETTINGS.IN_DOCKER:
-            return self.HOST_DOCKER
-        else:
-            return self.HOST_DEFAULT
-
-    @property
     def URL_API(self):
-        return self.URL_BASE.format(host=self.HOST_API, port=self.PORT)
+        return self.URL_BASE.format(host=self.HOST, port=self.PORT)
+
+    @property
+    def URL(self):
+        if EXTERNAL_SETTINGS.WITH_SELENOID:
+            return self.URL_BASE.format(host=self.HOST_DOCKER, port=self.PORT_DOCKER)
+        else:
+            return self.URL_API
 
 
 APP_SETTINGS = _APP_SETTINGS()
