@@ -44,11 +44,11 @@ class BaseUICase(metaclass=AddMarks):
         self.users_builder = UserBuilder(self.myapp_db)
 
         if self.seleniumwire_pages:
-            driver = request.getfixturevalue("seleniumwire_driver")
             request.getfixturevalue("ui_seleniumwire_report")
+            driver = request.getfixturevalue("seleniumwire_driver")
         else:
-            driver = request.getfixturevalue("driver")
             request.getfixturevalue('ui_report')
+            driver = request.getfixturevalue("driver")
 
         self.base_page = BasePage(driver)
         self.login_page = LoginPage(driver)

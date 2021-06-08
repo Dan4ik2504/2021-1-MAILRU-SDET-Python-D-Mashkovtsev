@@ -229,9 +229,9 @@ class TestRegisterPage(BaseUICase):
 
         ОР: Страница не перезагрузилась (т.е. POST запрос не отправился). Пользователь не создан
         """
-        username = username or self.fake.username
-        email = email or self.fake.email
-        password = password or self.fake.password
+        username = username or self.fake.get_username()
+        email = email or self.fake.get_email()
+        password = password or self.fake.get_password()
 
         with self.register_page.is_page_not_reloaded__context_manager():
             self.register_page.register(username=username, password=password, email=email)

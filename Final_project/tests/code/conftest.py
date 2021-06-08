@@ -135,19 +135,25 @@ def get_docker_container_logs(container):
 
 @pytest.fixture(scope='function', autouse=True)
 def docker_containers_logs_attach_to_allure_report(test_dir, config, docker_client):
-    containers = get_docker_containers(docker_client)
-    logs_start = {}
+    try:
+        containers = get_docker_containers(docker_client)
+        logs_start = {}
 
-    for container in containers:
-        logs_start[container.name] = len(get_docker_container_logs(container))
+        for container in containers:
+            logs_start[container.name] = len(get_docker_container_logs(container))
+    except docker.errors.DockerException:
+        containers = []
 
     yield
 
-    for container in containers:
-        container_logs_start = logs_start[container.name] - 1 if logs_start[container.name] > 0 \
-            else logs_start[container.name]
-        logs_list = get_docker_container_logs(container)[container_logs_start:]
-        allure.attach('\n'.join(logs_list), container.name, attachment_type=allure.attachment_type.TEXT)
+    try:
+        for container in containers:
+            container_logs_start = logs_start[container.name] - 1 if logs_start[container.name] > 0 \
+                else logs_start[container.name]
+            logs_list = get_docker_container_logs(container)[container_logs_start:]
+            allure.attach('\n'.join(logs_list), container.name, attachment_type=allure.attachment_type.TEXT)
+    except docker.errors.DockerException:
+        pass
 
 
 @pytest.fixture(scope='function')

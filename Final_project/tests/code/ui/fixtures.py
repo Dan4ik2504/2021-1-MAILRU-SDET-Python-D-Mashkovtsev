@@ -117,9 +117,7 @@ def seleniumwire_driver(config, test_dir):
     browser.quit()
 
 
-def _ui_report(driver, request, test_dir):
-    failed_tests_count = request.session.testsfailed
-    yield
+def _ui_report(failed_tests_count, driver, request, test_dir):
     if request.session.testsfailed > failed_tests_count:
         screenshot_file = os.path.join(test_dir, settings.BROWSER.SCREENSHOT_FILE_NAME)
         driver.get_screenshot_as_file(screenshot_file)
@@ -137,9 +135,13 @@ def _ui_report(driver, request, test_dir):
 
 @pytest.fixture(scope='function')
 def ui_report(driver, request, test_dir):
-    _ui_report(driver, request, test_dir)
+    failed_tests_count = request.session.testsfailed
+    yield
+    _ui_report(failed_tests_count, driver, request, test_dir)
 
 
 @pytest.fixture(scope='function')
 def ui_seleniumwire_report(seleniumwire_driver, request, test_dir):
-    _ui_report(seleniumwire_driver, request, test_dir)
+    failed_tests_count = request.session.testsfailed
+    yield
+    _ui_report(failed_tests_count, seleniumwire_driver, request, test_dir)
