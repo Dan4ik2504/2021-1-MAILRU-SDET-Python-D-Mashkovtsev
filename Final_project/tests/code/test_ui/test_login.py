@@ -1,6 +1,6 @@
 import string
 import textwrap
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from selenium.webdriver.common.keys import Keys
@@ -50,13 +50,13 @@ class TestLoginPage(BaseUICase):
         """
 
         user = self.users_builder.generate_user()
-        login_time = datetime.utcnow()
+        login_time = datetime.utcnow() - timedelta(hours=1)
         self.login_page.login(user.username, user.password)
         self.main_page.wait_until.is_page_opened()
         user = self.myapp_db.get_user(username=user.username, password=user.password, email=user.email)
         assert user.access == 1
         assert user.active == 1
-        assert login_time <= user.start_active_time <= datetime.utcnow()
+        assert login_time <= user.start_active_time <= datetime.utcnow() + timedelta(hours=1)
 
     def test_login_form__blocked_user(self):
         """
