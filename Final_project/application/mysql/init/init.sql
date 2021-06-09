@@ -21,5 +21,5 @@ USE `vk_api_db`;
 CREATE TABLE `vk_id_table` (
     `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `username` varchar(16) DEFAULT NULL,
-    `vk_id` text NOT NULL
+    `vk_id` text DEFAULT NULL
 );
