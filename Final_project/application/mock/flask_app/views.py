@@ -22,5 +22,5 @@ def not_found_rest_api(e):
 
 
 if __name__ == '__main__':
-    db_client.recreate_db()
+    db_client.connect()
     app.run(host=settings.MOCK_SETTINGS.HOST, port=settings.MOCK_SETTINGS.PORT)
