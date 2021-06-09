@@ -159,7 +159,7 @@ class _RandomDifferentValues(_RandomValues):
 
     def get_empty_value(self):
         if self._empty_value_current_length is None:
-            self._empty_value_current_length = self.pid + 1
+            self._empty_value_current_length = self.pid + 2
         else:
             self._empty_value_current_length += self.processes_number
         return ' ' * self._empty_value_current_length
