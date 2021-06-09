@@ -1,0 +1,25 @@
+version: '2.1'
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK_NAME}
+
+services:
+  selenoid:
+    image: "aerokube/selenoid:latest"
+    volumes:
+      - ./browsers.json:/etc/selenoid/browsers.json
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${SELENOID_PORT}:4444"
+    command: [ "-container-network", "${DOCKER_NETWORK_NAME}" ]
+
+  selenoid-ui:
+    image: "aerokube/selenoid-ui:latest"
+    ports:
+      - "${SELENOID_UI_PORT}:8080"
+    command: [ "--selenoid-uri", "http://selenoid:4444" ]
+    depends_on:
+      selenoid:
+        condition: service_started

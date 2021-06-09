@@ -1,0 +1,56 @@
+version: '2.1'
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK_NAME}
+
+services:
+  myapp_db:
+    image: "percona:latest"
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: myapp_db
+    volumes:
+      - ./application/mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${MYAPP_DB_PORT}:3306"
+    healthcheck:
+      test: ['CMD', 'mysqladmin', '-uroot', '-ppass', 'ping', '-h', '127.0.0.1']
+      timeout: 1s
+      retries: 30
+
+  vk_api:
+    build: ./application/mock/
+    volumes:
+      - ./application/mock/flask_app:/app
+    working_dir: /app
+    entrypoint: ["python", "views.py"]
+    ports:
+      - "${VK_API_PORT}:8008"
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+
+  myapp:
+    image: "myapp:latest"
+    entrypoint: /app/myapp --config=/config/config.txt
+    volumes:
+      - ./application/myapp/config/config.txt:/config/config.txt
+    ports:
+      - "${MYAPP_PORT}:8071"
+    depends_on:
+      myapp_db:
+        condition: service_healthy
+      vk_api:
+        condition: service_started
+
+  myapp_proxy:
+    image: "nginx:stable"
+    ports:
+      - "${MYAPP_PROXY_PORT}:8070"
+    volumes:
+      - ./application/myapp_proxy/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      myapp:
+        condition: service_started

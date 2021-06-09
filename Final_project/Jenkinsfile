@@ -1,0 +1,92 @@
+def random_port() {
+    return sh(returnStdout: true, script: """python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1], end=""); s.close()'""")
+}
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+        timestamps()
+    }
+
+    environment {
+        PYTHON = sh(returnStdout: true, script: 'which python3')
+        DOCKER_NETWORK_NAME = UUID.randomUUID().toString()
+        COMPOSE_PROJECT_NAME = UUID.randomUUID().toString()
+        MYAPP_DB_PORT = random_port()
+        MYAPP_PORT = random_port()
+        MYAPP_PROXY_PORT = random_port()
+        VK_API_PORT = random_port()
+        SELENOID_PORT = random_port()
+        SELENOID_UI_PORT = random_port()
+    }
+
+    stages {
+        stage("Preparing the environment") {
+            steps {
+                sh 'echo "Python PATH: ${PYTHON}"'
+                sh 'echo "Docker network: ${DOCKER_NETWORK_NAME}"'
+                sh 'echo "Docker compose project name: ${COMPOSE_PROJECT_NAME}"'
+                sh 'echo "Myapp DB port: ${MYAPP_DB_PORT}"'
+                sh 'echo "Myapp port: ${MYAPP_PORT}"'
+                sh 'echo "Myapp proxy port: ${MYAPP_PROXY_PORT}"'
+                sh 'echo "VK API port: ${VK_API_PORT}"'
+                sh 'echo "Selenoid port: ${SELENOID_PORT}"'
+                sh 'echo "Selenoid UI port: ${SELENOID_UI_PORT}"'
+
+                sh 'docker network create ${DOCKER_NETWORK_NAME} || true'
+
+                dir('Final_project/tests'){
+                    sh 'docker-compose up -d'
+                }
+
+                withEnv(["PATH+EXTRA=$PYTHON"]) {
+                    dir('Final_project/tests'){
+                        sh 'pip install -r requirements.txt'
+                    }
+                }
+            }
+        }
+
+        stage("App starting") {
+            steps {
+                dir('Final_project'){
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+
+        stage("Testing") {
+            steps {
+                withEnv(["PATH+EXTRA=$PYTHON"]) {
+                    dir('Final_project/tests/code'){
+                        sh 'pytest --alluredir=$WORKSPACE/alluredir ${PYTEST_ARGS}'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            dir('Final_project'){
+                sh 'docker-compose down --remove-orphans'
+            }
+
+            dir('Final_project/tests'){
+                sh 'docker-compose down --remove-orphans'
+            }
+
+            sh 'docker network rm ${DOCKER_NETWORK_NAME} || true'
+
+            allure([
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'alluredir']]
+            ])
+            cleanWs()
+        }
+    }
+}
